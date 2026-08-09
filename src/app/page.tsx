@@ -42,9 +42,9 @@ useEffect(() => {
   const [ngheSua, setNgheSua] = useState("");
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
       <h1 className="text-3xl font-bold mb-6">Thợ gần bạn</h1>
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-4 justify-center">
         {daDangNhap ? (
   <button
     className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-4"
