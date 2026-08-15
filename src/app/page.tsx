@@ -7,6 +7,9 @@ import Link from "next/link";
 export default function Home() {
   const [viTriDangMo, setViTriDangMo] = useState<number | null>(null);
   const [daDangNhap, setDaDangNhap] = useState(false);
+  const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
+const [tenKhach, setTenKhach] = useState("");
+const [soDienThoai, setSoDienThoai] = useState("");
 
 useEffect(() => {
   async function kiemTraDangNhap() {
@@ -19,13 +22,16 @@ useEffect(() => {
   const [danhSachTho, setDanhSachTho] = useState<any[]>([]);
 
   async function layDanhSachTho() {
-    const { data, error } = await supabase.from("tho").select("*").order("id", { ascending: true })
-    if (error) {
-      console.log("Lỗi:", error);
-    } else {
-      setDanhSachTho(data);
-    }
+  const { data, error } = await supabase
+    .from("tho")
+    .select("*")
+    .order("danh_gia_sao", { ascending: false });
+  if (error) {
+    console.log("Lỗi:", error);
+  } else {
+    setDanhSachTho(data);
   }
+}
 
 
   
@@ -45,7 +51,8 @@ useEffect(() => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
       <h1 className="text-3xl font-bold mb-6">Thợ gần bạn</h1>
       <div className="flex flex-wrap gap-4 justify-center">
-        {daDangNhap ? (
+
+   {daDangNhap ? (
   <button
     className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-4"
     onClick={async () => {
@@ -59,6 +66,13 @@ useEffect(() => {
   <Link href="/login">
     <button className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4">
       Đăng nhập
+    </button>
+  </Link>
+)}
+{daDangNhap && (
+  <Link href="/admin/don-dat-lich">
+    <button className="bg-purple-500 text-white px-4 py-2 rounded-lg mb-4 ml-2">
+      Xem đơn đặt lịch
     </button>
   </Link>
 )}
@@ -91,6 +105,35 @@ useEffect(() => {
         layDanhSachTho();
       }
     }}
+    dangDatLich={viTriDatLich === index}
+tenKhach={tenKhach}
+soDienThoai={soDienThoai}
+onMoDatLich={() => setViTriDatLich(index)}
+onDoiTenKhach={(giaTri) => setTenKhach(giaTri)}
+onDoiSoDienThoai={(giaTri) => setSoDienThoai(giaTri)}
+onXacNhanDatLich={async () => {
+  const { error } = await supabase.from("don_dat_lich").insert([
+    {
+      ten_khach: tenKhach,
+      so_dien_thoai: soDienThoai,
+      tho_id: tho.id,
+      gio_hen: new Date().toISOString(),
+    },
+  ]);
+  if (error) {
+    alert("Lỗi đặt lịch: " + error.message);
+  } else {
+    alert("Đặt lịch thành công! Thợ sẽ liên hệ bạn sớm.");
+    setViTriDatLich(null);
+    setTenKhach("");
+    setSoDienThoai("");
+  }
+}}
+onHuyDatLich={() => {
+  setViTriDatLich(null);
+  setTenKhach("");
+  setSoDienThoai("");
+}}
   />
 ))}
 </div>

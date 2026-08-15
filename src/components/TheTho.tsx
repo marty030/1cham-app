@@ -1,4 +1,5 @@
 "use client";
+import FormDatLich from "./FormDatLich";
 
 type TheThoProps = {
   tho: any;
@@ -12,6 +13,14 @@ type TheThoProps = {
   onDoiNgheSua: (giaTri: string) => void;
   onLuuSua: () => void;
   onXoa: () => void;
+  dangDatLich: boolean;
+tenKhach: string;
+soDienThoai: string;
+onMoDatLich: () => void;
+onDoiTenKhach: (giaTri: string) => void;
+onDoiSoDienThoai: (giaTri: string) => void;
+onXacNhanDatLich: () => void;
+onHuyDatLich: () => void;
 };
 
 export default function TheTho({
@@ -25,11 +34,23 @@ export default function TheTho({
   onDoiNgheSua,
   onLuuSua,
   onXoa,
+  dangDatLich,
+  tenKhach,
+  soDienThoai,
+  onMoDatLich,
+  onDoiTenKhach,
+  onDoiSoDienThoai,
+  onXacNhanDatLich,
+  onHuyDatLich,
 }: TheThoProps) {
   return (
     <div className="border border-gray-300 rounded-xl p-4 w-56 shadow bg-white">
       <h2 className="text-xl font-semibold">{tho.ten}</h2>
       <p className="text-gray-600">{tho.nghe}</p>
+    
+<p className="text-sm text-yellow-600 mt-1">
+  ⭐ {tho.danh_gia_sao} · {tho.so_don_hoan_thanh} đơn hoàn thành
+</p>
 
       {dangMo && (
         <p className="text-sm text-gray-500 mt-2">Địa chỉ: {tho.dia_chi}</p>
@@ -43,11 +64,23 @@ export default function TheTho({
       </button>
 
       <button
-        className="bg-orange-500 text-white px-4 py-2 rounded-lg mt-3"
-        onClick={() => alert("Đang gọi thợ: " + tho.ten)}
-      >
-        Gọi thợ ngay
-      </button>
+  className="bg-orange-500 text-white px-4 py-2 rounded-lg mt-3"
+  onClick={onMoDatLich}
+>
+  Gọi thợ ngay
+</button>
+
+<FormDatLich
+  hienForm={dangDatLich}
+  tenKhach={tenKhach}
+  soDienThoai={soDienThoai}
+  onDoiTenKhach={onDoiTenKhach}
+  onDoiSoDienThoai={onDoiSoDienThoai}
+  onXacNhan={onXacNhanDatLich}
+  onHuy={onHuyDatLich}
+/>
+
+
 
       {dangSua && (
         <div className="mt-2">
