@@ -10,21 +10,43 @@ export default function Home() {
   const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
 const [tenKhach, setTenKhach] = useState("");
 const [soDienThoai, setSoDienThoai] = useState("");
+const [ngayHen, setNgayHen] = useState("");
+const [gioHen, setGioHen] = useState("");
+const [diaChiHen, setDiaChiHen] = useState("");
+const [ghiChu, setGhiChu] = useState("");
+const [laAdmin, setLaAdmin] = useState(false);
 
 useEffect(() => {
   async function kiemTraDangNhap() {
     const { data } = await supabase.auth.getSession();
-    setDaDangNhap(!!data.session);
+    if (data.session) {
+      setDaDangNhap(true);
+      const role = data.session.user.user_metadata?.role;
+      setLaAdmin(role === "admin");
+    } else {
+      setDaDangNhap(false);
+      setLaAdmin(false);
+    }
   }
   kiemTraDangNhap();
 }, []);
   
   const [danhSachTho, setDanhSachTho] = useState<any[]>([]);
+  const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
+
+useEffect(() => {
+  async function layDon() {
+    const { data } = await supabase.from("don_dat_lich").select("*");
+    setDanhSachDon(data || []);
+  }
+  layDon();
+}, []);
 
   async function layDanhSachTho() {
   const { data, error } = await supabase
     .from("tho")
     .select("*")
+    .eq("an_hien", true)
     .order("danh_gia_sao", { ascending: false });
   if (error) {
     console.log("Lỗi:", error);
@@ -62,6 +84,7 @@ useEffect(() => {
   >
     Đăng xuất
   </button>
+  
 ) : (
   <Link href="/login">
     <button className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4">
@@ -70,6 +93,21 @@ useEffect(() => {
   </Link>
 )}
 {daDangNhap && (
+  <Link href="/ho-so">
+    <button className="bg-teal-500 text-white px-4 py-2 rounded-lg mb-4 ml-2">
+      Hồ sơ của tôi
+    </button>
+  </Link>
+)}
+{daDangNhap && (
+  <Link href="/don-cua-toi">
+    <button className="bg-indigo-500 text-white px-4 py-2 rounded-lg mb-4 ml-2">
+      Đơn của tôi
+    </button>
+  </Link>
+)}
+  
+{laAdmin && (
   <Link href="/admin/don-dat-lich">
     <button className="bg-purple-500 text-white px-4 py-2 rounded-lg mb-4 ml-2">
       Xem đơn đặt lịch
@@ -78,46 +116,67 @@ useEffect(() => {
 )}
 
 
-      {danhSachTho.map((tho, index) => (
-  <TheTho
-    key={tho.id}
-    tho={tho}
-    index={index}
-    dangMo={viTriDangMo === index}
-    dangSua={viTriDangSua === index}
-    ngheSua={ngheSua}
-    daDangNhap={daDangNhap}
-    onXemChiTiet={() => setViTriDangMo(viTriDangMo === index ? null : index)}
-    onBatDauSua={() => {
-      setViTriDangSua(index);
-      setNgheSua(tho.nghe);
-    }}
-    onDoiNgheSua={(giaTri) => setNgheSua(giaTri)}
-    onLuuSua={async () => {
-      await supabase.from("tho").update({ nghe: ngheSua }).eq("id", tho.id);
-      setViTriDangSua(null);
-      layDanhSachTho();
-    }}
-    onXoa={async () => {
-      const xacNhan = confirm("Bạn có chắc muốn xóa thợ này?");
-      if (xacNhan) {
-        await supabase.from("tho").delete().eq("id", tho.id);
+     {danhSachTho.map((tho, index) => {
+ const dangLamViec = danhSachDon.some((don) => {
+  if (don.tho_id !== tho.id || don.trang_thai !== "Đã xác nhận") return false;
+  const gioHen = new Date(don.gio_hen);
+  const bayGio = new Date();
+  const chenhLechGio = Math.abs(gioHen.getTime() - bayGio.getTime()) / (1000 * 60 * 60);
+  return chenhLechGio < 2;
+});
+
+  return (
+    <TheTho
+      key={tho.id}
+      tho={tho}
+      dangLamViec={dangLamViec}
+      dangNghi={tho.dang_nghi}
+      index={index}
+      dangMo={viTriDangMo === index}
+      dangSua={viTriDangSua === index}
+      ngheSua={ngheSua}
+      daDangNhap={laAdmin}
+      onXemChiTiet={() => setViTriDangMo(viTriDangMo === index ? null : index)}
+      onBatDauSua={() => {
+        setViTriDangSua(index);
+        setNgheSua(tho.nghe);
+      }}
+      onDoiNgheSua={(giaTri) => setNgheSua(giaTri)}
+      onLuuSua={async () => {
+        await supabase.from("tho").update({ nghe: ngheSua }).eq("id", tho.id);
+        setViTriDangSua(null);
         layDanhSachTho();
-      }
-    }}
-    dangDatLich={viTriDatLich === index}
-tenKhach={tenKhach}
-soDienThoai={soDienThoai}
-onMoDatLich={() => setViTriDatLich(index)}
-onDoiTenKhach={(giaTri) => setTenKhach(giaTri)}
-onDoiSoDienThoai={(giaTri) => setSoDienThoai(giaTri)}
-onXacNhanDatLich={async () => {
+      }}
+      onXoa={async () => {
+        const xacNhan = confirm("Bạn có chắc muốn ẩn thợ này?");
+        if (xacNhan) {
+          await supabase.from("tho").update({ an_hien: false }).eq("id", tho.id);
+          layDanhSachTho();
+        }
+      }}
+      dangDatLich={viTriDatLich === index}
+      tenKhach={tenKhach}
+      soDienThoai={soDienThoai}
+      ngayHen={ngayHen}
+gioHen={gioHen}
+diaChiHen={diaChiHen}
+ghiChu={ghiChu}
+      onMoDatLich={() => setViTriDatLich(index)}
+      onDoiTenKhach={(giaTri) => setTenKhach(giaTri)}
+      onDoiSoDienThoai={(giaTri) => setSoDienThoai(giaTri)}
+      onDoiNgayHen={(giaTri) => setNgayHen(giaTri)}
+onDoiGioHen={(giaTri) => setGioHen(giaTri)}
+onDoiDiaChiHen={(giaTri) => setDiaChiHen(giaTri)}
+onDoiGhiChu={(giaTri) => setGhiChu(giaTri)}
+      onXacNhanDatLich={async () => {
   const { error } = await supabase.from("don_dat_lich").insert([
     {
       ten_khach: tenKhach,
       so_dien_thoai: soDienThoai,
       tho_id: tho.id,
-      gio_hen: new Date().toISOString(),
+      gio_hen: `${ngayHen}T${gioHen}:00`,
+      dia_chi_hen: diaChiHen,
+      ghi_chu: ghiChu,
     },
   ]);
   if (error) {
@@ -127,18 +186,23 @@ onXacNhanDatLich={async () => {
     setViTriDatLich(null);
     setTenKhach("");
     setSoDienThoai("");
+    setNgayHen("");
+    setGioHen("");
+    setDiaChiHen("");
+    setGhiChu("");
   }
 }}
-onHuyDatLich={() => {
-  setViTriDatLich(null);
-  setTenKhach("");
-  setSoDienThoai("");
-}}
-  />
-))}
+      onHuyDatLich={() => {
+        setViTriDatLich(null);
+        setTenKhach("");
+        setSoDienThoai("");
+      }}
+    />
+  );
+})}
 </div>
           
-  {daDangNhap && (    
+  {laAdmin && (    
   <FormThemTho
   tenMoi={tenMoi}
   ngheMoi={ngheMoi}

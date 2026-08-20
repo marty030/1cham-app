@@ -25,7 +25,8 @@ export default function Login() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="border border-gray-300 rounded-xl p-6 w-80 bg-white">
-        <h1 className="text-xl font-bold mb-4">Đăng nhập Admin</h1>
+        <h1 className="text-xl font-bold mb-4">Đăng nhập
+        </h1>
         <input
           type="email"
           placeholder="Email"
