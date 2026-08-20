@@ -88,6 +88,12 @@ export default function DangKy() {
         >
           Đăng ký
         </button>
+        <p className="text-sm text-center mt-3">
+  Đã có tài khoản?{" "}
+  <a href="/login" className="text-blue-500 underline">
+    Đăng nhập
+  </a>
+</p>
       </div>
     </div>
   );

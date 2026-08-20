@@ -86,11 +86,18 @@ useEffect(() => {
   </button>
   
 ) : (
-  <Link href="/login">
-    <button className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4">
-      Đăng nhập
-    </button>
-  </Link>
+  <>
+    <Link href="/login">
+      <button className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4">
+        Đăng nhập
+      </button>
+    </Link>
+    <Link href="/dang-ky">
+      <button className="bg-green-600 text-white px-4 py-2 rounded-lg mb-4 ml-2">
+        Đăng ký làm thợ
+      </button>
+    </Link>
+  </>
 )}
 {daDangNhap && (
   <Link href="/ho-so">
