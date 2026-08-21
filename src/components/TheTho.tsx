@@ -1,10 +1,11 @@
 "use client";
+import { useRouter } from "next/navigation";
 import FormDatLich from "./FormDatLich";
 
 type TheThoProps = {
   tho: any;
   index: number;
-  dangMo: boolean; // Bạn có thể xóa prop này ở file page.tsx sau này
+  dangMo: boolean;
   dangSua: boolean;
   ngheSua: string;
   daDangNhap: boolean;
@@ -17,7 +18,7 @@ type TheThoProps = {
   gioHen: string;
   diaChiHen: string;
   ghiChu: string;
-  onXemChiTiet: () => void; // Có thể xóa prop này ở file page.tsx
+  onXemChiTiet: () => void;
   onBatDauSua: () => void;
   onDoiNgheSua: (giaTri: string) => void;
   onLuuSua: () => void;
@@ -61,13 +62,16 @@ export default function TheTho({
   onXacNhanDatLich,
   onHuyDatLich,
 }: TheThoProps) {
-  // Trích xuất chữ cái đầu của tên làm Avatar
+  const router = useRouter();
   const chuCaiDau = tho.ten ? tho.ten.charAt(0).toUpperCase() : "T";
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col w-full h-full">
+    <div
+      className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col w-full h-full cursor-pointer"
+      onClick={() => router.push(`/tho/${tho.id}`)}
+    >
       
-      {/* 1. HEADER: Avatar, Tên và Trạng thái */}
+      {/* 1. HEADER */}
       <div className="flex items-start gap-4 mb-4">
         <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold shrink-0">
           {chuCaiDau}
@@ -91,7 +95,7 @@ export default function TheTho({
         </div>
       </div>
 
-      {/* 2. BODY: Thông tin nghề nghiệp, Đánh giá và ĐỊA CHỈ */}
+      {/* 2. BODY */}
       <div className="flex flex-col gap-2 mb-4 flex-1 text-sm">
         <p className="text-gray-700 font-medium">{tho.nghe}</p>
         
@@ -103,7 +107,6 @@ export default function TheTho({
           <p className="text-gray-400 italic">Thợ mới — chưa có đánh giá</p>
         )}
 
-        {/* Địa chỉ luôn hiển thị rõ ràng */}
         <div className="mt-2 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-600 text-sm flex items-start gap-2">
           <span className="shrink-0 text-gray-400">📍</span>
           <span className="line-clamp-2 leading-relaxed">{tho.dia_chi}</span>
@@ -112,7 +115,10 @@ export default function TheTho({
 
       {/* 3. KHU VỰC CHỈNH SỬA CHO ADMIN */}
       {dangSua && (
-        <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-100 flex flex-col gap-2">
+        <div
+          className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-100 flex flex-col gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
           <input
             type="text"
             value={ngheSua}
@@ -137,11 +143,14 @@ export default function TheTho({
         </div>
       )}
 
-      {/* 4. FOOTER: Nhóm nút hành động chính của khách (Căn đáy) */}
+      {/* 4. FOOTER */}
       <div className="flex gap-2 mt-auto pt-2">
         <button
           className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
-          onClick={onMoDatLich}
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoDatLich();
+          }}
         >
           📅 Đặt lịch
         </button>
@@ -149,7 +158,10 @@ export default function TheTho({
         {!dangNghi && !dangLamViec && (
           <button
             className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
-            onClick={() => alert("Đang gọi thợ... (demo)\nSố điện thoại: 0987xxxxxx")}
+            onClick={(e) => {
+              e.stopPropagation();
+              alert("Đang gọi thợ... (demo)\nSố điện thoại: 0987xxxxxx");
+            }}
           >
             📞 Gọi ngay
           </button>
@@ -163,13 +175,19 @@ export default function TheTho({
           <div className="flex gap-2">
             <button
               className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-md text-xs font-medium transition"
-              onClick={onBatDauSua}
+              onClick={(e) => {
+                e.stopPropagation();
+                onBatDauSua();
+              }}
             >
               ✏️ Sửa
             </button>
             <button
               className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-md text-xs font-medium transition"
-              onClick={onXoa}
+              onClick={(e) => {
+                e.stopPropagation();
+                onXoa();
+              }}
             >
               🗑️ Ẩn/Xóa
             </button>
@@ -177,24 +195,26 @@ export default function TheTho({
         </div>
       )}
 
-      {/* COMPONENT FORM ĐẶT LỊCH (Đã là Popup) */}
-      <FormDatLich
-        hienForm={dangDatLich}
-        tenKhach={tenKhach}
-        soDienThoai={soDienThoai}
-        ngayHen={ngayHen}
-        gioHen={gioHen}
-        diaChiHen={diaChiHen}
-        ghiChu={ghiChu}
-        onDoiTenKhach={onDoiTenKhach}
-        onDoiSoDienThoai={onDoiSoDienThoai}
-        onDoiNgayHen={onDoiNgayHen}
-        onDoiGioHen={onDoiGioHen}
-        onDoiDiaChiHen={onDoiDiaChiHen}
-        onDoiGhiChu={onDoiGhiChu}
-        onXacNhan={onXacNhanDatLich}
-        onHuy={onHuyDatLich}
-      />
+      {/* FORM ĐẶT LỊCH (Popup) */}
+      <div onClick={(e) => e.stopPropagation()}>
+        <FormDatLich
+          hienForm={dangDatLich}
+          tenKhach={tenKhach}
+          soDienThoai={soDienThoai}
+          ngayHen={ngayHen}
+          gioHen={gioHen}
+          diaChiHen={diaChiHen}
+          ghiChu={ghiChu}
+          onDoiTenKhach={onDoiTenKhach}
+          onDoiSoDienThoai={onDoiSoDienThoai}
+          onDoiNgayHen={onDoiNgayHen}
+          onDoiGioHen={onDoiGioHen}
+          onDoiDiaChiHen={onDoiDiaChiHen}
+          onDoiGhiChu={onDoiGhiChu}
+          onXacNhan={onXacNhanDatLich}
+          onHuy={onHuyDatLich}
+        />
+      </div>
     </div>
   );
 }
