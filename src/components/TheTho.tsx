@@ -18,6 +18,7 @@ type TheThoProps = {
   gioHen: string;
   diaChiHen: string;
   ghiChu: string;
+  khoangCach: number | null;
   onXemChiTiet: () => void;
   onBatDauSua: () => void;
   onDoiNgheSua: (giaTri: string) => void;
@@ -48,6 +49,7 @@ export default function TheTho({
   gioHen,
   diaChiHen,
   ghiChu,
+  khoangCach,
   onBatDauSua,
   onDoiNgheSua,
   onLuuSua,
@@ -107,6 +109,12 @@ export default function TheTho({
           <p className="text-gray-400 italic">Thợ mới — chưa có đánh giá</p>
         )}
 
+        {khoangCach !== null && (
+          <p className="text-xs text-blue-500 font-medium">
+            📍 Cách bạn {khoangCach.toFixed(1)} km
+          </p>
+        )}
+
         <div className="mt-2 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-600 text-sm flex items-start gap-2">
           <span className="shrink-0 text-gray-400">📍</span>
           <span className="line-clamp-2 leading-relaxed">{tho.dia_chi}</span>
@@ -155,6 +163,17 @@ export default function TheTho({
           📅 Đặt lịch
         </button>
         
+        {/* NÚT CHAT THÊM MỚI Ở ĐÂY */}
+        <button
+          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/chat/${tho.id}`);
+          }}
+        >
+          💬 Chat
+        </button>
+
         {!dangNghi && !dangLamViec && (
           <button
             className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
@@ -163,7 +182,7 @@ export default function TheTho({
               alert("Đang gọi thợ... (demo)\nSố điện thoại: 0987xxxxxx");
             }}
           >
-            📞 Gọi ngay
+            📞 Gọi
           </button>
         )}
       </div>

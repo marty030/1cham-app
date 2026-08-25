@@ -1,159 +1,142 @@
-"use client";
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { supabase } from "../../../lib/supabase";
-import FormDatLich from "../../../components/FormDatLich";
 
-function tinhCapDo(soDon: number) {
-  if (soDon >= 300) return { cap: 5, ten: "Bậc thầy", tiepTheo: null };
-  if (soDon >= 150) return { cap: 4, ten: "Chuyên gia", tiepTheo: 300 };
-  if (soDon >= 50) return { cap: 3, ten: "Thành thạo", tiepTheo: 150 };
-  if (soDon >= 10) return { cap: 2, ten: "Có kinh nghiệm", tiepTheo: 50 };
-  return { cap: 1, ten: "Mới bắt đầu", tiepTheo: 10 };
-}
-
-export default function ChiTietTho() {
+export default function ThoPanelPage() {
   const params = useParams();
-  const [tho, setTho] = useState<any>(null);
-  const [dangTai, setDangTai] = useState(true);
+  const thoId = params?.thoId as string;
 
-  const [hienFormDatLich, setHienFormDatLich] = useState(false);
-  const [tenKhach, setTenKhach] = useState("");
-  const [soDienThoai, setSoDienThoai] = useState("");
-  const [ngayHen, setNgayHen] = useState("");
-  const [gioHen, setGioHen] = useState("");
-  const [diaChiHen, setDiaChiHen] = useState("");
-  const [ghiChu, setGhiChu] = useState("");
+  const [tinNhanList, setTinNhanList] = useState<any[]>([]);
+  const [noiDung, setNoiDung] = useState('');
 
+  // 1. Fetch danh sách tin nhắn ban đầu
   useEffect(() => {
-    async function layTho() {
+    if (!thoId) return;
+
+    const fetchTinNhan = async () => {
       const { data, error } = await supabase
-        .from("tho")
-        .select("*")
-        .eq("id", params.id)
-        .single();
-      if (error) {
-        console.log("Lỗi:", error);
-      } else {
-        setTho(data);
+        .from('tin_nhan')
+        .select('*')
+        .eq('tho_id', thoId)
+        .order('created_at', { ascending: true });
+
+      if (!error && data) {
+        setTinNhanList(data);
       }
-      setDangTai(false);
-    }
-    layTho();
-  }, [params.id]);
+    };
 
-  async function xacNhanDatLich() {
-    const { error } = await supabase.from("don_dat_lich").insert([
-      {
-        ten_khach: tenKhach,
-        so_dien_thoai: soDienThoai,
-        tho_id: tho.id,
-        gio_hen: `${ngayHen}T${gioHen}:00`,
-        dia_chi_hen: diaChiHen,
-        ghi_chu: ghiChu,
-      },
-    ]);
+    fetchTinNhan();
+  }, [thoId]);
+
+  // 2. Lắng nghe Realtime tin nhắn mới
+  useEffect(() => {
+    if (!thoId) return;
+
+    const channel = supabase
+      .channel(`tho-panel-${thoId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tin_nhan',
+          filter: `tho_id=eq.${thoId}`,
+        },
+        (payload: any) => {
+          if (payload.new) {
+            setTinNhanList((prev) => {
+              const isExist = prev.some((item) => item.id === payload.new.id);
+              if (isExist) return prev;
+              return [...prev, payload.new];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [thoId]);
+
+  // 3. Hàm gửi tin nhắn phía Thợ (Đánh dấu sender_type là 'tho')
+  const handlePhanHoi = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noiDung.trim()) return;
+
+    const currentText = noiDung;
+    setNoiDung('');
+
+    const { data, error } = await supabase
+      .from('tin_nhan')
+      .insert([
+        {
+          tho_id: thoId,
+          noi_dung: currentText,
+          sender_type: 'tho',
+        },
+      ])
+      .select();
+
     if (error) {
-      alert("Lỗi đặt lịch: " + error.message);
-    } else {
-      alert("Đặt lịch thành công! Thợ sẽ liên hệ bạn sớm.");
-      setHienFormDatLich(false);
-      setTenKhach("");
-      setSoDienThoai("");
-      setNgayHen("");
-      setGioHen("");
-      setDiaChiHen("");
-      setGhiChu("");
+      alert("Lỗi gửi: " + error.message);
+      setNoiDung(currentText);
+    } else if (data && data.length > 0) {
+      setTinNhanList((prev) => [...prev, data[0]]);
     }
-  }
-
-  if (dangTai) return <p className="p-8">Đang tải...</p>;
-  if (!tho) return <p className="p-8">Không tìm thấy thợ này.</p>;
-
-  const soDon = tho.so_don_hoan_thanh || 0;
-  const thongTinCap = tinhCapDo(soDon);
-  const phanTramLenCap = thongTinCap.tiepTheo
-    ? Math.min(100, (soDon / thongTinCap.tiepTheo) * 100)
-    : 100;
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl font-bold shrink-0">
-            {tho.ten ? tho.ten.charAt(0).toUpperCase() : "T"}
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-gray-800">{tho.ten}</h1>
-            <p className="text-sm text-gray-500">{tho.nghe} · {tho.dia_chi}</p>
-            {tho.dang_nghi ? (
-              <span className="text-red-500 text-sm">🔴 Đang nghỉ</span>
-            ) : (
-              <span className="text-emerald-500 text-sm">🟢 Có thể nhận đơn ngay</span>
-            )}
-          </div>
-        </div>
+    <div className="flex flex-col h-[calc(100vh-100px)] max-w-xl mx-auto p-4">
+      <h1 className="text-lg font-bold mb-2 text-center text-gray-800">
+        Panel Trả Lời Tin Nhắn (Dành Cho Thợ)
+      </h1>
 
-        <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-3 py-1 text-sm font-medium mb-4">
-          ⭐ Cấp {thongTinCap.cap} · {thongTinCap.ten}
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold text-gray-800">{soDon}</p>
-            <p className="text-xs text-gray-500">đơn hoàn thành</p>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold text-gray-800">{tho.danh_gia_sao ?? "—"}</p>
-            <p className="text-xs text-gray-500">⭐ đánh giá</p>
-          </div>
-        </div>
-
-        {thongTinCap.tiepTheo && (
-          <div className="mb-4">
-            <div className="flex justify-between text-sm text-gray-600 mb-1">
-              <span>Cấp {thongTinCap.cap} · {thongTinCap.ten}</span>
-              <span>{soDon} / {thongTinCap.tiepTheo} đơn để lên Cấp {thongTinCap.cap + 1}</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+      {/* Khung hiển thị danh sách tin nhắn */}
+      <div className="flex-1 overflow-y-auto space-y-3 p-4 border rounded-t-xl bg-white shadow-inner">
+        {tinNhanList.length === 0 ? (
+          <div className="text-center text-gray-400 mt-10">Chưa có tin nhắn nào.</div>
+        ) : (
+          tinNhanList.map((msg, index) => {
+            const isTho = msg.sender_type === 'tho';
+            return (
               <div
-                className="bg-amber-500 h-2 rounded-full transition-all"
-                style={{ width: `${phanTramLenCap}%` }}
-              ></div>
-            </div>
-          </div>
+                key={msg.id || index}
+                className={`flex ${isTho ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`p-3 rounded-xl max-w-[80%] text-sm shadow-sm ${
+                    isTho
+                      ? 'bg-green-600 text-white rounded-br-none'
+                      : 'bg-gray-200 text-black rounded-bl-none'
+                  }`}
+                >
+                  {msg.noi_dung}
+                </div>
+              </div>
+            );
+          })
         )}
-
-        <p className="text-xs text-gray-400 italic mb-4">
-          * Hệ thống huy hiệu và chỉ số chi tiết đang được phát triển
-        </p>
-
-        <button
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition"
-          onClick={() => setHienFormDatLich(true)}
-        >
-          📅 Đặt lịch với {tho.ten}
-        </button>
-
-        <FormDatLich
-          hienForm={hienFormDatLich}
-          tenKhach={tenKhach}
-          soDienThoai={soDienThoai}
-          ngayHen={ngayHen}
-          gioHen={gioHen}
-          diaChiHen={diaChiHen}
-          ghiChu={ghiChu}
-          onDoiTenKhach={setTenKhach}
-          onDoiSoDienThoai={setSoDienThoai}
-          onDoiNgayHen={setNgayHen}
-          onDoiGioHen={setGioHen}
-          onDoiDiaChiHen={setDiaChiHen}
-          onDoiGhiChu={setGhiChu}
-          onXacNhan={xacNhanDatLich}
-          onHuy={() => setHienFormDatLich(false)}
-        />
       </div>
+
+      {/* Form trả lời của Thợ */}
+      <form onSubmit={handlePhanHoi} className="p-3 bg-gray-100 border border-t-0 rounded-b-xl flex gap-2">
+        <input
+          type="text"
+          value={noiDung}
+          onChange={(e) => setNoiDung(e.target.value)}
+          placeholder="Thợ trả lời..."
+          className="flex-1 border p-2 rounded-lg text-black bg-white outline-none focus:ring-2 focus:ring-green-500"
+        />
+        <button
+          type="submit"
+          className="bg-green-600 text-white font-medium px-5 py-2 rounded-lg hover:bg-green-700 transition-colors"
+        >
+          Trả lời
+        </button>
+      </form>
     </div>
   );
 }

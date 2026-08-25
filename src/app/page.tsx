@@ -4,77 +4,117 @@ import { supabase } from "../lib/supabase";
 import TheTho from "../components/TheTho";
 import FormThemTho from "../components/FormThemTho";
 import Link from "next/link";
+
+function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export default function Home() {
   const [viTriDangMo, setViTriDangMo] = useState<number | null>(null);
   const [daDangNhap, setDaDangNhap] = useState(false);
   const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
-const [tenKhach, setTenKhach] = useState("");
-const [soDienThoai, setSoDienThoai] = useState("");
-const [ngayHen, setNgayHen] = useState("");
-const [gioHen, setGioHen] = useState("");
-const [diaChiHen, setDiaChiHen] = useState("");
-const [ghiChu, setGhiChu] = useState("");
-const [laAdmin, setLaAdmin] = useState(false);
-
-useEffect(() => {
-  async function kiemTraDangNhap() {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      setDaDangNhap(true);
-      const role = data.session.user.user_metadata?.role;
-      setLaAdmin(role === "admin");
-    } else {
-      setDaDangNhap(false);
-      setLaAdmin(false);
-    }
-  }
-  kiemTraDangNhap();
-}, []);
+  const [tenKhach, setTenKhach] = useState("");
+  const [soDienThoai, setSoDienThoai] = useState("");
+  const [ngayHen, setNgayHen] = useState("");
+  const [gioHen, setGioHen] = useState("");
+  const [diaChiHen, setDiaChiHen] = useState("");
+  const [ghiChu, setGhiChu] = useState("");
+  const [laAdmin, setLaAdmin] = useState(false);
+  const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
   
+  // BỔ SUNG: State lưu user_id của tài khoản đang đăng nhập
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (viTri) => {
+        setViTriKhach({
+          lat: viTri.coords.latitude,
+          lng: viTri.coords.longitude,
+        });
+      },
+      (loi) => {
+        console.log("Không lấy được vị trí:", loi);
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    async function kiemTraDangNhap() {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setDaDangNhap(true);
+        // BỔ SUNG: Lưu user_id của tài khoản hiện tại
+        setCurrentUserId(data.session.user.id);
+        const role = data.session.user.user_metadata?.role;
+        setLaAdmin(role === "admin");
+      } else {
+        setDaDangNhap(false);
+        setLaAdmin(false);
+        setCurrentUserId(null);
+      }
+    }
+    kiemTraDangNhap();
+  }, []);
+
   const [danhSachTho, setDanhSachTho] = useState<any[]>([]);
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
 
-useEffect(() => {
-  async function layDon() {
-    const { data } = await supabase.from("don_dat_lich").select("*");
-    setDanhSachDon(data || []);
-  }
-  layDon();
-}, []);
+  useEffect(() => {
+    async function layDon() {
+      const { data } = await supabase.from("don_dat_lich").select("*");
+      setDanhSachDon(data || []);
+    }
+    layDon();
+  }, []);
 
   async function layDanhSachTho() {
-  const { data, error } = await supabase
-    .from("tho")
-    .select("*")
-    .eq("an_hien", true)
-    .order("danh_gia_sao", { ascending: false });
-  if (error) {
-    console.log("Lỗi:", error);
-  } else {
-    setDanhSachTho(data);
+    const { data, error } = await supabase
+      .from("tho")
+      .select("*")
+      .eq("an_hien", true)
+      .order("danh_gia_sao", { ascending: false });
+    if (error) {
+      console.log("Lỗi:", error);
+    } else {
+      setDanhSachTho(data);
+    }
   }
-}
 
-
-  
   useEffect(() => {
-  layDanhSachTho();
-}, []);
+    layDanhSachTho();
+  }, []);
 
   const [tenMoi, setTenMoi] = useState("");
-
   const [ngheMoi, setNgheMoi] = useState("");
-
   const [diaChiMoi, setDiaChiMoi] = useState("");
   const [viTriDangSua, setViTriDangSua] = useState<number | null>(null);
   const [ngheSua, setNgheSua] = useState("");
- return (
+
+  // BỔ SUNG LOGIC: Lọc thêm điều kiện tho.user_id !== currentUserId
+  const thoTrongBanKinh = danhSachTho.filter((tho) => {
+    // Nếu thợ này có user_id trùng với user đang đăng nhập thì ẨN ĐI
+    if (currentUserId && tho.user_id === currentUserId) return false;
+
+    if (!viTriKhach || !tho.vi_do || !tho.kinh_do) return true;
+    const khoangCach = tinhKhoangCach(viTriKhach.lat, viTriKhach.lng, tho.vi_do, tho.kinh_do);
+    return khoangCach <= 20;
+  });
+
+  return (
     <div className="flex flex-col items-center min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
       
-      {/* 1. TIÊU ĐỀ */}
       <h1 className="text-3xl md:text-4xl font-bold mb-8 text-gray-800">Thợ gần bạn</h1>
 
-      {/* 2. KHU VỰC NÚT ĐIỀU HƯỚNG (Tách riêng biệt) */}
       <div className="flex flex-wrap justify-center gap-3 w-full max-w-4xl mb-10">
         {daDangNhap ? (
           <button
@@ -125,9 +165,8 @@ useEffect(() => {
         )}
       </div>
 
-      {/* 3. DANH SÁCH THỢ (Sử dụng CSS Grid cho Responsive) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full max-w-7xl">
-        {danhSachTho.map((tho, index) => {
+        {thoTrongBanKinh.map((tho, index) => {
           const dangLamViec = danhSachDon.some((don) => {
             if (don.tho_id !== tho.id || don.trang_thai !== "Đã xác nhận")
               return false;
@@ -138,12 +177,18 @@ useEffect(() => {
             return chenhLechGio < 2;
           });
 
+          const khoangCach =
+            viTriKhach && tho.vi_do && tho.kinh_do
+              ? tinhKhoangCach(viTriKhach.lat, viTriKhach.lng, tho.vi_do, tho.kinh_do)
+              : null;
+
           return (
             <TheTho
               key={tho.id}
               tho={tho}
               dangLamViec={dangLamViec}
               dangNghi={tho.dang_nghi}
+              khoangCach={khoangCach}
               index={index}
               dangMo={viTriDangMo === index}
               dangSua={viTriDangSua === index}
@@ -215,7 +260,6 @@ useEffect(() => {
         })}
       </div>
 
-      {/* 4. FORM THÊM THỢ CHO ADMIN */}
       {laAdmin && (
         <div className="mt-12 w-full max-w-2xl bg-white p-6 rounded-xl shadow-md border border-gray-200">
           <h2 className="text-xl font-bold mb-4 text-center text-gray-700">Khu vực Admin: Thêm thợ mới</h2>

@@ -1,4 +1,5 @@
 "use client";
+import ChonDiaChi from "./ChonDiaChi";
 
 type FormDatLichProps = {
   hienForm: boolean;
@@ -114,15 +115,9 @@ export default function FormDatLich({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Địa chỉ sửa chữa <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              placeholder="Số nhà, đường, phường/xã..."
-              value={diaChiHen}
-              onChange={(e) => onDoiDiaChiHen(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-            />
-          </div>
+  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Địa chỉ sửa chữa <span className="text-red-500">*</span></label>
+  <ChonDiaChi onDoiDiaChi={onDoiDiaChiHen} />
+</div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mô tả sự cố-Ghi chú đến thợ (không bắt buộc)</label>
