@@ -1,31 +1,63 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 type TinNhan = {
   id: number;
   created_at: string;
   tho_id: number;
-  sender_type: string; // Đồng bộ tên cột theo Database
+  khach_id: number;
+  sender_type: string;
   noi_dung: string;
 };
 
 export default function ChatPage() {
   const params = useParams();
+  const router = useRouter();
   const thoId = params.id as string;
 
+  const [khachId, setKhachId] = useState<number | null>(null);
+  const [dangKiemTra, setDangKiemTra] = useState(true);
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
   const [noiDungMoi, setNoiDungMoi] = useState("");
 
-  // 1. Tải danh sách tin nhắn ban đầu
+  // 0. Auth-guard: bắt đăng nhập + xác nhận đây là tài khoản khách
+  useEffect(() => {
+    async function kiemTraDangNhap() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        router.push("/login");
+        return;
+      }
+
+      const { data: hoSoKhach } = await supabase
+        .from("khach")
+        .select("id")
+        .eq("user_id", sessionData.session.user.id)
+        .single();
+
+      if (!hoSoKhach) {
+        alert("Chỉ tài khoản khách hàng mới được chat tại đây.");
+        router.push("/");
+        return;
+      }
+
+      setKhachId(hoSoKhach.id);
+      setDangKiemTra(false);
+    }
+    kiemTraDangNhap();
+  }, [router]);
+
+  // 1. Tải tin nhắn — chỉ của CẶP (tho_id, khach_id) này
   const taiTinNhan = async () => {
-    if (!thoId) return;
+    if (!thoId || !khachId) return;
 
     const { data, error } = await supabase
       .from("tin_nhan")
       .select("*")
       .eq("tho_id", thoId)
+      .eq("khach_id", khachId)
       .order("created_at", { ascending: true });
 
     if (data) setDanhSachTinNhan(data);
@@ -34,24 +66,25 @@ export default function ChatPage() {
 
   useEffect(() => {
     taiTinNhan();
-  }, [thoId]);
+  }, [thoId, khachId]);
 
-  // 2. Lắng hệ Realtime tin nhắn mới từ Thợ trả lời
+  // 2. Realtime — lọc theo tho_id, rồi tự lọc thêm khach_id ở client
   useEffect(() => {
-    if (!thoId) return;
+    if (!thoId || !khachId) return;
 
     const channel = supabase
-      .channel(`chat-room-${thoId}`)
+      .channel(`chat-room-${thoId}-${khachId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'tin_nhan',
+          event: "INSERT",
+          schema: "public",
+          table: "tin_nhan",
           filter: `tho_id=eq.${thoId}`,
         },
         (payload: { new: TinNhan }) => {
-          if (payload.new) {
+          // Chỉ nhận tin nhắn đúng cuộc trò chuyện của khách này với thợ này
+          if (payload.new && payload.new.khach_id === khachId) {
             setDanhSachTinNhan((prev) => {
               const isExist = prev.some((item) => item.id === payload.new.id);
               if (isExist) return prev;
@@ -65,22 +98,26 @@ export default function ChatPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [thoId]);
+  }, [thoId, khachId]);
 
-  // 3. Khách gõ tin nhắn gửi đi
+  // 3. Gửi tin nhắn — luôn kèm khach_id
   const guiTinNhan = async () => {
-    if (!noiDungMoi.trim()) return;
+    if (!noiDungMoi.trim() || !khachId) return;
 
     const currentText = noiDungMoi;
     setNoiDungMoi("");
 
-    const { data, error } = await supabase.from("tin_nhan").insert([
-      {
-        tho_id: parseInt(thoId),
-        sender_type: "khach", // Đánh dấu tin nhắn do KHÁCH gửi
-        noi_dung: currentText,
-      },
-    ]).select();
+    const { data, error } = await supabase
+      .from("tin_nhan")
+      .insert([
+        {
+          tho_id: parseInt(thoId),
+          khach_id: khachId,
+          sender_type: "khach",
+          noi_dung: currentText,
+        },
+      ])
+      .select();
 
     if (error) {
       console.error("Lỗi gửi tin nhắn:", error);
@@ -90,9 +127,16 @@ export default function ChatPage() {
     }
   };
 
+  if (dangKiemTra) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto border h-screen flex flex-col bg-slate-100">
-      {/* Header cho Khách */}
       <div className="p-4 bg-blue-600 text-white font-bold flex items-center justify-between shadow">
         <div>
           <h1 className="text-base">💬 Trò chuyện với Thợ #{thoId}</h1>
@@ -100,7 +144,6 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Màn hình danh sách tin nhắn */}
       <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
         {danhSachTinNhan.length === 0 ? (
           <p className="text-center text-gray-400 text-sm mt-10">
@@ -112,8 +155,8 @@ export default function ChatPage() {
               key={msg.id}
               className={`p-3 rounded-xl max-w-[80%] ${
                 msg.sender_type === "khach"
-                  ? "bg-blue-600 text-white self-end rounded-br-none" // Tin Khách gửi: Bên PHẢI (Màu xanh dương)
-                  : "bg-white text-gray-800 self-start rounded-bl-none shadow-sm" // Tin Thợ gửi: Bên TRÁI (Màu trắng/xám)
+                  ? "bg-blue-600 text-white self-end rounded-br-none"
+                  : "bg-white text-gray-800 self-start rounded-bl-none shadow-sm"
               }`}
             >
               <p className="text-[10px] opacity-75 mb-1 font-semibold">
@@ -125,7 +168,6 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Ô gõ tin nhắn */}
       <div className="p-3 bg-white border-t flex gap-2">
         <input
           type="text"
