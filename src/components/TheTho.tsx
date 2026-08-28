@@ -162,8 +162,8 @@ export default function TheTho({
         >
           📅 Đặt lịch
         </button>
-        
-        {/* NÚT CHAT THÊM MỚI Ở ĐÂY */}
+
+        {/* NÚT CHAT */}
         <button
           className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
           onClick={(e) => {
@@ -174,15 +174,21 @@ export default function TheTho({
           💬 Chat
         </button>
 
+        {/* NÚT GỌI — ĐÃ ĐỔI SANG ZALO THẬT */}
         {!dangNghi && !dangLamViec && (
           <button
             className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
             onClick={(e) => {
               e.stopPropagation();
-              alert("Đang gọi thợ... (demo)\nSố điện thoại: 0987xxxxxx");
+              if (!tho.so_dien_thoai) {
+                alert("Thợ này chưa cập nhật số điện thoại liên hệ.");
+                return;
+              }
+              const soSach = tho.so_dien_thoai.replace(/\D/g, "");
+              window.open(`https://zalo.me/${soSach}`, "_blank");
             }}
           >
-            📞 Gọi
+            💬 Zalo
           </button>
         )}
       </div>

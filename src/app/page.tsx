@@ -30,8 +30,6 @@ export default function Home() {
   const [ghiChu, setGhiChu] = useState("");
   const [laAdmin, setLaAdmin] = useState(false);
   const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
-  
-  // BỔ SUNG: State lưu user_id của tài khoản đang đăng nhập
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,7 +51,6 @@ export default function Home() {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         setDaDangNhap(true);
-        // BỔ SUNG: Lưu user_id của tài khoản hiện tại
         setCurrentUserId(data.session.user.id);
         const role = data.session.user.user_metadata?.role;
         setLaAdmin(role === "admin");
@@ -94,15 +91,36 @@ export default function Home() {
     layDanhSachTho();
   }, []);
 
+  // ====== PHẦN MỚI: Realtime — tự cập nhật khi thợ đổi vị trí ======
+  useEffect(() => {
+    const channel = supabase
+      .channel("trang-chu-vi-tri-tho")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "tho" },
+        (payload: { new: any }) => {
+          setDanhSachTho((prev) =>
+            prev.map((tho) =>
+              tho.id === payload.new.id ? { ...tho, ...payload.new } : tho
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+  // ====== HẾT PHẦN MỚI ======
+
   const [tenMoi, setTenMoi] = useState("");
   const [ngheMoi, setNgheMoi] = useState("");
   const [diaChiMoi, setDiaChiMoi] = useState("");
   const [viTriDangSua, setViTriDangSua] = useState<number | null>(null);
   const [ngheSua, setNgheSua] = useState("");
 
-  // BỔ SUNG LOGIC: Lọc thêm điều kiện tho.user_id !== currentUserId
   const thoTrongBanKinh = danhSachTho.filter((tho) => {
-    // Nếu thợ này có user_id trùng với user đang đăng nhập thì ẨN ĐI
     if (currentUserId && tho.user_id === currentUserId) return false;
 
     if (!viTriKhach || !tho.vi_do || !tho.kinh_do) return true;

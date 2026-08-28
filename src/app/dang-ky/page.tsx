@@ -9,6 +9,7 @@ export default function DangKy() {
   const [tenTho, setTenTho] = useState("");
   const [ngheTho, setNgheTho] = useState("");
   const [diaChiTho, setDiaChiTho] = useState("");
+  const [soDienThoaiTho, setSoDienThoaiTho] = useState("");
   const router = useRouter();
 
   async function xuLyDangKy() {
@@ -29,6 +30,7 @@ export default function DangKy() {
         ten: tenTho,
         nghe: ngheTho,
         dia_chi: diaChiTho,
+        so_dien_thoai: soDienThoaiTho,
         user_id: userId,
         so_don_hoan_thanh: 0,
         danh_gia_sao: 0,
@@ -80,6 +82,13 @@ export default function DangKy() {
           placeholder="Địa chỉ"
           value={diaChiTho}
           onChange={(e) => setDiaChiTho(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+        />
+        <input
+          type="tel"
+          placeholder="Số điện thoại (Zalo)"
+          value={soDienThoaiTho}
+          onChange={(e) => setSoDienThoaiTho(e.target.value)}
           className="border border-gray-300 rounded-lg px-3 py-2 mb-3 w-full"
         />
         <button

@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 
+const SDT_ADMIN = "0865455171"; // Số Zalo admin để nhận báo lỗi/khiếu nại
+
 export default function Header() {
   const router = useRouter();
   const [thoId, setThoId] = useState<number | null>(null);
@@ -29,6 +31,10 @@ export default function Header() {
     kiemTraQuyenTho();
   }, []);
 
+  function moZaloHoTro() {
+    window.open(`https://zalo.me/${SDT_ADMIN}`, "_blank");
+  }
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-50">
       {/* Click logo về trang chủ */}
@@ -49,6 +55,14 @@ export default function Header() {
             📥 Hộp thư Thợ
           </button>
         )}
+
+        {/* Nút liên hệ admin khi có sự cố — luôn hiển thị, mọi vai trò */}
+        <button
+          onClick={moZaloHoTro}
+          className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition"
+        >
+          🆘 Hỗ trợ
+        </button>
       </div>
     </header>
   );
