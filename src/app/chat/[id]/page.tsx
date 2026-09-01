@@ -31,18 +31,20 @@ export default function ChatPage() {
         return;
       }
 
-      const { data: hoSoKhach } = await supabase
+            const { data: hoSoKhach, error: loiKhach } = await supabase
         .from("khach")
         .select("id")
         .eq("user_id", sessionData.session.user.id)
         .single();
+
+      console.log("DEBUG — session user id:", sessionData.session.user.id);
+      console.log("DEBUG — hoSoKhach:", hoSoKhach, "| lỗi:", loiKhach);
 
       if (!hoSoKhach) {
         alert("Chỉ tài khoản khách hàng mới được chat tại đây.");
         router.push("/");
         return;
       }
-
       setKhachId(hoSoKhach.id);
       setDangKiemTra(false);
     }

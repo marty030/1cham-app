@@ -6,8 +6,12 @@ import { supabase } from "../../lib/supabase";
 export default function DonCuaToi() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
   const [dangTai, setDangTai] = useState(true);
-  const [boLoc, setBoLoc] = useState("Tất cả"); // State quản lý trạng thái lọc
+  const [boLoc, setBoLoc] = useState("Tất cả");
   const router = useRouter();
+
+  const [donDangXacNhan, setDonDangXacNhan] = useState<number | null>(null);
+  const [ngayDenDuKien, setNgayDenDuKien] = useState("");
+  const [gioDenDuKien, setGioDenDuKien] = useState("");
 
   useEffect(() => {
     async function layDon() {
@@ -45,6 +49,18 @@ export default function DonCuaToi() {
   }, []);
 
   async function doiTrangThai(idDon: number, trangThaiMoi: string) {
+    if (trangThaiMoi === "Đã xác nhận") {
+      setDonDangXacNhan(idDon);
+      setNgayDenDuKien("");
+      setGioDenDuKien("");
+      return;
+    }
+
+    if (trangThaiMoi === "Đã hoàn thành") {
+      await thoXacNhanHoanThanh(idDon);
+      return;
+    }
+
     const { error } = await supabase
       .from("don_dat_lich")
       .update({ trang_thai: trangThaiMoi })
@@ -58,7 +74,75 @@ export default function DonCuaToi() {
     }
   }
 
-  // Hàm phụ trợ để lấy màu sắc theo trạng thái
+  async function thoXacNhanHoanThanh(idDon: number) {
+    // Lấy dữ liệu mới nhất từ Supabase — khách có thể đã xác nhận qua link riêng,
+    // nên không thể tin vào state cũ trong danhSachDon (chỉ tải 1 lần lúc vào trang).
+    const { data: donMoiNhat, error: loiLayDon } = await supabase
+      .from("don_dat_lich")
+      .select("khach_xac_nhan_hoan_thanh")
+      .eq("id", idDon)
+      .single();
+
+    if (loiLayDon || !donMoiNhat) {
+      alert("Không lấy được dữ liệu đơn, thử lại.");
+      return;
+    }
+
+    const khachDaXacNhan = donMoiNhat.khach_xac_nhan_hoan_thanh === true;
+
+    const capNhat: any = { tho_xac_nhan_hoan_thanh: true };
+    if (khachDaXacNhan) {
+      capNhat.trang_thai = "Đã hoàn thành";
+    }
+
+    const { error } = await supabase
+      .from("don_dat_lich")
+      .update(capNhat)
+      .eq("id", idDon);
+
+    if (error) {
+      alert("Lỗi: " + error.message);
+    } else {
+      setDanhSachDon((truoc) =>
+        truoc.map((d) => (d.id === idDon ? { ...d, ...capNhat } : d))
+      );
+      if (!khachDaXacNhan) {
+        alert("Đã ghi nhận bạn hoàn thành. Đơn sẽ chuyển 'Đã hoàn thành' khi khách cũng xác nhận.");
+      }
+    }
+  }
+
+  function copyLinkChoKhach(idDon: number) {
+    const link = `${window.location.origin}/don/${idDon}`;
+    navigator.clipboard.writeText(link);
+    alert("Đã copy link! Gửi link này cho khách qua Zalo nhé.");
+  }
+
+  async function xacNhanKemGioDen(idDon: number) {
+    if (!ngayDenDuKien || !gioDenDuKien) {
+      alert("Vui lòng chọn đủ ngày và giờ dự kiến đến.");
+      return;
+    }
+
+    const gioDuKienDen = `${ngayDenDuKien}T${gioDenDuKien}:00`;
+
+    const { error } = await supabase
+      .from("don_dat_lich")
+      .update({ trang_thai: "Đã xác nhận", gio_du_kien_den: gioDuKienDen })
+      .eq("id", idDon);
+
+    if (error) {
+      alert("Lỗi: " + error.message);
+    } else {
+      setDanhSachDon((truoc) =>
+        truoc.map((d) =>
+          d.id === idDon ? { ...d, trang_thai: "Đã xác nhận", gio_du_kien_den: gioDuKienDen } : d
+        )
+      );
+      setDonDangXacNhan(null);
+    }
+  }
+
   const layMauTrangThai = (trangThai: string) => {
     switch (trangThai) {
       case "Chờ xác nhận":
@@ -74,7 +158,6 @@ export default function DonCuaToi() {
     }
   };
 
-  // Lọc danh sách đơn dựa theo tab đang chọn
   const danhSachHienThi = danhSachDon.filter((don) => {
     if (boLoc === "Tất cả") return true;
     return don.trang_thai === boLoc;
@@ -95,12 +178,10 @@ export default function DonCuaToi() {
           📦 Đơn đặt lịch của tôi
         </h1>
 
-        {/* --- THANH CÔNG CỤ LỌC (FILTER TABS) --- */}
         <div className="flex flex-wrap gap-2 mb-8 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
           {["Tất cả", "Chờ xác nhận", "Đã xác nhận", "Đã hoàn thành", "Đã hủy"].map((trangThaiTab) => {
-            // Đếm số lượng đơn cho từng trạng thái để hiển thị badge con số cho xịn
-            const soLuong = trangThaiTab === "Tất cả" 
-              ? danhSachDon.length 
+            const soLuong = trangThaiTab === "Tất cả"
+              ? danhSachDon.length
               : danhSachDon.filter(d => d.trang_thai === trangThaiTab).length;
 
             return (
@@ -124,7 +205,6 @@ export default function DonCuaToi() {
           })}
         </div>
 
-        {/* --- DANH SÁCH ĐƠN HÀNG --- */}
         {danhSachHienThi.length === 0 ? (
           <div className="bg-white p-12 rounded-2xl shadow-sm text-center border border-gray-100">
             <p className="text-gray-400 text-lg">Không có đơn hàng nào ở trạng thái này.</p>
@@ -136,7 +216,6 @@ export default function DonCuaToi() {
                 key={don.id}
                 className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden"
               >
-                {/* Header Card */}
                 <div className="bg-gray-50 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-500 font-medium mb-1">Khách hàng</p>
@@ -153,7 +232,6 @@ export default function DonCuaToi() {
                   </a>
                 </div>
 
-                {/* Body Card */}
                 <div className="p-5 flex-1 flex flex-col gap-3 text-sm text-gray-700">
                   <div className="flex items-start gap-2.5">
                     <span className="text-gray-400 mt-0.5">📞</span>
@@ -161,8 +239,18 @@ export default function DonCuaToi() {
                   </div>
                   <div className="flex items-start gap-2.5">
                     <span className="text-gray-400 mt-0.5">🕒</span>
-                    <span>{new Date(don.gio_hen).toLocaleString("vi-VN")}</span>
+                    <span>Khách hẹn: {new Date(don.gio_hen).toLocaleString("vi-VN")}</span>
                   </div>
+
+                  {don.gio_du_kien_den && (
+                    <div className="flex items-start gap-2.5 bg-blue-50 p-2.5 rounded-lg border border-blue-100">
+                      <span className="text-blue-500 mt-0.5">🚗</span>
+                      <span className="text-blue-700 font-medium">
+                        Bạn dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN")}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-start gap-2.5">
                     <span className="text-gray-400 mt-0.5">📍</span>
                     <span className="line-clamp-2">{don.dia_chi_hen}</span>
@@ -175,30 +263,80 @@ export default function DonCuaToi() {
                       </span>
                     </div>
                   )}
+
+                  {don.tho_xac_nhan_hoan_thanh && don.trang_thai !== "Đã hoàn thành" && (
+                    <div className="flex items-start gap-2.5 bg-purple-50 p-2.5 rounded-lg border border-purple-100">
+                      <span className="text-purple-500 mt-0.5">⏳</span>
+                      <span className="text-purple-700 font-medium">
+                        Bạn đã xác nhận hoàn thành – đang chờ khách xác nhận
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Footer Card - Dropdown Trạng thái */}
-                <div className="p-5 pt-0 mt-auto">
-                  <div className="relative">
-                    <select
-                      value={don.trang_thai}
-                      onChange={(e) => doiTrangThai(don.id, e.target.value)}
-                      className={`appearance-none w-full border font-semibold px-4 py-2.5 rounded-xl cursor-pointer outline-none transition-all focus:ring-2 pr-10 ${layMauTrangThai(
-                        don.trang_thai
-                      )}`}
-                    >
-                      <option value="Chờ xác nhận">⏳ Chờ xác nhận</option>
-                      <option value="Đã xác nhận">👍 Đã xác nhận</option>
-                      <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
-                      <option value="Đã hủy">❌ Đã hủy</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                      <svg className="w-4 h-4 fill-current opacity-70" viewBox="0 0 20 20">
-                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                      </svg>
+                {donDangXacNhan === don.id ? (
+                  <div className="p-5 pt-0 mt-auto flex flex-col gap-2 bg-blue-50 border-t border-blue-100">
+                    <p className="text-xs font-semibold text-blue-700 mt-3">Dự kiến bạn đến lúc nào?</p>
+                    <input
+                      type="date"
+                      value={ngayDenDuKien}
+                      onChange={(e) => setNgayDenDuKien(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
+                    />
+                    <input
+                      type="time"
+                      value={gioDenDuKien}
+                      onChange={(e) => setGioDenDuKien(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
+                    />
+                    <div className="flex gap-2 mt-1">
+                      <button
+                        onClick={() => xacNhanKemGioDen(don.id)}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold"
+                      >
+                        Xác nhận
+                      </button>
+                      <button
+                        onClick={() => setDonDangXacNhan(null)}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-2 rounded-lg text-sm"
+                      >
+                        Hủy
+                      </button>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-5 pt-0 mt-auto flex flex-col gap-2">
+                    <div className="relative">
+                      <select
+                        value={don.trang_thai}
+                        onChange={(e) => doiTrangThai(don.id, e.target.value)}
+                        className={`appearance-none w-full border font-semibold px-4 py-2.5 rounded-xl cursor-pointer outline-none transition-all focus:ring-2 pr-10 ${layMauTrangThai(
+                          don.trang_thai
+                        )}`}
+                      >
+                        <option value="Chờ xác nhận">⏳ Chờ xác nhận</option>
+                        <option value="Đã xác nhận">👍 Đã xác nhận</option>
+                        <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
+                        <option value="Đã hủy">❌ Đã hủy</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                        <svg className="w-4 h-4 fill-current opacity-70" viewBox="0 0 20 20">
+                          <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {(don.trang_thai === "Đã xác nhận" || don.tho_xac_nhan_hoan_thanh) &&
+                      don.trang_thai !== "Đã hủy" && (
+                        <button
+                          onClick={() => copyLinkChoKhach(don.id)}
+                          className="w-full text-xs font-semibold text-orange-600 border border-orange-200 bg-orange-50 hover:bg-orange-100 py-2 rounded-lg"
+                        >
+                          🔗 Copy link đơn cho khách
+                        </button>
+                      )}
+                  </div>
+                )}
               </div>
             ))}
           </div>

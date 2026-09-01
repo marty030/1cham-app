@@ -32,6 +32,7 @@ type TheThoProps = {
   onDoiDiaChiHen: (giaTri: string) => void;
   onDoiGhiChu: (giaTri: string) => void;
   onXacNhanDatLich: () => void;
+  onGoiNgay: () => void;
   onHuyDatLich: () => void;
 };
 
@@ -62,6 +63,7 @@ export default function TheTho({
   onDoiDiaChiHen,
   onDoiGhiChu,
   onXacNhanDatLich,
+  onGoiNgay,
   onHuyDatLich,
 }: TheThoProps) {
   const router = useRouter();
@@ -72,15 +74,27 @@ export default function TheTho({
       className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col w-full h-full cursor-pointer"
       onClick={() => router.push(`/tho/${tho.id}`)}
     >
-      
+
       {/* 1. HEADER */}
       <div className="flex items-start gap-4 mb-4">
         <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold shrink-0">
           {chuCaiDau}
         </div>
-        <div className="flex flex-col items-start gap-1.5">
-          <h2 className="text-lg font-bold text-gray-800 leading-tight line-clamp-1">{tho.ten}</h2>
-          
+        <div className="flex flex-col items-start gap-1.5 flex-1">
+          <div className="flex items-center gap-2 w-full">
+            <h2 className="text-lg font-bold text-gray-800 leading-tight line-clamp-1">{tho.ten}</h2>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/chat/${tho.id}`);
+              }}
+              className="text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-xs transition"
+              title="Chat với thợ"
+            >
+              💬
+            </button>
+          </div>
+
           {dangNghi ? (
             <span className="bg-red-50 text-red-600 border border-red-200 text-xs px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Đang nghỉ
@@ -100,7 +114,7 @@ export default function TheTho({
       {/* 2. BODY */}
       <div className="flex flex-col gap-2 mb-4 flex-1 text-sm">
         <p className="text-gray-700 font-medium">{tho.nghe}</p>
-        
+
         {tho.so_don_hoan_thanh > 0 ? (
           <p className="text-yellow-600 font-medium">
             ⭐ {tho.danh_gia_sao} <span className="text-gray-400 font-normal">· {tho.so_don_hoan_thanh} đơn</span>
@@ -151,7 +165,7 @@ export default function TheTho({
         </div>
       )}
 
-      {/* 4. FOOTER */}
+      {/* 4. FOOTER — chỉ còn đúng 1 nút CTA chính */}
       <div className="flex gap-2 mt-auto pt-2">
         <button
           className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
@@ -162,35 +176,6 @@ export default function TheTho({
         >
           📅 Đặt lịch
         </button>
-
-        {/* NÚT CHAT */}
-        <button
-          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/chat/${tho.id}`);
-          }}
-        >
-          💬 Chat
-        </button>
-
-        {/* NÚT GỌI — ĐÃ ĐỔI SANG ZALO THẬT */}
-        {!dangNghi && !dangLamViec && (
-          <button
-            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!tho.so_dien_thoai) {
-                alert("Thợ này chưa cập nhật số điện thoại liên hệ.");
-                return;
-              }
-              const soSach = tho.so_dien_thoai.replace(/\D/g, "");
-              window.open(`https://zalo.me/${soSach}`, "_blank");
-            }}
-          >
-            💬 Zalo
-          </button>
-        )}
       </div>
 
       {/* 5. KHU VỰC QUẢN LÝ DÀNH CHO ADMIN */}
@@ -237,6 +222,7 @@ export default function TheTho({
           onDoiDiaChiHen={onDoiDiaChiHen}
           onDoiGhiChu={onDoiGhiChu}
           onXacNhan={onXacNhanDatLich}
+          onGoiNgay={onGoiNgay}
           onHuy={onHuyDatLich}
         />
       </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
@@ -18,7 +18,7 @@ type HoiThoai = {
   so_dien_thoai: string;
   tin_nhan_cuoi: string;
   thoi_gian_cuoi: string;
-  coDonXacNhan: boolean; // MỚI: chỉ true khi đã có đơn xác nhận với đúng SĐT này
+  coDonXacNhan: boolean;
 };
 
 export default function TrangLamViecTho() {
@@ -30,45 +30,6 @@ export default function TrangLamViecTho() {
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
   const [noiDungMoi, setNoiDungMoi] = useState("");
 
-  const [dangChiaSeViTri, setDangChiaSeViTri] = useState(false);
-  const lanCapNhatCuoi = useRef<number>(0);
-
-  useEffect(() => {
-    if (!thoId) return;
-    if (!("geolocation" in navigator)) return;
-
-    const capNhatViTri = async (lat: number, lng: number) => {
-      const bayGio = Date.now();
-      if (bayGio - lanCapNhatCuoi.current < 30000) return;
-      lanCapNhatCuoi.current = bayGio;
-
-      const { error } = await supabase
-        .from("tho")
-        .update({ vi_do: lat, kinh_do: lng })
-        .eq("id", thoId);
-
-      if (error) console.error("Lỗi cập nhật vị trí:", error.message);
-    };
-
-    const watchId = navigator.geolocation.watchPosition(
-      (viTri) => {
-        setDangChiaSeViTri(true);
-        capNhatViTri(viTri.coords.latitude, viTri.coords.longitude);
-      },
-      (loi) => {
-        console.error("Lỗi định vị — code:", loi.code, "| message:", loi.message);
-        setDangChiaSeViTri(false);
-      },
-      { enableHighAccuracy: false, maximumAge: 15000, timeout: 20000 }
-    );
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-      setDangChiaSeViTri(false);
-    };
-  }, [thoId]);
-
-  // 1. Tải danh sách hội thoại + kiểm tra đơn xác nhận cho mỗi khách
   const taiDanhSachHoiThoai = async () => {
     if (!thoId) return;
 
@@ -83,7 +44,6 @@ export default function TrangLamViecTho() {
       return;
     }
 
-    // Lấy các đơn ĐÃ XÁC NHẬN của thợ này, gom SĐT đã xác nhận vào 1 Set để so khớp nhanh
     const { data: donXacNhan } = await supabase
       .from("don_dat_lich")
       .select("so_dien_thoai")
@@ -195,9 +155,7 @@ export default function TrangLamViecTho() {
       <div className="max-w-md mx-auto border h-screen flex flex-col bg-slate-100">
         <div className="p-4 bg-emerald-700 text-white font-bold shadow">
           <h1 className="text-base">🛠️ Bàn làm việc của Thợ #{thoId}</h1>
-          <p className="text-xs text-emerald-200">
-            {dangChiaSeViTri ? "📍 Đang chia sẻ vị trí" : "📍 Chưa bật định vị"} · Danh sách hội thoại
-          </p>
+          <p className="text-xs text-emerald-200">Danh sách hội thoại</p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {danhSachHoiThoai.length === 0 ? (
@@ -230,7 +188,6 @@ export default function TrangLamViecTho() {
         <button onClick={() => setKhachDangChon(null)} className="text-xl leading-none">←</button>
         <div>
           <h1 className="text-base">{khachDangChon.ten_khach}</h1>
-          {/* SĐT CHỈ HIỆN KHI ĐÃ CÓ ĐƠN XÁC NHẬN */}
           <p className="text-xs text-emerald-200">
             {khachDangChon.coDonXacNhan
               ? khachDangChon.so_dien_thoai

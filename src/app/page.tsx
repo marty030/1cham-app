@@ -18,6 +18,37 @@ function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) 
   return R * c;
 }
 
+async function taoDonVaLayLink(supabaseClient: any, duLieuDon: any): Promise<{ thanhCong: boolean; link: string | null }> {
+  const { data, error } = await supabaseClient
+    .from("don_dat_lich")
+    .insert([duLieuDon])
+    .select()
+    .single();
+
+  if (!error && data) {
+    return { thanhCong: true, link: `${window.location.origin}/don/${data.id}` };
+  }
+
+  console.error("Insert don_dat_lich - lỗi hoặc không lấy lại được dòng vừa tạo:", error);
+
+  const { data: donDuPhong, error: loiDuPhong } = await supabaseClient
+    .from("don_dat_lich")
+    .select("id")
+    .eq("so_dien_thoai", duLieuDon.so_dien_thoai)
+    .eq("tho_id", duLieuDon.tho_id)
+    .eq("gio_hen", duLieuDon.gio_hen)
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (loiDuPhong || !donDuPhong) {
+    console.error("Phương án dự phòng cũng thất bại (có thể insert đã thất bại thật sự):", loiDuPhong);
+    return { thanhCong: false, link: null };
+  }
+
+  return { thanhCong: true, link: `${window.location.origin}/don/${donDuPhong.id}` };
+}
+
 export default function Home() {
   const [viTriDangMo, setViTriDangMo] = useState<number | null>(null);
   const [daDangNhap, setDaDangNhap] = useState(false);
@@ -31,6 +62,7 @@ export default function Home() {
   const [laAdmin, setLaAdmin] = useState(false);
   const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [linkDonMoiTao, setLinkDonMoiTao] = useState<string | null>(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -91,29 +123,6 @@ export default function Home() {
     layDanhSachTho();
   }, []);
 
-  // ====== PHẦN MỚI: Realtime — tự cập nhật khi thợ đổi vị trí ======
-  useEffect(() => {
-    const channel = supabase
-      .channel("trang-chu-vi-tri-tho")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "tho" },
-        (payload: { new: any }) => {
-          setDanhSachTho((prev) =>
-            prev.map((tho) =>
-              tho.id === payload.new.id ? { ...tho, ...payload.new } : tho
-            )
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-  // ====== HẾT PHẦN MỚI ======
-
   const [tenMoi, setTenMoi] = useState("");
   const [ngheMoi, setNgheMoi] = useState("");
   const [diaChiMoi, setDiaChiMoi] = useState("");
@@ -125,7 +134,7 @@ export default function Home() {
 
     if (!viTriKhach || !tho.vi_do || !tho.kinh_do) return true;
     const khoangCach = tinhKhoangCach(viTriKhach.lat, viTriKhach.lng, tho.vi_do, tho.kinh_do);
-    return khoangCach <= 20;
+    return khoangCach <= (tho.ban_kinh_hoat_dong ?? 10);
   });
 
   return (
@@ -154,6 +163,11 @@ export default function Home() {
             <Link href="/dang-ky">
               <button className="bg-green-600 hover:bg-green-700 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium">
                 Đăng ký làm thợ
+              </button>
+            </Link>
+                        <Link href="/dang-ky-khach">
+              <button className="bg-orange-500 hover:bg-orange-600 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium">
+                Đăng ký làm khách hàng
               </button>
             </Link>
           </>
@@ -245,33 +259,82 @@ export default function Home() {
               onDoiDiaChiHen={(giaTri) => setDiaChiHen(giaTri)}
               onDoiGhiChu={(giaTri) => setGhiChu(giaTri)}
               onXacNhanDatLich={async () => {
-                const { error } = await supabase.from("don_dat_lich").insert([
-                  {
-                    ten_khach: tenKhach,
-                    so_dien_thoai: soDienThoai,
-                    tho_id: tho.id,
-                    gio_hen: `${ngayHen}T${gioHen}:00`,
-                    dia_chi_hen: diaChiHen,
-                    ghi_chu: ghiChu,
-                  },
-                ]);
-                if (error) {
-                  alert("Lỗi đặt lịch: " + error.message);
-                } else {
-                  alert("Đặt lịch thành công! Thợ sẽ liên hệ bạn sớm.");
-                  setViTriDatLich(null);
-                  setTenKhach("");
-                  setSoDienThoai("");
-                  setNgayHen("");
-                  setGioHen("");
-                  setDiaChiHen("");
-                  setGhiChu("");
+                const { thanhCong, link } = await taoDonVaLayLink(supabase, {
+                  ten_khach: tenKhach,
+                  so_dien_thoai: soDienThoai,
+                  tho_id: tho.id,
+                  gio_hen: `${ngayHen}T${gioHen}:00`,
+                  dia_chi_hen: diaChiHen,
+                  ghi_chu: ghiChu,
+                });
+
+                if (!thanhCong) {
+                  alert("Đặt lịch thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)");
+                  return;
                 }
+
+                if (link) {
+                  navigator.clipboard.writeText(link).catch(() => {});
+                  setLinkDonMoiTao(link);
+                } else {
+                  alert("Đặt lịch thành công nhưng không lấy được link đơn. Vui lòng nhờ thợ gửi lại link sau.");
+                }
+
+                setViTriDatLich(null);
+                setTenKhach("");
+                setSoDienThoai("");
+                setNgayHen("");
+                setGioHen("");
+                setDiaChiHen("");
+                setGhiChu("");
               }}
               onHuyDatLich={() => {
                 setViTriDatLich(null);
                 setTenKhach("");
                 setSoDienThoai("");
+              }}
+                            onGoiNgay={async () => {
+                if (!tenKhach || !soDienThoai || !diaChiHen) {
+                  alert("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.");
+                  return;
+                }
+
+                const duLieuDon = {
+                  ten_khach: tenKhach,
+                  so_dien_thoai: soDienThoai,
+                  tho_id: tho.id,
+                  gio_hen: new Date().toISOString(),
+                  dia_chi_hen: diaChiHen,
+                  ghi_chu: ghiChu,
+                  trang_thai: "Chờ xác nhận",
+                };
+
+                const { thanhCong, link } = await taoDonVaLayLink(supabase, duLieuDon);
+
+                if (!thanhCong) {
+                  alert("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)");
+                  return;
+                }
+
+                if (link) {
+                  navigator.clipboard.writeText(link).catch(() => {});
+                  setLinkDonMoiTao(link);
+                } else {
+                  alert("Đã tạo đơn nhưng không lấy được link. Vui lòng nhờ thợ gửi lại link sau.");
+                }
+
+                setViTriDatLich(null);
+                setTenKhach("");
+                setSoDienThoai("");
+                setDiaChiHen("");
+                setGhiChu("");
+
+                if (!tho.so_dien_thoai) {
+                  alert("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.");
+                } else {
+                  const soSach = tho.so_dien_thoai.replace(/\D/g, "");
+                  window.open(`https://zalo.me/${soSach}`, "_blank");
+                }
               }}
             />
           );
@@ -303,6 +366,35 @@ export default function Home() {
               }
             }}
           />
+        </div>
+      )}
+
+      {linkDonMoiTao && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-4">
+            <h3 className="text-lg font-bold text-gray-800">✅ Đặt lịch thành công!</h3>
+            <p className="text-sm text-gray-600">
+              Lưu link này lại để xem trạng thái đơn, xác nhận hoàn thành và đánh giá thợ sau này.
+              Link đã được tự động copy vào clipboard.
+            </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 break-all">
+              {linkDonMoiTao}
+            </div>
+            <div className="flex gap-2">
+              <a
+                href={linkDonMoiTao}
+                className="flex-1 text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-lg transition-colors"
+              >
+                Mở trang đơn
+              </a>
+              <button
+                onClick={() => setLinkDonMoiTao(null)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 rounded-lg transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
