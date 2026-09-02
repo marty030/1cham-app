@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import FormDatLich from "./FormDatLich";
+import { DANH_MUC_NGHE } from "../lib/danhMuc";
 
 type TheThoProps = {
   tho: any;
@@ -69,6 +70,10 @@ export default function TheTho({
   const router = useRouter();
   const chuCaiDau = tho.ten ? tho.ten.charAt(0).toUpperCase() : "T";
 
+  const tenCacDanhMuc: string[] = (tho.danh_muc || []).map(
+    (ma: string) => DANH_MUC_NGHE.find((m) => m.gia_tri === ma)?.nhan ?? ma
+  );
+
   return (
     <div
       className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col w-full h-full cursor-pointer"
@@ -113,7 +118,12 @@ export default function TheTho({
 
       {/* 2. BODY */}
       <div className="flex flex-col gap-2 mb-4 flex-1 text-sm">
-        <p className="text-gray-700 font-medium">{tho.nghe}</p>
+        {tenCacDanhMuc.length > 0 ? (
+          <p className="text-gray-700 font-medium">{tenCacDanhMuc.join(" · ")}</p>
+        ) : (
+          <p className="text-gray-400 italic">Chưa cập nhật ngành</p>
+        )}
+        {tho.nghe && <p className="text-gray-500 text-xs">{tho.nghe}</p>}
 
         {tho.so_don_hoan_thanh > 0 ? (
           <p className="text-yellow-600 font-medium">

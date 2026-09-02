@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { DANH_MUC_NGHE } from "../../lib/danhMuc";
 
 export default function DangKy() {
   const [email, setEmail] = useState("");
@@ -10,9 +11,21 @@ export default function DangKy() {
   const [ngheTho, setNgheTho] = useState("");
   const [diaChiTho, setDiaChiTho] = useState("");
   const [soDienThoaiTho, setSoDienThoaiTho] = useState("");
+  const [danhMucDaChon, setDanhMucDaChon] = useState<string[]>([]);
   const router = useRouter();
 
+  function toggleDanhMuc(giaTri: string) {
+    setDanhMucDaChon((truoc) =>
+      truoc.includes(giaTri) ? truoc.filter((d) => d !== giaTri) : [...truoc, giaTri]
+    );
+  }
+
   async function xuLyDangKy() {
+    if (danhMucDaChon.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 ngành bạn nhận làm.");
+      return;
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: matKhau,
@@ -31,6 +44,7 @@ export default function DangKy() {
         nghe: ngheTho,
         dia_chi: diaChiTho,
         so_dien_thoai: soDienThoaiTho,
+        danh_muc: danhMucDaChon,
         user_id: userId,
         so_don_hoan_thanh: 0,
         danh_gia_sao: 0,
@@ -72,11 +86,31 @@ export default function DangKy() {
         />
         <input
           type="text"
-          placeholder="Nghề"
+          placeholder="Nghề (mô tả chi tiết)"
           value={ngheTho}
           onChange={(e) => setNgheTho(e.target.value)}
           className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
         />
+
+        <div className="mb-2">
+          <p className="text-sm font-semibold text-gray-700 mb-1.5">
+            Bạn nhận làm ngành nào? <span className="text-red-500">*</span>
+          </p>
+          <div className="flex flex-col gap-1.5 border border-gray-200 rounded-lg p-3 bg-gray-50">
+            {DANH_MUC_NGHE.map((muc) => (
+              <label key={muc.gia_tri} className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={danhMucDaChon.includes(muc.gia_tri)}
+                  onChange={() => toggleDanhMuc(muc.gia_tri)}
+                  className="w-4 h-4 accent-blue-500"
+                />
+                {muc.nhan}
+              </label>
+            ))}
+          </div>
+        </div>
+
         <input
           type="text"
           placeholder="Địa chỉ"
