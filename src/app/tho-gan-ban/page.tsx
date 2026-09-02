@@ -298,6 +298,7 @@ function NoiDungTrangDanhSach() {
                   gio_hen: `${ngayHen}T${gioHen}:00`,
                   dia_chi_hen: diaChiHen,
                   ghi_chu: ghiChu,
+                  danh_muc: danhMucLoc,
                 });
 
                 if (!thanhCong) {
@@ -339,6 +340,7 @@ function NoiDungTrangDanhSach() {
                   dia_chi_hen: diaChiHen,
                   ghi_chu: ghiChu,
                   trang_thai: "Chờ xác nhận",
+                  danh_muc: danhMucLoc,
                 };
 
                 const { thanhCong, link } = await taoDonVaLayLink(supabase, duLieuDon);
