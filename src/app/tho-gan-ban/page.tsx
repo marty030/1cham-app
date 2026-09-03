@@ -153,18 +153,18 @@ function NoiDungTrangDanhSach() {
   });
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
+    <div className="flex flex-col items-center min-h-screen bg-paper py-8 px-4 sm:px-6">
       <div className="flex items-center gap-2 mb-2">
-        <Link href="/" className="text-sm text-orange-600 hover:underline font-medium">
+        <Link href="/" className="text-sm text-rust hover:underline font-medium">
           ← Trang chủ
         </Link>
       </div>
 
-      <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-800">
+      <h1 className="text-3xl md:text-4xl font-bold mb-2 text-ink">
         {tenDanhMucLoc ? `Thợ ${tenDanhMucLoc.toLowerCase()} gần bạn` : "Thợ gần bạn"}
       </h1>
       {tenDanhMucLoc && (
-        <Link href="/tho-gan-ban" className="text-sm text-gray-500 hover:text-orange-600 mb-6 underline">
+        <Link href="/tho-gan-ban" className="text-sm text-ink-soft hover:text-rust mb-6 underline">
           Xem tất cả ngành
         </Link>
       )}
@@ -173,7 +173,7 @@ function NoiDungTrangDanhSach() {
       <div className="flex flex-wrap justify-center gap-3 w-full max-w-4xl mb-10">
         {daDangNhap ? (
           <button
-            className="bg-gray-500 hover:bg-gray-600 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium"
+            className="bg-line hover:bg-ink-soft hover:text-white text-ink-soft transition px-5 py-2.5 rounded-xl shadow-sm font-medium"
             onClick={async () => {
               await supabase.auth.signOut();
               setDaDangNhap(false);
@@ -184,17 +184,17 @@ function NoiDungTrangDanhSach() {
         ) : (
           <>
             <Link href="/login">
-              <button className="bg-blue-500 hover:bg-blue-600 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium">
+              <button className="bg-card hover:bg-teal-soft transition text-teal border border-teal/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
                 Đăng nhập
               </button>
             </Link>
             <Link href="/dang-ky">
-              <button className="bg-green-600 hover:bg-green-700 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium">
+              <button className="bg-teal hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
                 Đăng ký làm thợ
               </button>
             </Link>
             <Link href="/dang-ky-khach">
-              <button className="bg-orange-500 hover:bg-orange-600 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium">
+              <button className="bg-card hover:bg-rust-soft transition text-rust border border-rust/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
                 Đăng ký làm khách hàng
               </button>
             </Link>
@@ -204,12 +204,12 @@ function NoiDungTrangDanhSach() {
         {daDangNhap && (
           <>
             <Link href="/ho-so">
-              <button className="bg-teal-500 hover:bg-teal-600 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium">
+              <button className="bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
                 Hồ sơ của tôi
               </button>
             </Link>
             <Link href="/don-cua-toi">
-              <button className="bg-indigo-500 hover:bg-indigo-600 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium">
+              <button className="bg-gold-soft hover:opacity-80 transition text-gold px-5 py-2.5 rounded-xl shadow-sm font-medium">
                 Đơn của tôi
               </button>
             </Link>
@@ -218,7 +218,7 @@ function NoiDungTrangDanhSach() {
 
         {laAdmin && (
           <Link href="/admin/don-dat-lich">
-            <button className="bg-purple-500 hover:bg-purple-600 transition text-white px-5 py-2.5 rounded-lg shadow-sm font-medium">
+            <button className="bg-gold hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
               Xem đơn đặt lịch
             </button>
           </Link>
@@ -226,7 +226,7 @@ function NoiDungTrangDanhSach() {
       </div>
 
       {thoTrongBanKinh.length === 0 && (
-        <p className="text-gray-400 mb-8">Chưa có thợ nào ở ngành này trong khu vực của bạn.</p>
+        <p className="text-ink-soft mb-8">Chưa có thợ nào ở ngành này trong khu vực của bạn.</p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full max-w-7xl">
@@ -376,8 +376,8 @@ function NoiDungTrangDanhSach() {
       </div>
 
       {laAdmin && (
-        <div className="mt-12 w-full max-w-2xl bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h2 className="text-xl font-bold mb-4 text-center text-gray-700">Khu vực Admin: Thêm thợ mới</h2>
+        <div className="mt-12 w-full max-w-2xl bg-card p-6 rounded-2xl shadow-md border border-line">
+          <h2 className="text-xl font-bold mb-4 text-center text-ink">Khu vực Admin: Thêm thợ mới</h2>
           <FormThemTho
             tenMoi={tenMoi}
             ngheMoi={ngheMoi}
@@ -412,26 +412,26 @@ function NoiDungTrangDanhSach() {
       )}
 
       {linkDonMoiTao && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-4">
-            <h3 className="text-lg font-bold text-gray-800">✅ Đặt lịch thành công!</h3>
-            <p className="text-sm text-gray-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-4">
+            <h3 className="text-lg font-bold text-ink">✅ Đặt lịch thành công!</h3>
+            <p className="text-sm text-ink-soft">
               Lưu link này lại để xem trạng thái đơn, xác nhận hoàn thành và đánh giá thợ sau này.
               Link đã được tự động copy vào clipboard.
             </p>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 break-all">
+            <div className="bg-paper border border-line rounded-lg px-3 py-2 text-sm text-ink-soft break-all font-mono">
               {linkDonMoiTao}
             </div>
             <div className="flex gap-2">
               <a
                 href={linkDonMoiTao}
-                className="flex-1 text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-lg transition-colors"
+                className="flex-1 text-center bg-rust hover:opacity-90 text-white font-semibold py-2.5 rounded-lg transition-colors"
               >
                 Mở trang đơn
               </a>
               <button
                 onClick={() => setLinkDonMoiTao(null)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 rounded-lg transition-colors"
+                className="flex-1 bg-line hover:bg-ink-soft hover:text-white text-ink-soft font-semibold py-2.5 rounded-lg transition-colors"
               >
                 Đóng
               </button>
@@ -447,8 +447,8 @@ export default function TrangDanhSachTho() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+        <div className="min-h-screen flex items-center justify-center bg-paper">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-rust"></div>
         </div>
       }
     >
