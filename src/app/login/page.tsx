@@ -23,26 +23,26 @@ export default function Login() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="border border-gray-300 rounded-xl p-6 w-80 bg-white">
-        <h1 className="text-xl font-bold mb-4">Đăng nhập
+    <div className="flex flex-col items-center justify-center min-h-screen bg-paper">
+      <div className="border border-line rounded-2xl p-6 w-80 bg-card shadow-sm">
+        <h1 className="text-xl font-bold mb-4 text-ink">Đăng nhập
         </h1>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
         <input
           type="password"
           placeholder="Mật khẩu"
           value={matKhau}
           onChange={(e) => setMatKhau(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-3 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-3 w-full outline-none focus:border-teal"
         />
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg w-full"
+          className="bg-teal hover:opacity-90 transition text-white px-4 py-2 rounded-lg w-full font-medium"
           onClick={xuLyDangNhap}
         >
           Đăng nhập

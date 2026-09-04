@@ -60,50 +60,50 @@ export default function DangKy() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="border border-gray-300 rounded-xl p-6 w-80 bg-white">
-        <h1 className="text-xl font-bold mb-4">Đăng ký làm thợ</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-paper">
+      <div className="border border-line rounded-2xl p-6 w-80 bg-card shadow-sm">
+        <h1 className="text-xl font-bold mb-4 text-ink">Đăng ký làm thợ</h1>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
         <input
           type="password"
           placeholder="Mật khẩu"
           value={matKhau}
           onChange={(e) => setMatKhau(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
         <input
           type="text"
           placeholder="Tên của bạn"
           value={tenTho}
           onChange={(e) => setTenTho(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
         <input
           type="text"
           placeholder="Nghề (mô tả chi tiết)"
           value={ngheTho}
           onChange={(e) => setNgheTho(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
 
         <div className="mb-2">
-          <p className="text-sm font-semibold text-gray-700 mb-1.5">
-            Bạn nhận làm ngành nào? <span className="text-red-500">*</span>
+          <p className="text-sm font-semibold text-ink mb-1.5">
+            Bạn nhận làm ngành nào? <span className="text-rust">*</span>
           </p>
-          <div className="flex flex-col gap-1.5 border border-gray-200 rounded-lg p-3 bg-gray-50">
+          <div className="flex flex-col gap-1.5 border border-line rounded-lg p-3 bg-paper">
             {DANH_MUC_NGHE.map((muc) => (
-              <label key={muc.gia_tri} className="flex items-center gap-2 text-sm text-gray-700">
+              <label key={muc.gia_tri} className="flex items-center gap-2 text-sm text-ink-soft">
                 <input
                   type="checkbox"
                   checked={danhMucDaChon.includes(muc.gia_tri)}
                   onChange={() => toggleDanhMuc(muc.gia_tri)}
-                  className="w-4 h-4 accent-blue-500"
+                  className="w-4 h-4 accent-teal"
                 />
                 {muc.nhan}
               </label>
@@ -116,24 +116,24 @@ export default function DangKy() {
           placeholder="Địa chỉ"
           value={diaChiTho}
           onChange={(e) => setDiaChiTho(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
         <input
           type="tel"
           placeholder="Số điện thoại (Zalo)"
           value={soDienThoaiTho}
           onChange={(e) => setSoDienThoaiTho(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-3 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-3 w-full outline-none focus:border-teal"
         />
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg w-full"
+          className="bg-teal hover:opacity-90 transition text-white px-4 py-2 rounded-lg w-full font-medium"
           onClick={xuLyDangKy}
         >
           Đăng ký
         </button>
-        <p className="text-sm text-center mt-3">
+        <p className="text-sm text-center mt-3 text-ink-soft">
   Đã có tài khoản?{" "}
-  <a href="/login" className="text-blue-500 underline">
+  <a href="/login" className="text-teal underline">
     Đăng nhập
   </a>
 </p>

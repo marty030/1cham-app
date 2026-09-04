@@ -11,7 +11,6 @@ export default function DangKyKhach() {
   const router = useRouter();
 
   async function xuLyDangKy() {
-    // 1. Tạo tài khoản Supabase Auth, gắn role "khach" vào metadata
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: matKhau,
@@ -27,7 +26,6 @@ export default function DangKyKhach() {
 
     const userId = data.user?.id;
 
-    // 2. Tạo hồ sơ khách trong bảng "khach" (KHÔNG đụng vào bảng "tho")
     const { error: loiTaoHoSo } = await supabase.from("khach").insert([
       {
         user_id: userId,
@@ -45,46 +43,46 @@ export default function DangKyKhach() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="border border-gray-300 rounded-xl p-6 w-80 bg-white">
-        <h1 className="text-xl font-bold mb-4">Đăng ký tài khoản khách hàng</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-paper">
+      <div className="border border-line rounded-2xl p-6 w-80 bg-card shadow-sm">
+        <h1 className="text-xl font-bold mb-4 text-ink">Đăng ký tài khoản khách hàng</h1>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
         <input
           type="password"
           placeholder="Mật khẩu"
           value={matKhau}
           onChange={(e) => setMatKhau(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
         <input
           type="text"
           placeholder="Tên của bạn"
           value={tenKhach}
           onChange={(e) => setTenKhach(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
         />
         <input
           type="text"
           placeholder="Số điện thoại"
           value={soDienThoai}
           onChange={(e) => setSoDienThoai(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-3 w-full"
+          className="border border-line rounded-lg px-3 py-2 mb-3 w-full outline-none focus:border-teal"
         />
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg w-full"
+          className="bg-teal hover:opacity-90 transition text-white px-4 py-2 rounded-lg w-full font-medium"
           onClick={xuLyDangKy}
         >
           Đăng ký
         </button>
-        <p className="text-sm text-center mt-3">
+        <p className="text-sm text-center mt-3 text-ink-soft">
           Đã có tài khoản?{" "}
-          <a href="/login" className="text-blue-500 underline">
+          <a href="/login" className="text-teal underline">
             Đăng nhập
           </a>
         </p>

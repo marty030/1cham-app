@@ -39,7 +39,7 @@ export default function Header() {
         onClick={() => router.push("/")}
         className="font-bold text-xl text-teal cursor-pointer flex items-center gap-2"
       >
-        🔧 1 Chạm Dịch Vụ
+        🔧 SỬA CHỮA-BẢO TRÌ UY TÍN VÀ MINH BẠCH
       </div>
 
       <div className="flex items-center gap-3">

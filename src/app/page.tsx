@@ -89,7 +89,7 @@ export default function TrangChu() {
 
       <div className="text-center mb-12 max-w-xl">
         <h1 className="text-3xl md:text-4xl font-bold text-ink mb-3">
-          1 Chạm Dịch Vụ
+        Thợ nhanh-Chất Lượng
         </h1>
         <p className="text-ink-soft">
           Tìm thợ sửa chữa gia dụng gần bạn tại khu vực Hà Đông, Hà Nội — chọn đúng ngành bạn cần bên dưới.

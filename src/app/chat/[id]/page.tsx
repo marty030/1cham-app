@@ -22,7 +22,6 @@ export default function ChatPage() {
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
   const [noiDungMoi, setNoiDungMoi] = useState("");
 
-  // 0. Auth-guard: bắt đăng nhập + xác nhận đây là tài khoản khách
   useEffect(() => {
     async function kiemTraDangNhap() {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -51,7 +50,6 @@ export default function ChatPage() {
     kiemTraDangNhap();
   }, [router]);
 
-  // 1. Tải tin nhắn — chỉ của CẶP (tho_id, khach_id) này
   const taiTinNhan = async () => {
     if (!thoId || !khachId) return;
 
@@ -70,7 +68,6 @@ export default function ChatPage() {
     taiTinNhan();
   }, [thoId, khachId]);
 
-  // 2. Realtime — lọc theo tho_id, rồi tự lọc thêm khach_id ở client
   useEffect(() => {
     if (!thoId || !khachId) return;
 
@@ -85,7 +82,6 @@ export default function ChatPage() {
           filter: `tho_id=eq.${thoId}`,
         },
         (payload: { new: TinNhan }) => {
-          // Chỉ nhận tin nhắn đúng cuộc trò chuyện của khách này với thợ này
           if (payload.new && payload.new.khach_id === khachId) {
             setDanhSachTinNhan((prev) => {
               const isExist = prev.some((item) => item.id === payload.new.id);
@@ -102,7 +98,6 @@ export default function ChatPage() {
     };
   }, [thoId, khachId]);
 
-  // 3. Gửi tin nhắn — luôn kèm khach_id
   const guiTinNhan = async () => {
     if (!noiDungMoi.trim() || !khachId) return;
 
@@ -131,24 +126,24 @@ export default function ChatPage() {
 
   if (dangKiemTra) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto border h-screen flex flex-col bg-slate-100">
-      <div className="p-4 bg-blue-600 text-white font-bold flex items-center justify-between shadow">
+    <div className="max-w-md mx-auto border border-line h-screen flex flex-col bg-paper">
+      <div className="p-4 bg-teal text-white font-bold flex items-center justify-between shadow">
         <div>
           <h1 className="text-base">💬 Trò chuyện với Thợ #{thoId}</h1>
-          <p className="text-xs text-blue-100">Đang hoạt động</p>
+          <p className="text-xs text-white/80">Đang hoạt động</p>
         </div>
       </div>
 
       <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
         {danhSachTinNhan.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm mt-10">
+          <p className="text-center text-ink-soft text-sm mt-10">
             Chưa có tin nhắn nào. Hãy bắt đầu trò chuyện!
           </p>
         ) : (
@@ -157,8 +152,8 @@ export default function ChatPage() {
               key={msg.id}
               className={`p-3 rounded-xl max-w-[80%] ${
                 msg.sender_type === "khach"
-                  ? "bg-blue-600 text-white self-end rounded-br-none"
-                  : "bg-white text-gray-800 self-start rounded-bl-none shadow-sm"
+                  ? "bg-teal text-white self-end rounded-br-none"
+                  : "bg-card text-ink self-start rounded-bl-none shadow-sm border border-line"
               }`}
             >
               <p className="text-[10px] opacity-75 mb-1 font-semibold">
@@ -170,18 +165,18 @@ export default function ChatPage() {
         )}
       </div>
 
-      <div className="p-3 bg-white border-t flex gap-2">
+      <div className="p-3 bg-card border-t border-line flex gap-2">
         <input
           type="text"
           value={noiDungMoi}
           onChange={(e) => setNoiDungMoi(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && guiTinNhan()}
           placeholder="Nhập tin nhắn..."
-          className="flex-1 border rounded-full px-4 py-2 text-sm outline-none focus:border-blue-500 text-black"
+          className="flex-1 border border-line rounded-full px-4 py-2 text-sm outline-none focus:border-teal text-ink"
         />
         <button
           onClick={guiTinNhan}
-          className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-blue-700 transition"
+          className="bg-teal text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition"
         >
           Gửi
         </button>
