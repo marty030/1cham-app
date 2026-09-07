@@ -61,8 +61,7 @@ function NoiDungTrangDanhSach() {
   const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
   const [tenKhach, setTenKhach] = useState("");
   const [soDienThoai, setSoDienThoai] = useState("");
-  const [ngayHen, setNgayHen] = useState("");
-  const [gioHen, setGioHen] = useState("");
+  const [gioHenDayDu, setGioHenDayDu] = useState("");
   const [diaChiHen, setDiaChiHen] = useState("");
   const [ghiChu, setGhiChu] = useState("");
   const [laAdmin, setLaAdmin] = useState(false);
@@ -279,26 +278,30 @@ function NoiDungTrangDanhSach() {
               dangDatLich={viTriDatLich === index}
               tenKhach={tenKhach}
               soDienThoai={soDienThoai}
-              ngayHen={ngayHen}
-              gioHen={gioHen}
+              gioHenDayDu={gioHenDayDu}
               diaChiHen={diaChiHen}
               ghiChu={ghiChu}
               onMoDatLich={() => setViTriDatLich(index)}
               onDoiTenKhach={(giaTri) => setTenKhach(giaTri)}
               onDoiSoDienThoai={(giaTri) => setSoDienThoai(giaTri)}
-              onDoiNgayHen={(giaTri) => setNgayHen(giaTri)}
-              onDoiGioHen={(giaTri) => setGioHen(giaTri)}
+              onDoiGioHenDayDu={(giaTri) => setGioHenDayDu(giaTri)}
               onDoiDiaChiHen={(giaTri) => setDiaChiHen(giaTri)}
               onDoiGhiChu={(giaTri) => setGhiChu(giaTri)}
               onXacNhanDatLich={async () => {
+                if (!gioHenDayDu) {
+                  alert("Vui lòng chọn ngày & giờ hẹn.");
+                  return;
+                }
+
                 const { thanhCong, link } = await taoDonVaLayLink(supabase, {
                   ten_khach: tenKhach,
                   so_dien_thoai: soDienThoai,
                   tho_id: tho.id,
-                  gio_hen: `${ngayHen}T${gioHen}:00`,
+                  gio_hen: gioHenDayDu,
                   dia_chi_hen: diaChiHen,
                   ghi_chu: ghiChu,
                   danh_muc: danhMucLoc,
+                  che_do_dat_lich: "gio_khac",
                 });
 
                 if (!thanhCong) {
@@ -316,8 +319,7 @@ function NoiDungTrangDanhSach() {
                 setViTriDatLich(null);
                 setTenKhach("");
                 setSoDienThoai("");
-                setNgayHen("");
-                setGioHen("");
+                setGioHenDayDu("");
                 setDiaChiHen("");
                 setGhiChu("");
               }}
@@ -341,6 +343,7 @@ function NoiDungTrangDanhSach() {
                   ghi_chu: ghiChu,
                   trang_thai: "Chờ xác nhận",
                   danh_muc: danhMucLoc,
+                  che_do_dat_lich: "ngay_bay_gio",
                 };
 
                 const { thanhCong, link } = await taoDonVaLayLink(supabase, duLieuDon);

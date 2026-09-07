@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import ChonKhungGio from "../../components/ChonKhungGio";
 
 export default function DonCuaToi() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
@@ -10,8 +11,8 @@ export default function DonCuaToi() {
   const router = useRouter();
 
   const [donDangXacNhan, setDonDangXacNhan] = useState<number | null>(null);
-  const [ngayDenDuKien, setNgayDenDuKien] = useState("");
-  const [gioDenDuKien, setGioDenDuKien] = useState("");
+  const [gioDenDuKienDayDu, setGioDenDuKienDayDu] = useState("");
+  const [thoIdCuaToi, setThoIdCuaToi] = useState<number | null>(null);
 
   useEffect(() => {
     async function layDon() {
@@ -32,6 +33,8 @@ export default function DonCuaToi() {
         return;
       }
 
+      setThoIdCuaToi(hoSo.id);
+
       const { data, error } = await supabase
         .from("don_dat_lich")
         .select("*")
@@ -50,9 +53,27 @@ export default function DonCuaToi() {
 
   async function doiTrangThai(idDon: number, trangThaiMoi: string) {
     if (trangThaiMoi === "Đã xác nhận") {
+      const don = danhSachDon.find((d) => d.id === idDon);
+
+      // Đơn "Chọn giờ khác" đã có sẵn giờ hẹn do khách chọn — thợ chỉ cần xác nhận,
+      // không cần nhập thêm giờ dự kiến đến. Chỉ đơn "Gọi ngay" mới cần bước này.
+      if (don?.che_do_dat_lich === "gio_khac") {
+        const { error } = await supabase
+          .from("don_dat_lich")
+          .update({ trang_thai: "Đã xác nhận" })
+          .eq("id", idDon);
+        if (error) {
+          alert("Lỗi: " + error.message);
+        } else {
+          setDanhSachDon((truoc) =>
+            truoc.map((d) => (d.id === idDon ? { ...d, trang_thai: "Đã xác nhận" } : d))
+          );
+        }
+        return;
+      }
+
       setDonDangXacNhan(idDon);
-      setNgayDenDuKien("");
-      setGioDenDuKien("");
+      setGioDenDuKienDayDu("");
       return;
     }
 
@@ -117,12 +138,12 @@ export default function DonCuaToi() {
   }
 
   async function xacNhanKemGioDen(idDon: number) {
-    if (!ngayDenDuKien || !gioDenDuKien) {
-      alert("Vui lòng chọn đủ ngày và giờ dự kiến đến.");
+    if (!gioDenDuKienDayDu) {
+      alert("Vui lòng chọn ngày và giờ dự kiến đến.");
       return;
     }
 
-    const gioDuKienDen = `${ngayDenDuKien}T${gioDenDuKien}:00`;
+    const gioDuKienDen = gioDenDuKienDayDu;
 
     const { error } = await supabase
       .from("don_dat_lich")
@@ -275,17 +296,11 @@ export default function DonCuaToi() {
                 {donDangXacNhan === don.id ? (
                   <div className="p-5 pt-0 mt-auto flex flex-col gap-2 bg-teal-soft border-t border-teal/20">
                     <p className="text-xs font-semibold text-teal mt-3">Dự kiến bạn đến lúc nào?</p>
-                    <input
-                      type="date"
-                      value={ngayDenDuKien}
-                      onChange={(e) => setNgayDenDuKien(e.target.value)}
-                      className="border border-line rounded-lg px-3 py-2 text-sm w-full outline-none focus:border-teal"
-                    />
-                    <input
-                      type="time"
-                      value={gioDenDuKien}
-                      onChange={(e) => setGioDenDuKien(e.target.value)}
-                      className="border border-line rounded-lg px-3 py-2 text-sm w-full outline-none focus:border-teal"
+                    <ChonKhungGio
+                      value={gioDenDuKienDayDu}
+                      onChange={setGioDenDuKienDayDu}
+                      thoId={thoIdCuaToi ?? undefined}
+                      boQuaDonId={don.id}
                     />
                     <div className="flex gap-2 mt-1">
                       <button
@@ -300,6 +315,12 @@ export default function DonCuaToi() {
                       >
                         Hủy
                       </button>
+                    </div>
+                  </div>
+                ) : don.trang_thai === "Đã hoàn thành" ? (
+                  <div className="p-5 pt-0 mt-auto">
+                    <div className="w-full text-center font-semibold px-4 py-2.5 rounded-xl border bg-teal text-white border-teal">
+                      ✅ Đã hoàn thành
                     </div>
                   </div>
                 ) : (

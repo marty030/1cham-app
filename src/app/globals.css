@@ -22,3 +22,62 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
+/* Flatpickr — chỉnh khớp theme màu của site */
+.flatpickr-calendar {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(38, 35, 32, 0.12);
+  font-family: var(--font-sans);
+}
+.flatpickr-months {
+  background: var(--color-paper);
+  border-radius: 1rem 1rem 0 0;
+  padding-top: 0.25rem;
+}
+.flatpickr-months .flatpickr-month,
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  color: var(--color-ink);
+  fill: var(--color-ink);
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+span.flatpickr-weekday {
+  color: var(--color-ink-soft);
+  font-weight: 600;
+}
+.flatpickr-day {
+  color: var(--color-ink);
+  border-radius: 0.5rem;
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: var(--color-rust);
+  border-color: var(--color-rust);
+  color: #fff;
+}
+.flatpickr-day:hover {
+  background: var(--color-teal-soft);
+}
+.flatpickr-day.today {
+  border-color: var(--color-teal);
+}
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover {
+  color: var(--color-line);
+}
+.flatpickr-time input {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.flatpickr-time .flatpickr-time-separator,
+.flatpickr-time .flatpickr-am-pm {
+  color: var(--color-ink-soft);
+}
+.flatpickr-time .numInputWrapper:hover {
+  background: var(--color-teal-soft);
+}

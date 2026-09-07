@@ -1,19 +1,19 @@
 "use client";
 import { useState } from "react";
 import ChonDiaChi from "./ChonDiaChi";
+import ChonKhungGio from "./ChonKhungGio";
 
 type FormDatLichProps = {
   hienForm: boolean;
+  thoId: number;
   tenKhach: string;
   soDienThoai: string;
-  ngayHen: string;
-  gioHen: string;
+  gioHenDayDu: string;
   diaChiHen: string;
   ghiChu: string;
   onDoiTenKhach: (giaTri: string) => void;
   onDoiSoDienThoai: (giaTri: string) => void;
-  onDoiNgayHen: (giaTri: string) => void;
-  onDoiGioHen: (giaTri: string) => void;
+  onDoiGioHenDayDu: (giaTri: string) => void;
   onDoiDiaChiHen: (giaTri: string) => void;
   onDoiGhiChu: (giaTri: string) => void;
   onXacNhan: () => void;
@@ -23,16 +23,15 @@ type FormDatLichProps = {
 
 export default function FormDatLich({
   hienForm,
+  thoId,
   tenKhach,
   soDienThoai,
-  ngayHen,
-  gioHen,
+  gioHenDayDu,
   diaChiHen,
   ghiChu,
   onDoiTenKhach,
   onDoiSoDienThoai,
-  onDoiNgayHen,
-  onDoiGioHen,
+  onDoiGioHenDayDu,
   onDoiDiaChiHen,
   onDoiGhiChu,
   onXacNhan,
@@ -115,25 +114,9 @@ export default function FormDatLich({
           </div>
 
           {cheDo === "gio_khac" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-ink mb-1.5">Ngày hẹn <span className="text-rust">*</span></label>
-                <input
-                  type="date"
-                  value={ngayHen}
-                  onChange={(e) => onDoiNgayHen(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-line focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-ink mb-1.5">Giờ hẹn <span className="text-rust">*</span></label>
-                <input
-                  type="time"
-                  value={gioHen}
-                  onChange={(e) => onDoiGioHen(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-line focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-ink mb-1.5">Ngày & giờ hẹn <span className="text-rust">*</span></label>
+              <ChonKhungGio value={gioHenDayDu} onChange={onDoiGioHenDayDu} thoId={thoId} />
             </div>
           )}
 

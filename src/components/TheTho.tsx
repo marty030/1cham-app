@@ -15,8 +15,7 @@ type TheThoProps = {
   dangDatLich: boolean;
   tenKhach: string;
   soDienThoai: string;
-  ngayHen: string;
-  gioHen: string;
+  gioHenDayDu: string;
   diaChiHen: string;
   ghiChu: string;
   khoangCach: number | null;
@@ -28,8 +27,7 @@ type TheThoProps = {
   onMoDatLich: () => void;
   onDoiTenKhach: (giaTri: string) => void;
   onDoiSoDienThoai: (giaTri: string) => void;
-  onDoiNgayHen: (giaTri: string) => void;
-  onDoiGioHen: (giaTri: string) => void;
+  onDoiGioHenDayDu: (giaTri: string) => void;
   onDoiDiaChiHen: (giaTri: string) => void;
   onDoiGhiChu: (giaTri: string) => void;
   onXacNhanDatLich: () => void;
@@ -47,8 +45,7 @@ export default function TheTho({
   dangDatLich,
   tenKhach,
   soDienThoai,
-  ngayHen,
-  gioHen,
+  gioHenDayDu,
   diaChiHen,
   ghiChu,
   khoangCach,
@@ -59,8 +56,7 @@ export default function TheTho({
   onMoDatLich,
   onDoiTenKhach,
   onDoiSoDienThoai,
-  onDoiNgayHen,
-  onDoiGioHen,
+  onDoiGioHenDayDu,
   onDoiDiaChiHen,
   onDoiGhiChu,
   onXacNhanDatLich,
@@ -219,16 +215,15 @@ export default function TheTho({
       <div onClick={(e) => e.stopPropagation()}>
         <FormDatLich
           hienForm={dangDatLich}
+          thoId={tho.id}
           tenKhach={tenKhach}
           soDienThoai={soDienThoai}
-          ngayHen={ngayHen}
-          gioHen={gioHen}
+          gioHenDayDu={gioHenDayDu}
           diaChiHen={diaChiHen}
           ghiChu={ghiChu}
           onDoiTenKhach={onDoiTenKhach}
           onDoiSoDienThoai={onDoiSoDienThoai}
-          onDoiNgayHen={onDoiNgayHen}
-          onDoiGioHen={onDoiGioHen}
+          onDoiGioHenDayDu={onDoiGioHenDayDu}
           onDoiDiaChiHen={onDoiDiaChiHen}
           onDoiGhiChu={onDoiGhiChu}
           onXacNhan={onXacNhanDatLich}

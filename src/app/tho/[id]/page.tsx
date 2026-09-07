@@ -1,17 +1,17 @@
 "use client";
- 
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { DANH_MUC_NGHE } from "../../../lib/danhMuc";
 import FormDatLich from "../../../components/FormDatLich";
- 
+
 type DanhGia = {
   so_sao: number;
   binh_luan: string | null;
   created_at: string;
 };
- 
+
 const CAC_CAP_DO = [
   { nguong: 0, ten: "Thợ mới" },
   { nguong: 5, ten: "Thợ cứng tay" },
@@ -20,7 +20,7 @@ const CAC_CAP_DO = [
   { nguong: 60, ten: "Chuyên gia" },
   { nguong: 100, ten: "Bậc thầy" },
 ];
- 
+
 function tinhCapDo(soDon: number) {
   let hienTai = CAC_CAP_DO[0];
   let ke = CAC_CAP_DO[1] ?? null;
@@ -35,20 +35,20 @@ function tinhCapDo(soDon: number) {
     : 100;
   return { hienTai, ke, phanTram };
 }
- 
+
 async function taoDonVaLayLink(supabaseClient: any, duLieuDon: any): Promise<{ thanhCong: boolean; link: string | null }> {
   const { data, error } = await supabaseClient
     .from("don_dat_lich")
     .insert([duLieuDon])
     .select()
     .single();
- 
+
   if (!error && data) {
     return { thanhCong: true, link: `${window.location.origin}/don/${data.id}` };
   }
- 
+
   console.error("Insert don_dat_lich - lỗi hoặc không lấy lại được dòng vừa tạo:", error);
- 
+
   const { data: donDuPhong, error: loiDuPhong } = await supabaseClient
     .from("don_dat_lich")
     .select("id")
@@ -58,57 +58,56 @@ async function taoDonVaLayLink(supabaseClient: any, duLieuDon: any): Promise<{ t
     .order("id", { ascending: false })
     .limit(1)
     .maybeSingle();
- 
+
   if (loiDuPhong || !donDuPhong) {
     console.error("Phương án dự phòng cũng thất bại (có thể insert đã thất bại thật sự):", loiDuPhong);
     return { thanhCong: false, link: null };
   }
- 
+
   return { thanhCong: true, link: `${window.location.origin}/don/${donDuPhong.id}` };
 }
- 
+
 export default function TrangChiTietTho() {
   const params = useParams();
   const router = useRouter();
   const thoId = params.id as string;
- 
+
   const [tho, setTho] = useState<any>(null);
   const [dangTai, setDangTai] = useState(true);
   const [danhSachDanhGia, setDanhSachDanhGia] = useState<DanhGia[]>([]);
   const [dangBan, setDangBan] = useState(false);
- 
+
   const [dangDatLich, setDangDatLich] = useState(false);
   const [tenKhach, setTenKhach] = useState("");
   const [soDienThoai, setSoDienThoai] = useState("");
-  const [ngayHen, setNgayHen] = useState("");
-  const [gioHen, setGioHen] = useState("");
+  const [gioHenDayDu, setGioHenDayDu] = useState("");
   const [diaChiHen, setDiaChiHen] = useState("");
   const [ghiChu, setGhiChu] = useState("");
   const [linkDonMoiTao, setLinkDonMoiTao] = useState<string | null>(null);
- 
+
   useEffect(() => {
     async function taiDuLieu() {
       setDangTai(true);
- 
+
       const { data: thoData, error } = await supabase
         .from("tho")
         .select("*")
         .eq("id", thoId)
         .single();
- 
+
       if (error || !thoData) {
         console.error("Không lấy được thợ:", error);
         setDangTai(false);
         return;
       }
       setTho(thoData);
- 
+
       const { data: donData } = await supabase
         .from("don_dat_lich")
         .select("gio_hen, trang_thai")
         .eq("tho_id", thoId)
         .eq("trang_thai", "Đã xác nhận");
- 
+
       const banHienTai = (donData || []).some((don: any) => {
         const gio = new Date(don.gio_hen);
         const bayGio = new Date();
@@ -116,7 +115,7 @@ export default function TrangChiTietTho() {
         return chenhLech < 2;
       });
       setDangBan(banHienTai);
- 
+
       const { data: danhGiaData } = await supabase
         .from("danh_gia")
         .select("so_sao, binh_luan, created_at")
@@ -124,13 +123,13 @@ export default function TrangChiTietTho() {
         .order("created_at", { ascending: false })
         .limit(20);
       setDanhSachDanhGia(danhGiaData || []);
- 
+
       setDangTai(false);
     }
- 
+
     if (thoId) taiDuLieu();
   }, [thoId]);
- 
+
   if (dangTai) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper">
@@ -138,7 +137,7 @@ export default function TrangChiTietTho() {
       </div>
     );
   }
- 
+
   if (!tho) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper p-6">
@@ -146,7 +145,7 @@ export default function TrangChiTietTho() {
       </div>
     );
   }
- 
+
   const chuCaiDau = tho.ten ? tho.ten.charAt(0).toUpperCase() : "T";
   const tenCacDanhMuc: string[] = (tho.danh_muc || []).map(
     (ma: string) => DANH_MUC_NGHE.find((m) => m.gia_tri === ma)?.nhan ?? ma
@@ -154,7 +153,7 @@ export default function TrangChiTietTho() {
   const soDon = tho.so_don_hoan_thanh || 0;
   const saoTrungBinh = tho.danh_gia_sao || 0;
   const { hienTai: capDoHienTai, ke: capDoKe, phanTram } = tinhCapDo(soDon);
- 
+
   const huyHieu: { ten: string; icon: string }[] = [];
   if (soDon >= 1) huyHieu.push({ ten: "Đơn đầu tiên", icon: "🎉" });
   if (soDon >= 10) huyHieu.push({ ten: "10 đơn hoàn thành", icon: "🥉" });
@@ -162,7 +161,7 @@ export default function TrangChiTietTho() {
   if (soDon >= 100) huyHieu.push({ ten: "100 đơn hoàn thành", icon: "🥇" });
   if (soDon >= 5 && saoTrungBinh >= 4.5) huyHieu.push({ ten: "Được yêu thích", icon: "❤️" });
   if (tenCacDanhMuc.length >= 2) huyHieu.push({ ten: "Đa năng", icon: "🧰" });
- 
+
   return (
     <div className="min-h-screen bg-paper pb-28">
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-5">
@@ -172,7 +171,7 @@ export default function TrangChiTietTho() {
         >
           ← Danh sách thợ
         </button>
- 
+
         {/* HEADER */}
         <div className="bg-card border border-line rounded-2xl p-6 flex flex-col gap-4">
           <div className="flex items-start gap-4">
@@ -196,7 +195,7 @@ export default function TrangChiTietTho() {
               )}
             </div>
           </div>
- 
+
           {tenCacDanhMuc.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {tenCacDanhMuc.map((ten) => (
@@ -206,15 +205,15 @@ export default function TrangChiTietTho() {
               ))}
             </div>
           )}
- 
+
           {tho.nghe && <p className="text-ink-soft text-sm">{tho.nghe}</p>}
- 
+
           <div className="flex items-start gap-2.5 text-sm text-ink-soft">
             <span className="shrink-0">📍</span>
             <span>{tho.dia_chi}</span>
           </div>
         </div>
- 
+
         {/* GAUGE CẤP ĐỘ */}
         <div className="bg-card border border-line rounded-2xl p-6 flex flex-col gap-4">
           <div className="flex items-center justify-between">
@@ -229,7 +228,7 @@ export default function TrangChiTietTho() {
               </p>
             </div>
           </div>
- 
+
           <div>
             <div className="h-2.5 bg-line rounded-full overflow-hidden">
               <div
@@ -243,7 +242,7 @@ export default function TrangChiTietTho() {
                 : `${soDon} đơn hoàn thành — cấp độ cao nhất`}
             </p>
           </div>
- 
+
           {huyHieu.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-2 border-t border-line">
               {huyHieu.map((hh) => (
@@ -257,7 +256,7 @@ export default function TrangChiTietTho() {
             </div>
           )}
         </div>
- 
+
         {/* ĐÁNH GIÁ TỪ KHÁCH */}
         <div className="bg-card border border-line rounded-2xl p-6 flex flex-col gap-3">
           <h2 className="text-base font-bold text-ink">Đánh giá từ khách hàng</h2>
@@ -283,7 +282,7 @@ export default function TrangChiTietTho() {
           )}
         </div>
       </div>
- 
+
       {/* THANH CTA DÍNH ĐÁY */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-line p-4 flex gap-3 max-w-2xl mx-auto sm:rounded-t-2xl sm:border sm:mb-4">
         <button
@@ -299,19 +298,18 @@ export default function TrangChiTietTho() {
           📅 Đặt lịch
         </button>
       </div>
- 
+
       <FormDatLich
         hienForm={dangDatLich}
+        thoId={tho.id}
         tenKhach={tenKhach}
         soDienThoai={soDienThoai}
-        ngayHen={ngayHen}
-        gioHen={gioHen}
+        gioHenDayDu={gioHenDayDu}
         diaChiHen={diaChiHen}
         ghiChu={ghiChu}
         onDoiTenKhach={setTenKhach}
         onDoiSoDienThoai={setSoDienThoai}
-        onDoiNgayHen={setNgayHen}
-        onDoiGioHen={setGioHen}
+        onDoiGioHenDayDu={setGioHenDayDu}
         onDoiDiaChiHen={setDiaChiHen}
         onDoiGhiChu={setGhiChu}
         onHuy={() => {
@@ -320,32 +318,37 @@ export default function TrangChiTietTho() {
           setSoDienThoai("");
         }}
         onXacNhan={async () => {
+          if (!gioHenDayDu) {
+            alert("Vui lòng chọn ngày & giờ hẹn.");
+            return;
+          }
+
           const { thanhCong, link } = await taoDonVaLayLink(supabase, {
             ten_khach: tenKhach,
             so_dien_thoai: soDienThoai,
             tho_id: tho.id,
-            gio_hen: `${ngayHen}T${gioHen}:00`,
+            gio_hen: gioHenDayDu,
             dia_chi_hen: diaChiHen,
             ghi_chu: ghiChu,
+            che_do_dat_lich: "gio_khac",
           });
- 
+
           if (!thanhCong) {
             alert("Đặt lịch thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)");
             return;
           }
- 
+
           if (link) {
             navigator.clipboard.writeText(link).catch(() => {});
             setLinkDonMoiTao(link);
           } else {
             alert("Đặt lịch thành công nhưng không lấy được link đơn. Vui lòng nhờ thợ gửi lại link sau.");
           }
- 
+
           setDangDatLich(false);
           setTenKhach("");
           setSoDienThoai("");
-          setNgayHen("");
-          setGioHen("");
+          setGioHenDayDu("");
           setDiaChiHen("");
           setGhiChu("");
         }}
@@ -354,7 +357,7 @@ export default function TrangChiTietTho() {
             alert("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.");
             return;
           }
- 
+
           const { thanhCong, link } = await taoDonVaLayLink(supabase, {
             ten_khach: tenKhach,
             so_dien_thoai: soDienThoai,
@@ -363,26 +366,27 @@ export default function TrangChiTietTho() {
             dia_chi_hen: diaChiHen,
             ghi_chu: ghiChu,
             trang_thai: "Chờ xác nhận",
+            che_do_dat_lich: "ngay_bay_gio",
           });
- 
+
           if (!thanhCong) {
             alert("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)");
             return;
           }
- 
+
           if (link) {
             navigator.clipboard.writeText(link).catch(() => {});
             setLinkDonMoiTao(link);
           } else {
             alert("Đã tạo đơn nhưng không lấy được link. Vui lòng nhờ thợ gửi lại link sau.");
           }
- 
+
           setDangDatLich(false);
           setTenKhach("");
           setSoDienThoai("");
           setDiaChiHen("");
           setGhiChu("");
- 
+
           if (!tho.so_dien_thoai) {
             alert("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.");
           } else {
@@ -391,7 +395,7 @@ export default function TrangChiTietTho() {
           }
         }}
       />
- 
+
       {linkDonMoiTao && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm">
           <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-4">
