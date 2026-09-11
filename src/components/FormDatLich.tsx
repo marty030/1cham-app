@@ -2,7 +2,7 @@
 import { useState } from "react";
 import ChonDiaChi from "./ChonDiaChi";
 import ChonKhungGio from "./ChonKhungGio";
-
+import { X, Zap, CalendarClock, PhoneCall, CalendarCheck } from "lucide-react";
 type FormDatLichProps = {
   hienForm: boolean;
   thoId: number;
@@ -64,7 +64,7 @@ export default function FormDatLich({
             onClick={onHuy}
             className="text-ink-soft hover:text-rust bg-card hover:bg-rust-soft rounded-full w-8 h-8 flex items-center justify-center transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -74,20 +74,20 @@ export default function FormDatLich({
             <button
               type="button"
               onClick={() => setCheDo("ngay_bay_gio")}
-              className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-semibold transition ${
                 cheDo === "ngay_bay_gio" ? "bg-card shadow text-rust" : "text-ink-soft"
               }`}
             >
-              ⚡ Ngay bây giờ
+               <Zap className="w-4 h-4" /> Ngay bây giờ
             </button>
             <button
               type="button"
               onClick={() => setCheDo("gio_khac")}
-              className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-semibold transition ${
                 cheDo === "gio_khac" ? "bg-card shadow text-teal" : "text-ink-soft"
               }`}
             >
-              🗓️ Chọn giờ khác
+             <CalendarClock className="w-4 h-4" /> Chọn giờ khác
             </button>
           </div>
 
@@ -146,17 +146,18 @@ export default function FormDatLich({
           </button>
           {cheDo === "ngay_bay_gio" ? (
             <button
-              onClick={onGoiNgay}
-              className="flex-1 bg-rust text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition-colors shadow-md active:scale-[0.98]"
-            >
-              📞 Gọi ngay
-            </button>
+  onClick={onGoiNgay}
+  className="flex-1 bg-rust text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition-colors shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
+>
+  <PhoneCall className="w-4 h-4" /> Gọi ngay
+        </button>
+         
           ) : (
             <button
               onClick={onXacNhan}
-              className="flex-1 bg-teal text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition-colors shadow-md active:scale-[0.98]"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-teal text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition-colors shadow-md active:scale-[0.98]"
             >
-              Xác nhận đặt
+              <CalendarCheck className="w-4 h-4" /> Xác nhận đặt
             </button>
           )}
         </div>

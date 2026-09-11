@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { DANH_MUC_NGHE } from "../../../lib/danhMuc";
+import { isoVietNamHienTai, TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
+import { layHoSoKhachHienTai, HoSoKhach } from "../../../lib/khach";
 import FormDatLich from "../../../components/FormDatLich";
+import { ArrowLeft, MessageCircle, CalendarDays, Star, MapPin } from "lucide-react";
 
 type DanhGia = {
   so_sao: number;
@@ -78,12 +81,17 @@ export default function TrangChiTietTho() {
   const [dangBan, setDangBan] = useState(false);
 
   const [dangDatLich, setDangDatLich] = useState(false);
+  const [hoSoKhach, setHoSoKhach] = useState<HoSoKhach | null>(null);
   const [tenKhach, setTenKhach] = useState("");
   const [soDienThoai, setSoDienThoai] = useState("");
   const [gioHenDayDu, setGioHenDayDu] = useState("");
   const [diaChiHen, setDiaChiHen] = useState("");
   const [ghiChu, setGhiChu] = useState("");
   const [linkDonMoiTao, setLinkDonMoiTao] = useState<string | null>(null);
+
+  useEffect(() => {
+    layHoSoKhachHienTai().then(setHoSoKhach);
+  }, []);
 
   useEffect(() => {
     async function taiDuLieu() {
@@ -147,6 +155,17 @@ export default function TrangChiTietTho() {
   }
 
   const chuCaiDau = tho.ten ? tho.ten.charAt(0).toUpperCase() : "T";
+
+  function moDatLich() {
+    if (!hoSoKhach) {
+      alert("Vui lòng đăng nhập bằng tài khoản khách hàng trước khi đặt lịch.");
+      router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
+      return;
+    }
+    setTenKhach(hoSoKhach.ten || "");
+    setSoDienThoai(hoSoKhach.so_dien_thoai || "");
+    setDangDatLich(true);
+  }
   const tenCacDanhMuc: string[] = (tho.danh_muc || []).map(
     (ma: string) => DANH_MUC_NGHE.find((m) => m.gia_tri === ma)?.nhan ?? ma
   );
@@ -167,16 +186,21 @@ export default function TrangChiTietTho() {
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-5">
         <button
           onClick={() => router.push("/tho-gan-ban")}
-          className="self-start text-sm text-rust hover:underline font-medium"
+          className="self-start text-sm text-rust hover:underline font-medium flex items-center gap-1"
         >
-          ← Danh sách thợ
+          <ArrowLeft className="w-4 h-4" /> Danh sách thợ
         </button>
 
         {/* HEADER */}
         <div className="bg-card border border-line rounded-2xl p-6 flex flex-col gap-4">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-teal-soft text-teal flex items-center justify-center text-2xl font-bold shrink-0">
-              {chuCaiDau}
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-teal-soft text-teal flex items-center justify-center text-2xl font-bold shrink-0">
+              {tho.anh_dai_dien ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={tho.anh_dai_dien} alt={tho.ten} className="w-full h-full object-cover" />
+              ) : (
+                chuCaiDau
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <h1 className="text-2xl font-bold text-ink">{tho.ten}</h1>
@@ -209,7 +233,7 @@ export default function TrangChiTietTho() {
           {tho.nghe && <p className="text-ink-soft text-sm">{tho.nghe}</p>}
 
           <div className="flex items-start gap-2.5 text-sm text-ink-soft">
-            <span className="shrink-0">📍</span>
+            <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{tho.dia_chi}</span>
           </div>
         </div>
@@ -224,7 +248,13 @@ export default function TrangChiTietTho() {
             <div className="text-right">
               <p className="text-xs text-ink-soft uppercase tracking-wide font-mono">Điểm đánh giá</p>
               <p className="text-lg font-bold text-gold font-mono">
-                {soDon > 0 ? `★ ${saoTrungBinh}` : "Chưa có"}
+                {soDon > 0 ? (
+                  <span className="flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-gold text-gold" /> {saoTrungBinh}
+                  </span>
+                ) : (
+                  "Chưa có"
+                )}
               </p>
             </div>
           </div>
@@ -272,7 +302,7 @@ export default function TrangChiTietTho() {
                       <span className="text-line">{"★".repeat(5 - dg.so_sao)}</span>
                     </span>
                     <span className="text-xs text-ink-soft font-mono">
-                      {new Date(dg.created_at).toLocaleDateString("vi-VN")}
+                      {new Date(dg.created_at).toLocaleDateString("vi-VN", TUY_CHON_GIO_VN)}
                     </span>
                   </div>
                   {dg.binh_luan && <p className="text-sm text-ink-soft mt-1">{dg.binh_luan}</p>}
@@ -289,13 +319,13 @@ export default function TrangChiTietTho() {
           onClick={() => router.push(`/chat/${tho.id}`)}
           className="flex-1 bg-card border border-teal text-teal hover:bg-teal-soft transition py-3 rounded-xl font-semibold flex items-center justify-center gap-1.5"
         >
-          💬 Chat
+          <MessageCircle className="w-4 h-4" /> Chat
         </button>
         <button
-          onClick={() => setDangDatLich(true)}
+          onClick={moDatLich}
           className="flex-1 bg-rust hover:opacity-90 text-white transition py-3 rounded-xl font-semibold flex items-center justify-center gap-1.5"
         >
-          📅 Đặt lịch
+          <CalendarDays className="w-4 h-4" /> Đặt lịch
         </button>
       </div>
 
@@ -322,10 +352,16 @@ export default function TrangChiTietTho() {
             alert("Vui lòng chọn ngày & giờ hẹn.");
             return;
           }
+          if (!hoSoKhach) {
+            alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+            router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
+            return;
+          }
 
           const { thanhCong, link } = await taoDonVaLayLink(supabase, {
             ten_khach: tenKhach,
             so_dien_thoai: soDienThoai,
+            khach_id: hoSoKhach.id,
             tho_id: tho.id,
             gio_hen: gioHenDayDu,
             dia_chi_hen: diaChiHen,
@@ -357,12 +393,18 @@ export default function TrangChiTietTho() {
             alert("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.");
             return;
           }
+          if (!hoSoKhach) {
+            alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+            router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
+            return;
+          }
 
           const { thanhCong, link } = await taoDonVaLayLink(supabase, {
             ten_khach: tenKhach,
             so_dien_thoai: soDienThoai,
+            khach_id: hoSoKhach.id,
             tho_id: tho.id,
-            gio_hen: new Date().toISOString(),
+            gio_hen: isoVietNamHienTai(),
             dia_chi_hen: diaChiHen,
             ghi_chu: ghiChu,
             trang_thai: "Chờ xác nhận",

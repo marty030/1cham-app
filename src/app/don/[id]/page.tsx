@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { layHoSoKhachHienTai } from "../../../lib/khach";
+import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
+import { Clock, Car, MapPin, StickyNote, CheckCircle2, Star, Send } from "lucide-react";
 
 type DonDatLich = {
   id: number;
@@ -12,6 +15,7 @@ type DonDatLich = {
   dia_chi_hen: string;
   ghi_chu: string | null;
   tho_id: number;
+  khach_id: number | null;
   tho_xac_nhan_hoan_thanh: boolean;
   khach_xac_nhan_hoan_thanh: boolean;
   tho: { ten: string } | null;
@@ -36,6 +40,7 @@ export default function TrangDonKhach() {
   const [binhLuan, setBinhLuan] = useState("");
   const [dangGui, setDangGui] = useState(false);
   const [dangXacNhan, setDangXacNhan] = useState(false);
+  const [laChuDon, setLaChuDon] = useState(false);
 
   useEffect(() => {
     layDon();
@@ -53,7 +58,11 @@ export default function TrangDonKhach() {
       console.error("Không lấy được đơn:", error);
       setKhongTimThay(true);
     } else {
-      setDon(data as unknown as DonDatLich);
+      const donData = data as unknown as DonDatLich;
+      setDon(donData);
+
+      const hoSo = await layHoSoKhachHienTai();
+      setLaChuDon(!!hoSo && !!donData.khach_id && hoSo.id === donData.khach_id);
     }
     setLoading(false);
   }
@@ -77,7 +86,7 @@ export default function TrangDonKhach() {
     if (!error) {
       setDon({ ...don, ...capNhat });
     } else {
-      alert("Có lỗi khi xác nhận, thử lại nhé.");
+      alert(error.message || "Có lỗi khi xác nhận, thử lại nhé.");
     }
   }
 
@@ -96,7 +105,7 @@ export default function TrangDonKhach() {
     if (!error) {
       setDaGuiDanhGia(true);
     } else {
-      alert("Có lỗi khi gửi đánh giá, thử lại nhé.");
+      alert(error.message || "Có lỗi khi gửi đánh giá, thử lại nhé.");
     }
   }
 
@@ -121,7 +130,8 @@ export default function TrangDonKhach() {
     mau: "bg-line text-ink-soft border-line",
   };
 
-  const coTheXacNhanHoanThanh = don.trang_thai === "Đã xác nhận" && !don.khach_xac_nhan_hoan_thanh;
+  const coTheXacNhanHoanThanh =
+    don.trang_thai === "Đã xác nhận" && !don.khach_xac_nhan_hoan_thanh && laChuDon;
 
   return (
     <div className="min-h-screen bg-paper py-10 px-4">
@@ -140,27 +150,27 @@ export default function TrangDonKhach() {
 
           <div className="flex flex-col gap-2 text-sm text-ink-soft">
             <div className="flex items-start gap-2.5">
-              <span className="text-ink-soft mt-0.5">🕒</span>
-              <span>Giờ hẹn: {new Date(don.gio_hen).toLocaleString("vi-VN")}</span>
+              <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
+              <span>Giờ hẹn: {new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</span>
             </div>
 
             {don.gio_du_kien_den && (
               <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
-                <span className="text-teal mt-0.5">🚗</span>
+                <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
                 <span className="text-teal font-medium">
-                  Thợ dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN")}
+                  Thợ dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}
                 </span>
               </div>
             )}
 
             <div className="flex items-start gap-2.5">
-              <span className="text-ink-soft mt-0.5">📍</span>
+              <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
               <span>{don.dia_chi_hen}</span>
             </div>
 
             {don.ghi_chu && (
               <div className="flex items-start gap-2.5 bg-gold-soft p-3 rounded-lg border border-gold/20">
-                <span className="text-gold mt-0.5">📝</span>
+                <StickyNote className="w-4 h-4 text-gold mt-0.5 shrink-0" />
                 <span className="text-ink-soft italic">{don.ghi_chu}</span>
               </div>
             )}
@@ -176,13 +186,21 @@ export default function TrangDonKhach() {
             <p className="text-sm text-rust border-t border-line pt-4">Đơn này đã bị hủy.</p>
           )}
 
+          {don.trang_thai === "Đã xác nhận" && !laChuDon && !don.khach_xac_nhan_hoan_thanh && (
+            <p className="text-sm text-ink-soft bg-paper border border-line rounded-lg p-3">
+              Chỉ khách hàng đã đặt đơn này mới xác nhận hoàn thành và đánh giá được — đăng nhập
+              đúng tài khoản đã dùng để đặt lịch nếu đây là đơn của bạn.
+            </p>
+          )}
+
           {coTheXacNhanHoanThanh && (
             <button
               onClick={xacNhanHoanThanh}
               disabled={dangXacNhan}
-              className="w-full bg-teal hover:opacity-90 text-white py-3 rounded-lg font-medium disabled:opacity-50 transition"
+              className="w-full bg-teal hover:opacity-90 text-white py-3 rounded-lg font-medium disabled:opacity-50 transition flex items-center justify-center gap-2"
             >
-              {dangXacNhan ? "Đang xác nhận..." : "Xác nhận hoàn thành đơn (đã thanh toán)"}
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{dangXacNhan ? "Đang xác nhận..." : "Xác nhận hoàn thành đơn (đã thanh toán)"}</span>
             </button>
           )}
 
@@ -192,17 +210,17 @@ export default function TrangDonKhach() {
             </p>
           )}
 
-          {don.khach_xac_nhan_hoan_thanh && !daGuiDanhGia && (
+          {laChuDon && don.khach_xac_nhan_hoan_thanh && !daGuiDanhGia && (
             <div className="space-y-3 border-t border-line pt-4">
               <p className="font-medium text-ink">Bạn chấm mấy sao cho thợ?</p>
-              <div className="flex gap-2 text-3xl">
+              <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((sao) => (
                   <button
                     key={sao}
                     onClick={() => setSoSao(sao)}
-                    className={sao <= soSao ? "text-gold" : "text-line"}
+                    className={`transition-colors ${sao <= soSao ? "text-gold" : "text-line"}`}
                   >
-                    ★
+                    <Star className="w-8 h-8" fill={sao <= soSao ? "currentColor" : "none"} />
                   </button>
                 ))}
               </div>
@@ -216,9 +234,10 @@ export default function TrangDonKhach() {
               <button
                 onClick={guiDanhGia}
                 disabled={soSao === 0 || dangGui}
-                className="w-full bg-teal hover:opacity-90 text-white py-3 rounded-lg font-medium disabled:opacity-50 transition"
+                className="w-full bg-teal hover:opacity-90 text-white py-3 rounded-lg font-medium disabled:opacity-50 transition flex items-center justify-center gap-2"
               >
-                {dangGui ? "Đang gửi..." : "Gửi đánh giá"}
+                <Send className="w-4 h-4" />
+                <span>{dangGui ? "Đang gửi..." : "Gửi đánh giá"}</span>
               </button>
             </div>
           )}

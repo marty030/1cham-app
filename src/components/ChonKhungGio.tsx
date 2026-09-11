@@ -4,6 +4,7 @@ import flatpickr from "flatpickr";
 import { Vietnamese } from "flatpickr/dist/l10n/vn.js";
 import "flatpickr/dist/flatpickr.min.css";
 import { supabase } from "../lib/supabase";
+import { taoISOTuVN, gioPhutVN } from "../lib/thoiGianVN";
 
 const GIO_BAT_DAU = 7; // 07:00
 const GIO_KET_THUC = 20; // 20:00 (không bao gồm khung 20:00, dừng ở 19:30)
@@ -31,17 +32,31 @@ function lamTronXuong30Phut(gio: number, phut: number): string {
 
 type ChonKhungGioProps = {
   thoId: number | string | undefined | null;
-  value: string; // "YYYY-MM-DDTHH:mm", rỗng nếu chưa chọn
+  value: string; // ISO có ghi rõ +07:00, ví dụ "2026-09-07T15:30:00+07:00"; rỗng nếu chưa chọn
   onChange: (giaTri: string) => void;
   boQuaDonId?: number; // loại trừ chính đơn này khỏi danh sách "đã bị đặt" (dùng khi thợ xác nhận giờ cho chính đơn đó)
 };
+
+function tachNgayGioVN(gioTri: string): { ngay: string; gio: string } {
+  if (!gioTri) return { ngay: "", gio: "" };
+  const d = new Date(gioTri);
+  if (isNaN(d.getTime())) {
+    // Phòng hờ giá trị cũ kiểu naive "YYYY-MM-DDTHH:mm" (trước khi có fix múi giờ)
+    const [ngay, gio] = gioTri.split("T");
+    return { ngay: ngay || "", gio: (gio || "").slice(0, 5) };
+  }
+  const ngay = d.toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" });
+  const { gio, phut } = gioPhutVN(d);
+  return { ngay, gio: `${String(gio).padStart(2, "0")}:${String(phut).padStart(2, "0")}` };
+}
 
 export default function ChonKhungGio({ thoId, value, onChange, boQuaDonId }: ChonKhungGioProps) {
   const ngayInputRef = useRef<HTMLInputElement>(null);
   const fpRef = useRef<any>(null);
 
-  const [ngayDaChon, setNgayDaChon] = useState<string>(value ? value.split("T")[0] : "");
-  const [gioDaChon, setGioDaChon] = useState<string>(value ? value.split("T")[1] : "");
+  const gtKhoiTao = tachNgayGioVN(value);
+  const [ngayDaChon, setNgayDaChon] = useState<string>(gtKhoiTao.ngay);
+  const [gioDaChon, setGioDaChon] = useState<string>(gtKhoiTao.gio);
   const [dangTaiKhungGio, setDangTaiKhungGio] = useState(false);
   const [khungGioDaDat, setKhungGioDaDat] = useState<Set<string>>(new Set());
 
@@ -77,8 +92,8 @@ export default function ChonKhungGio({ thoId, value, onChange, boQuaDonId }: Cho
 
     async function taiDonTrongNgay() {
       setDangTaiKhungGio(true);
-      const batDauNgay = `${ngayDaChon}T00:00:00`;
-      const ketThucNgay = `${ngayDaChon}T23:59:59`;
+      const batDauNgay = `${ngayDaChon}T00:00:00+07:00`;
+      const ketThucNgay = `${ngayDaChon}T23:59:59+07:00`;
 
       let truyVan = supabase
         .from("don_dat_lich")
@@ -100,8 +115,8 @@ export default function ChonKhungGio({ thoId, value, onChange, boQuaDonId }: Cho
       } else {
         const daDat = new Set(
           (data || []).map((don: any) => {
-            const d = new Date(don.gio_hen);
-            return lamTronXuong30Phut(d.getHours(), d.getMinutes());
+            const { gio, phut } = gioPhutVN(don.gio_hen);
+            return lamTronXuong30Phut(gio, phut);
           })
         );
         setKhungGioDaDat(daDat);
@@ -114,11 +129,12 @@ export default function ChonKhungGio({ thoId, value, onChange, boQuaDonId }: Cho
 
   function chonKhungGio(gio: string) {
     setGioDaChon(gio);
-    onChange(`${ngayDaChon}T${gio}`);
+    onChange(taoISOTuVN(ngayDaChon, gio));
   }
 
-  const homNay = new Date().toISOString().split("T")[0];
-  const gioPhutHienTai = new Date().getHours() * 60 + new Date().getMinutes();
+  const bayGioVN = gioPhutVN(new Date());
+  const homNay = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" });
+  const gioPhutHienTai = bayGioVN.gio * 60 + bayGioVN.phut;
 
   return (
     <div className="flex flex-col gap-3">

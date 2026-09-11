@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
+import { ArrowLeft, Wrench, Send } from "lucide-react";
 
 type TinNhan = {
   id: number;
@@ -154,7 +156,9 @@ export default function TrangLamViecTho() {
     return (
       <div className="max-w-md mx-auto border h-screen flex flex-col bg-slate-100">
         <div className="p-4 bg-emerald-700 text-white font-bold shadow">
-          <h1 className="text-base">🛠️ Bàn làm việc của Thợ #{thoId}</h1>
+          <h1 className="text-base flex items-center gap-2">
+            <Wrench className="w-4 h-4" /> Bàn làm việc của Thợ #{thoId}
+          </h1>
           <p className="text-xs text-emerald-200">Danh sách hội thoại</p>
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -170,7 +174,7 @@ export default function TrangLamViecTho() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-gray-800">{ht.ten_khach}</span>
                   <span className="text-[10px] text-gray-400">
-                    {new Date(ht.thoi_gian_cuoi).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(ht.thoi_gian_cuoi).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", ...TUY_CHON_GIO_VN })}
                   </span>
                 </div>
                 <span className="text-sm text-gray-500 line-clamp-1">{ht.tin_nhan_cuoi}</span>
@@ -185,7 +189,9 @@ export default function TrangLamViecTho() {
   return (
     <div className="max-w-md mx-auto border h-screen flex flex-col bg-slate-100">
       <div className="p-4 bg-emerald-700 text-white font-bold flex items-center gap-3 shadow">
-        <button onClick={() => setKhachDangChon(null)} className="text-xl leading-none">←</button>
+        <button onClick={() => setKhachDangChon(null)} className="leading-none flex items-center justify-center">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
         <div>
           <h1 className="text-base">{khachDangChon.ten_khach}</h1>
           <p className="text-xs text-emerald-200">
@@ -229,9 +235,10 @@ export default function TrangLamViecTho() {
         />
         <button
           onClick={guiTinNhanTraLoi}
-          className="bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-emerald-700 transition"
+          className="bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-emerald-700 transition flex items-center justify-center gap-1.5"
         >
-          Gửi
+          <Send className="w-4 h-4" />
+          <span>Gửi</span>
         </button>
       </div>
     </div>

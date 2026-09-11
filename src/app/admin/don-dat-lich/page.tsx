@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
+import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 
 export default function DonDatLich() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
@@ -60,7 +61,7 @@ export default function DonDatLich() {
             <p><strong>Khách:</strong> {don.ten_khach}</p>
             <p><strong>SĐT:</strong> {don.so_dien_thoai}</p>
             <p><strong>Thợ:</strong> {don.tho?.ten}</p>
-            <p><strong>Giờ hẹn:</strong> {new Date(don.gio_hen).toLocaleString("vi-VN")}</p>
+            <p><strong>Giờ hẹn:</strong> {new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</p>
             <p><strong>Trạng thái:</strong> {don.trang_thai}</p>
 
             <select

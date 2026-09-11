@@ -1,11 +1,14 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { DANH_MUC_NGHE } from "../../lib/danhMuc";
+import { isoVietNamHienTai } from "../../lib/thoiGianVN";
+import { layHoSoKhachHienTai, HoSoKhach } from "../../lib/khach";
 import TheTho from "../../components/TheTho";
 import FormThemTho from "../../components/FormThemTho";
 import Link from "next/link";
+import { ArrowLeft, LogOut, LogIn, UserPlus, User, ClipboardList, Settings } from "lucide-react";
 
 function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -53,11 +56,14 @@ async function taoDonVaLayLink(supabaseClient: any, duLieuDon: any): Promise<{ t
 
 function NoiDungTrangDanhSach() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const danhMucLoc = searchParams.get("danh_muc");
   const tenDanhMucLoc = DANH_MUC_NGHE.find((m) => m.gia_tri === danhMucLoc)?.nhan ?? null;
 
   const [viTriDangMo, setViTriDangMo] = useState<number | null>(null);
   const [daDangNhap, setDaDangNhap] = useState(false);
+  const [hoSoKhach, setHoSoKhach] = useState<HoSoKhach | null>(null);
   const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
   const [tenKhach, setTenKhach] = useState("");
   const [soDienThoai, setSoDienThoai] = useState("");
@@ -91,10 +97,12 @@ function NoiDungTrangDanhSach() {
         setCurrentUserId(data.session.user.id);
         const role = data.session.user.user_metadata?.role;
         setLaAdmin(role === "admin");
+        setHoSoKhach(await layHoSoKhachHienTai());
       } else {
         setDaDangNhap(false);
         setLaAdmin(false);
         setCurrentUserId(null);
+        setHoSoKhach(null);
       }
     }
     kiemTraDangNhap();
@@ -151,11 +159,23 @@ function NoiDungTrangDanhSach() {
     return khoangCach <= (tho.ban_kinh_hoat_dong ?? 10);
   });
 
+  function moDatLich(index: number) {
+    if (!hoSoKhach) {
+      const duongDanHienTai = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+      alert("Vui lòng đăng nhập bằng tài khoản khách hàng trước khi đặt lịch.");
+      router.push(`/login?next=${encodeURIComponent(duongDanHienTai)}`);
+      return;
+    }
+    setTenKhach(hoSoKhach.ten || "");
+    setSoDienThoai(hoSoKhach.so_dien_thoai || "");
+    setViTriDatLich(index);
+  }
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-paper py-8 px-4 sm:px-6">
       <div className="flex items-center gap-2 mb-2">
-        <Link href="/" className="text-sm text-rust hover:underline font-medium">
-          ← Trang chủ
+        <Link href="/" className="flex items-center gap-1 text-sm text-rust hover:underline font-medium">
+          <ArrowLeft className="w-4 h-4" /> Trang chủ
         </Link>
       </div>
 
@@ -172,29 +192,29 @@ function NoiDungTrangDanhSach() {
       <div className="flex flex-wrap justify-center gap-3 w-full max-w-4xl mb-10">
         {daDangNhap ? (
           <button
-            className="bg-line hover:bg-ink-soft hover:text-white text-ink-soft transition px-5 py-2.5 rounded-xl shadow-sm font-medium"
+            className="flex items-center gap-2 bg-line hover:bg-ink-soft hover:text-white text-ink-soft transition px-5 py-2.5 rounded-xl shadow-sm font-medium"
             onClick={async () => {
               await supabase.auth.signOut();
               setDaDangNhap(false);
             }}
           >
-            Đăng xuất
+            <LogOut className="w-4 h-4" /> Đăng xuất
           </button>
         ) : (
           <>
             <Link href="/login">
-              <button className="bg-card hover:bg-teal-soft transition text-teal border border-teal/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                Đăng nhập
+              <button className="flex items-center gap-2 bg-card hover:bg-teal-soft transition text-teal border border-teal/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
+                <LogIn className="w-4 h-4" /> Đăng nhập
               </button>
             </Link>
             <Link href="/dang-ky">
-              <button className="bg-teal hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                Đăng ký làm thợ
+              <button className="flex items-center gap-2 bg-teal hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
+                <UserPlus className="w-4 h-4" /> Đăng ký làm thợ
               </button>
             </Link>
             <Link href="/dang-ky-khach">
-              <button className="bg-card hover:bg-rust-soft transition text-rust border border-rust/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                Đăng ký làm khách hàng
+              <button className="flex items-center gap-2 bg-card hover:bg-rust-soft transition text-rust border border-rust/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
+                <UserPlus className="w-4 h-4" /> Đăng ký làm khách hàng
               </button>
             </Link>
           </>
@@ -202,14 +222,16 @@ function NoiDungTrangDanhSach() {
 
         {daDangNhap && (
           <>
-            <Link href="/ho-so">
-              <button className="bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                Hồ sơ của tôi
-              </button>
-            </Link>
-            <Link href="/don-cua-toi">
-              <button className="bg-gold-soft hover:opacity-80 transition text-gold px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                Đơn của tôi
+            {!hoSoKhach && (
+              <Link href="/ho-so">
+                <button className="flex items-center gap-2 bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
+                  <User className="w-4 h-4" /> Hồ sơ của tôi
+                </button>
+              </Link>
+            )}
+            <Link href={hoSoKhach ? "/don-cua-toi-khach" : "/don-cua-toi"}>
+              <button className="flex items-center gap-2 bg-gold-soft hover:opacity-80 transition text-gold px-5 py-2.5 rounded-xl shadow-sm font-medium">
+                <ClipboardList className="w-4 h-4" /> Đơn của tôi
               </button>
             </Link>
           </>
@@ -217,8 +239,8 @@ function NoiDungTrangDanhSach() {
 
         {laAdmin && (
           <Link href="/admin/don-dat-lich">
-            <button className="bg-gold hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
-              Xem đơn đặt lịch
+            <button className="flex items-center gap-2 bg-gold hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
+              <Settings className="w-4 h-4" /> Xem đơn đặt lịch
             </button>
           </Link>
         )}
@@ -281,7 +303,7 @@ function NoiDungTrangDanhSach() {
               gioHenDayDu={gioHenDayDu}
               diaChiHen={diaChiHen}
               ghiChu={ghiChu}
-              onMoDatLich={() => setViTriDatLich(index)}
+              onMoDatLich={() => moDatLich(index)}
               onDoiTenKhach={(giaTri) => setTenKhach(giaTri)}
               onDoiSoDienThoai={(giaTri) => setSoDienThoai(giaTri)}
               onDoiGioHenDayDu={(giaTri) => setGioHenDayDu(giaTri)}
@@ -292,10 +314,16 @@ function NoiDungTrangDanhSach() {
                   alert("Vui lòng chọn ngày & giờ hẹn.");
                   return;
                 }
+                if (!hoSoKhach) {
+                  alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+                  router.push(`/login?next=${encodeURIComponent(pathname)}`);
+                  return;
+                }
 
                 const { thanhCong, link } = await taoDonVaLayLink(supabase, {
                   ten_khach: tenKhach,
                   so_dien_thoai: soDienThoai,
+                  khach_id: hoSoKhach.id,
                   tho_id: tho.id,
                   gio_hen: gioHenDayDu,
                   dia_chi_hen: diaChiHen,
@@ -333,12 +361,18 @@ function NoiDungTrangDanhSach() {
                   alert("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.");
                   return;
                 }
+                if (!hoSoKhach) {
+                  alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+                  router.push(`/login?next=${encodeURIComponent(pathname)}`);
+                  return;
+                }
 
                 const duLieuDon = {
                   ten_khach: tenKhach,
                   so_dien_thoai: soDienThoai,
+                  khach_id: hoSoKhach.id,
                   tho_id: tho.id,
-                  gio_hen: new Date().toISOString(),
+                  gio_hen: isoVietNamHienTai(),
                   dia_chi_hen: diaChiHen,
                   ghi_chu: ghiChu,
                   trang_thai: "Chờ xác nhận",

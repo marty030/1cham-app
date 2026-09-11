@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { MessageCircle, Send } from "lucide-react";
 
 type TinNhan = {
   id: number;
@@ -30,7 +31,7 @@ export default function ChatPage() {
         return;
       }
 
-            const { data: hoSoKhach, error: loiKhach } = await supabase
+      const { data: hoSoKhach, error: loiKhach } = await supabase
         .from("khach")
         .select("id")
         .eq("user_id", sessionData.session.user.id)
@@ -136,7 +137,9 @@ export default function ChatPage() {
     <div className="max-w-md mx-auto border border-line h-screen flex flex-col bg-paper">
       <div className="p-4 bg-teal text-white font-bold flex items-center justify-between shadow">
         <div>
-          <h1 className="text-base">💬 Trò chuyện với Thợ #{thoId}</h1>
+          <h1 className="text-base flex items-center gap-2">
+            <MessageCircle className="w-4 h-4" /> Trò chuyện với Thợ #{thoId}
+          </h1>
           <p className="text-xs text-white/80">Đang hoạt động</p>
         </div>
       </div>
@@ -176,9 +179,10 @@ export default function ChatPage() {
         />
         <button
           onClick={guiTinNhan}
-          className="bg-teal text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition"
+          className="bg-teal text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition flex items-center justify-center gap-1.5"
         >
-          Gửi
+          <Send className="w-4 h-4" />
+          <span>Gửi</span>
         </button>
       </div>
     </div>

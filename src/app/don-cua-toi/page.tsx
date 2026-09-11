@@ -3,6 +3,18 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import ChonKhungGio from "../../components/ChonKhungGio";
+import { TUY_CHON_GIO_VN } from "../../lib/thoiGianVN";
+import {
+  ClipboardList,
+  Phone,
+  Clock,
+  Car,
+  MapPin,
+  StickyNote,
+  Hourglass,
+  CheckCircle2,
+  Link2,
+} from "lucide-react";
 
 export default function DonCuaToi() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
@@ -55,8 +67,6 @@ export default function DonCuaToi() {
     if (trangThaiMoi === "Đã xác nhận") {
       const don = danhSachDon.find((d) => d.id === idDon);
 
-      // Đơn "Chọn giờ khác" đã có sẵn giờ hẹn do khách chọn — thợ chỉ cần xác nhận,
-      // không cần nhập thêm giờ dự kiến đến. Chỉ đơn "Gọi ngay" mới cần bước này.
       if (don?.che_do_dat_lich === "gio_khac") {
         const { error } = await supabase
           .from("don_dat_lich")
@@ -193,8 +203,8 @@ export default function DonCuaToi() {
   return (
     <div className="min-h-screen bg-paper p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-extrabold text-ink mb-6">
-          📦 Đơn đặt lịch của tôi
+        <h1 className="text-3xl font-extrabold text-ink mb-6 flex items-center gap-2">
+          <ClipboardList className="w-7 h-7" /> Đơn đặt lịch của tôi
         </h1>
 
         <div className="flex flex-wrap gap-2 mb-8 bg-card p-2 rounded-2xl shadow-sm border border-line">
@@ -244,39 +254,39 @@ export default function DonCuaToi() {
                   </div>
                   <a
                     href={`tel:${don.so_dien_thoai}`}
-                    className="bg-teal-soft text-teal p-2.5 rounded-full hover:opacity-80 transition-colors shrink-0"
+                    className="bg-teal-soft text-teal p-2.5 rounded-full hover:opacity-80 transition-colors shrink-0 flex items-center justify-center"
                     title="Gọi ngay"
                   >
-                    📞
+                    <Phone className="w-4 h-4" />
                   </a>
                 </div>
 
                 <div className="p-5 flex-1 flex flex-col gap-3 text-sm text-ink-soft">
                   <div className="flex items-start gap-2.5">
-                    <span className="text-ink-soft mt-0.5">📞</span>
+                    <Phone className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
                     <span className="font-medium text-ink">{don.so_dien_thoai}</span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <span className="text-ink-soft mt-0.5">🕒</span>
-                    <span>Khách hẹn: {new Date(don.gio_hen).toLocaleString("vi-VN")}</span>
+                    <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
+                    <span>Khách hẹn: {new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</span>
                   </div>
 
                   {don.gio_du_kien_den && (
                     <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
-                      <span className="text-teal mt-0.5">🚗</span>
+                      <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
                       <span className="text-teal font-medium">
-                        Bạn dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN")}
+                        Bạn dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}
                       </span>
                     </div>
                   )}
 
                   <div className="flex items-start gap-2.5">
-                    <span className="text-ink-soft mt-0.5">📍</span>
+                    <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
                     <span className="line-clamp-2">{don.dia_chi_hen}</span>
                   </div>
                   {don.ghi_chu && (
                     <div className="flex items-start gap-2.5 bg-gold-soft p-3 rounded-lg border border-gold/20 mt-2">
-                      <span className="text-gold mt-0.5">📝</span>
+                      <StickyNote className="w-4 h-4 text-gold mt-0.5 shrink-0" />
                       <span className="text-ink-soft italic line-clamp-3">
                         {don.ghi_chu}
                       </span>
@@ -285,7 +295,7 @@ export default function DonCuaToi() {
 
                   {don.tho_xac_nhan_hoan_thanh && don.trang_thai !== "Đã hoàn thành" && (
                     <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
-                      <span className="text-teal mt-0.5">⏳</span>
+                      <Hourglass className="w-4 h-4 text-teal mt-0.5 shrink-0" />
                       <span className="text-teal font-medium">
                         Bạn đã xác nhận hoàn thành – đang chờ khách xác nhận
                       </span>
@@ -319,8 +329,8 @@ export default function DonCuaToi() {
                   </div>
                 ) : don.trang_thai === "Đã hoàn thành" ? (
                   <div className="p-5 pt-0 mt-auto">
-                    <div className="w-full text-center font-semibold px-4 py-2.5 rounded-xl border bg-teal text-white border-teal">
-                      ✅ Đã hoàn thành
+                    <div className="w-full flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl border bg-teal text-white border-teal">
+                      <CheckCircle2 className="w-4 h-4" /> Đã hoàn thành
                     </div>
                   </div>
                 ) : (
@@ -349,9 +359,9 @@ export default function DonCuaToi() {
                       don.trang_thai !== "Đã hủy" && (
                         <button
                           onClick={() => copyLinkChoKhach(don.id)}
-                          className="w-full text-xs font-semibold text-rust border border-rust/30 bg-rust-soft hover:opacity-80 py-2 rounded-lg transition"
+                          className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-rust border border-rust/30 bg-rust-soft hover:opacity-80 py-2 rounded-lg transition"
                         >
-                          🔗 Copy link đơn cho khách
+                          <Link2 className="w-3.5 h-3.5" /> Copy link đơn cho khách
                         </button>
                       )}
                   </div>

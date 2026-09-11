@@ -1,18 +1,25 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import ChonKhuVucHoatDong from "../../components/ChonKhuVucHoatDong";
+import { Camera, MapPin, PauseCircle, PlayCircle, Save, Star } from "lucide-react";
 
 export default function HoSo() {
   const [hoSo, setHoSo] = useState<any>(null);
   const [dangTai, setDangTai] = useState(true);
   const [ten, setTen] = useState("");
-  const [nghe, setNghe] = useState("");
+  const [moTaCongViec, setMoTaCongViec] = useState("");
   const [diaChi, setDiaChi] = useState("");
+  const [viDo, setViDo] = useState<number | null>(null);
+  const [kinhDo, setKinhDo] = useState<number | null>(null);
   const [banKinh, setBanKinh] = useState(10);
-  const [dangLayViTri, setDangLayViTri] = useState(false);
-  const router = useRouter();
+  const [anhDaiDien, setAnhDaiDien] = useState<string | null>(null);
+  const [dangTaiAnh, setDangTaiAnh] = useState(false);
   const [dangNghi, setDangNghi] = useState(false);
+  const [dangLuu, setDangLuu] = useState(false);
+  const router = useRouter();
+  const inputAnhRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function layHoSo() {
@@ -33,21 +40,34 @@ export default function HoSo() {
       } else {
         setHoSo(data);
         setTen(data.ten);
-        setNghe(data.nghe);
-        setDiaChi(data.dia_chi);
+        setMoTaCongViec(data.nghe || "");
+        setDiaChi(data.dia_chi || "");
+        setViDo(data.vi_do ?? null);
+        setKinhDo(data.kinh_do ?? null);
         setDangNghi(data.dang_nghi || false);
         setBanKinh(data.ban_kinh_hoat_dong ?? 10);
+        setAnhDaiDien(data.anh_dai_dien ?? null);
       }
       setDangTai(false);
     }
     layHoSo();
-  }, []);
+  }, [router]);
 
   async function luuHoSo() {
+    setDangLuu(true);
     const { error } = await supabase
       .from("tho")
-      .update({ ten: ten, nghe: nghe, dia_chi: diaChi, ban_kinh_hoat_dong: banKinh })
+      .update({
+        ten,
+        nghe: moTaCongViec,
+        dia_chi: diaChi,
+        vi_do: viDo,
+        kinh_do: kinhDo,
+        ban_kinh_hoat_dong: banKinh,
+      })
       .eq("id", hoSo.id);
+
+    setDangLuu(false);
 
     if (error) {
       alert("Lỗi khi lưu: " + error.message);
@@ -70,115 +90,168 @@ export default function HoSo() {
     }
   }
 
-  // MỚI: đặt tọa độ trung tâm khu vực hoạt động — lấy 1 lần, không theo dõi liên tục
-  function datViTriTrungTam() {
-    if (!("geolocation" in navigator)) {
-      alert("Trình duyệt không hỗ trợ định vị.");
+  function doiViTriTrungTam(lat: number, lng: number, diaChiMoi: string) {
+    setViDo(lat);
+    setKinhDo(lng);
+    if (diaChiMoi) setDiaChi(diaChiMoi);
+  }
+
+  async function xuLyChonAnh(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !hoSo) return;
+
+    setDangTaiAnh(true);
+    const duoiFile = file.name.split(".").pop() || "jpg";
+    const duongDan = `${hoSo.user_id}/avatar.${duoiFile}`;
+
+    const { error: loiUpload } = await supabase.storage
+      .from("avatars")
+      .upload(duongDan, file, { upsert: true, cacheControl: "3600" });
+
+    if (loiUpload) {
+      setDangTaiAnh(false);
+      alert("Lỗi tải ảnh lên: " + loiUpload.message);
       return;
     }
-    setDangLayViTri(true);
-    navigator.geolocation.getCurrentPosition(
-      async (viTri) => {
-        const { error } = await supabase
-          .from("tho")
-          .update({ vi_do: viTri.coords.latitude, kinh_do: viTri.coords.longitude })
-          .eq("id", hoSo.id);
-        setDangLayViTri(false);
-        if (error) {
-          alert("Lỗi lưu vị trí: " + error.message);
-        } else {
-          alert("Đã đặt vị trí trung tâm khu vực hoạt động!");
-        }
-      },
-      (loi) => {
-        setDangLayViTri(false);
-        alert("Không lấy được vị trí: " + loi.message);
-      },
-      { enableHighAccuracy: false, timeout: 20000 }
+
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(duongDan);
+    // Thêm tham số thời gian để phá cache trình duyệt — vì dùng chung 1 đường
+    // dẫn (upsert) nên ảnh mới sẽ không tự hiện nếu không có bước này.
+    const urlMoi = `${urlData.publicUrl}?t=${Date.now()}`;
+
+    const { error: loiCapNhat } = await supabase
+      .from("tho")
+      .update({ anh_dai_dien: urlMoi })
+      .eq("id", hoSo.id);
+
+    setDangTaiAnh(false);
+
+    if (loiCapNhat) {
+      alert("Lỗi lưu ảnh đại diện: " + loiCapNhat.message);
+    } else {
+      setAnhDaiDien(urlMoi);
+    }
+  }
+
+  if (dangTai) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-rust"></div>
+      </div>
     );
   }
 
-  if (dangTai) return <p className="p-8">Đang tải hồ sơ...</p>;
-  if (!hoSo) return <p className="p-8">Không tìm thấy hồ sơ của bạn.</p>;
+  if (!hoSo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-paper p-6">
+        <p className="text-ink-soft">Không tìm thấy hồ sơ của bạn.</p>
+      </div>
+    );
+  }
+
+  const chuCaiDau = ten ? ten.charAt(0).toUpperCase() : "T";
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
-      <div className="border border-gray-300 rounded-xl p-6 w-80 bg-white">
-        <h1 className="text-xl font-bold mb-4">Hồ sơ của tôi</h1>
+    <div className="min-h-screen bg-paper py-10 px-4">
+      <div className="max-w-md mx-auto flex flex-col gap-5">
+        <h1 className="text-2xl font-bold text-ink">Hồ sơ của tôi</h1>
 
-        <label className="text-sm text-gray-600">Tên</label>
-        <input
-          type="text"
-          value={ten}
-          onChange={(e) => setTen(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
-        />
+        {/* ẢNH ĐẠI DIỆN */}
+<div className="bg-card border border-line rounded-2xl p-6 flex flex-col items-center gap-3">
+  <div className="w-24 h-24 rounded-full overflow-hidden bg-teal-soft text-teal flex items-center justify-center text-3xl font-bold shrink-0">
+    {anhDaiDien ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={anhDaiDien} alt="Ảnh đại diện" className="w-full h-full object-cover" />
+    ) : (
+      chuCaiDau
+    )}
+  </div>
+  <input
+    ref={inputAnhRef}
+    type="file"
+    accept="image/*"
+    onChange={xuLyChonAnh}
+    className="hidden"
+  />
+  <button
+    type="button"
+    onClick={() => inputAnhRef.current?.click()}
+    disabled={dangTaiAnh}
+    className="flex items-center gap-1.5 text-sm font-semibold text-teal border border-teal/30 bg-teal-soft hover:opacity-80 px-4 py-2 rounded-lg disabled:opacity-50 transition"
+  >
+    <Camera className="w-4 h-4" />
+    {dangTaiAnh ? "Đang tải ảnh lên..." : anhDaiDien ? "Đổi ảnh đại diện" : "Tải ảnh đại diện lên"}
+  </button>
+</div>
 
-        <label className="text-sm text-gray-600">Nghề</label>
-        <input
-          type="text"
-          value={nghe}
-          onChange={(e) => setNghe(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full"
-        />
+        {/* THÔNG TIN CHUNG */}
+        <div className="bg-card border border-line rounded-2xl p-6 flex flex-col gap-3">
+          <div>
+            <label className="text-sm font-semibold text-ink mb-1 block">Tên</label>
+            <input
+              type="text"
+              value={ten}
+              onChange={(e) => setTen(e.target.value)}
+              className="border border-line rounded-lg px-3 py-2 w-full outline-none focus:border-teal text-sm"
+            />
+          </div>
 
-        <label className="text-sm text-gray-600">Địa chỉ</label>
-        <input
-          type="text"
-          value={diaChi}
-          onChange={(e) => setDiaChi(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 mb-3 w-full"
-        />
+          <div>
+            <label className="text-sm font-semibold text-ink mb-1 block">Mô tả công việc</label>
+            <textarea
+              value={moTaCongViec}
+              onChange={(e) => setMoTaCongViec(e.target.value)}
+              rows={2}
+              placeholder="Ví dụ: Sửa điều hòa, tủ lạnh, máy giặt tại nhà, có xe riêng..."
+              className="border border-line rounded-lg px-3 py-2 w-full outline-none focus:border-teal text-sm resize-none"
+            />
+          </div>
+        </div>
 
-        {/* MỚI: KHU VỰC HOẠT ĐỘNG */}
-        <div className="border border-gray-300 rounded-lg p-3 mb-3">
-          <p className="text-sm font-semibold text-gray-700 mb-2">📍 Khu vực hoạt động</p>
-
-          <label className="text-xs text-gray-500">Bán kính (km)</label>
-          <input
-            type="number"
-            min={1}
-            max={50}
-            value={banKinh}
-            onChange={(e) => setBanKinh(Number(e.target.value))}
-            className="border border-gray-300 rounded-lg px-3 py-2 mb-2 w-full text-sm"
+        {/* KHU VỰC HOẠT ĐỘNG */}
+        <div className="bg-card border border-line rounded-2xl p-6 flex flex-col gap-2">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink"><MapPin className="w-4 h-4" /> Khu vực hoạt động</p>
+          <ChonKhuVucHoatDong
+            viDo={viDo}
+            kinhDo={kinhDo}
+            banKinh={banKinh}
+            diaChi={diaChi}
+            onDoiViTri={doiViTriTrungTam}
+            onDoiBanKinh={setBanKinh}
           />
-
-          <button
-            onClick={datViTriTrungTam}
-            disabled={dangLayViTri}
-            className="bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white px-3 py-2 rounded-lg text-sm w-full"
-          >
-            {dangLayViTri ? "Đang lấy vị trí..." : "📍 Đặt vị trí trung tâm (tại đây)"}
-          </button>
-          <p className="text-[11px] text-gray-400 mt-1">
-            Bấm khi bạn đang đứng ở nơi làm việc chính (nhà/xưởng) để đặt tâm khu vực nhận khách.
-          </p>
         </div>
 
-        <p className="text-sm text-yellow-600 mb-3">
-          ⭐ {hoSo.danh_gia_sao} · {hoSo.so_don_hoan_thanh} đơn hoàn thành
-        </p>
-        <div className="flex items-center justify-between border border-gray-300 rounded-lg px-3 py-2 mb-3">
-          <span className="text-sm">
-            {dangNghi ? "🔴 Đang nghỉ" : "🟢 Đang hoạt động"}
-          </span>
-          <button
-            className={`px-3 py-1 rounded-lg text-sm text-white ${
-              dangNghi ? "bg-green-500" : "bg-red-500"
-            }`}
-            onClick={doiTrangThaiNghi}
-          >
-            {dangNghi ? "Bật lại" : "Nghỉ tạm thời"}
-          </button>
-        </div>
+       {/* TRẠNG THÁI + ĐÁNH GIÁ */}
+<div className="bg-card border border-line rounded-2xl p-6 flex flex-col gap-3">
+  <p className="flex items-center gap-1.5 text-sm text-gold font-semibold">
+    <Star className="w-4 h-4 fill-gold text-gold" /> {hoSo.danh_gia_sao} · {hoSo.so_don_hoan_thanh} đơn hoàn thành
+  </p>
+  <div className="flex items-center justify-between border border-line rounded-lg px-3 py-2.5">
+    <span className="text-sm text-ink">
+      {dangNghi ? "🔴 Đang nghỉ" : "🟢 Đang hoạt động"}
+    </span>
+    {/* 1. NÚT NGHỈ / BẬT LẠI */}
+    <button
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white transition ${
+        dangNghi ? "bg-teal hover:opacity-90" : "bg-rust hover:opacity-90"
+      }`}
+      onClick={doiTrangThaiNghi}
+    >
+      {dangNghi ? <PlayCircle className="w-4 h-4" /> : <PauseCircle className="w-4 h-4" />}
+      {dangNghi ? "Bật lại" : "Nghỉ tạm thời"}
+    </button>
+  </div>
+</div>
 
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg w-full"
-          onClick={luuHoSo}
-        >
-          Lưu thay đổi
-        </button>
+{/* 2. NÚT LƯU THAY ĐỔI */}
+<button
+  className="flex items-center justify-center gap-2 bg-rust hover:opacity-90 text-white px-4 py-3 rounded-xl w-full font-semibold disabled:opacity-50 transition"
+  onClick={luuHoSo}
+  disabled={dangLuu}
+>
+  <Save className="w-4 h-4" />
+  {dangLuu ? "Đang lưu..." : "Lưu thay đổi"}
+</button>
       </div>
     </div>
   );

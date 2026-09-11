@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import FormDatLich from "./FormDatLich";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
+import { MessageCircle, CalendarDays, Pencil, Trash2, MapPin, Star } from "lucide-react";
 
 type TheThoProps = {
   tho: any;
@@ -78,8 +79,13 @@ export default function TheTho({
 
       {/* 1. HEADER */}
       <div className="flex items-start gap-4 mb-4">
-        <div className="w-12 h-12 rounded-full bg-teal-soft text-teal flex items-center justify-center text-xl font-bold shrink-0">
-          {chuCaiDau}
+        <div className="w-12 h-12 rounded-full overflow-hidden bg-teal-soft text-teal flex items-center justify-center text-xl font-bold shrink-0">
+          {tho.anh_dai_dien ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={tho.anh_dai_dien} alt={tho.ten} className="w-full h-full object-cover" />
+          ) : (
+            chuCaiDau
+          )}
         </div>
         <div className="flex flex-col items-start gap-1.5 flex-1">
           <div className="flex items-center gap-2 w-full">
@@ -92,7 +98,7 @@ export default function TheTho({
               className="text-teal hover:text-ink bg-teal-soft hover:bg-line rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-xs transition"
               title="Chat với thợ"
             >
-              💬
+              <MessageCircle className="w-3.5 h-3.5" />
             </button>
           </div>
 
@@ -122,21 +128,21 @@ export default function TheTho({
         {tho.nghe && <p className="text-ink-soft text-xs">{tho.nghe}</p>}
 
         {tho.so_don_hoan_thanh > 0 ? (
-          <p className="text-gold font-medium font-mono text-sm">
-            ★ {tho.danh_gia_sao} <span className="text-ink-soft font-normal font-sans">· {tho.so_don_hoan_thanh} đơn</span>
+          <p className="text-gold font-medium font-mono text-sm flex items-center gap-1">
+            <Star className="w-3.5 h-3.5 fill-gold text-gold" /> {tho.danh_gia_sao} <span className="text-ink-soft font-normal font-sans">· {tho.so_don_hoan_thanh} đơn</span>
           </p>
         ) : (
           <p className="text-ink-soft italic">Thợ mới — chưa có đánh giá</p>
         )}
 
         {khoangCach !== null && (
-          <p className="text-xs text-teal font-medium font-mono">
-            📍 Cách bạn {khoangCach.toFixed(1)} km
+          <p className="text-xs text-teal font-medium font-mono flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5" /> Cách bạn {khoangCach.toFixed(1)} km
           </p>
         )}
 
         <div className="mt-2 p-3 bg-paper border border-line rounded-lg text-ink-soft text-sm flex items-start gap-2">
-          <span className="shrink-0 text-ink-soft">📍</span>
+          <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-ink-soft" />
           <span className="line-clamp-2 leading-relaxed">{tho.dia_chi}</span>
         </div>
       </div>
@@ -180,7 +186,7 @@ export default function TheTho({
             onMoDatLich();
           }}
         >
-          📅 Đặt lịch
+          <CalendarDays className="w-4 h-4" /> Đặt lịch
         </button>
       </div>
 
@@ -190,22 +196,22 @@ export default function TheTho({
           <span className="text-xs text-ink-soft font-medium">Admin</span>
           <div className="flex gap-2">
             <button
-              className="bg-teal-soft text-teal hover:opacity-80 px-3 py-1.5 rounded-md text-xs font-medium transition"
+              className="bg-teal-soft text-teal hover:opacity-80 px-3 py-1.5 rounded-md text-xs font-medium transition flex items-center gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onBatDauSua();
               }}
             >
-              ✏️ Sửa
+              <Pencil className="w-3.5 h-3.5" /> Sửa
             </button>
             <button
-              className="bg-rust-soft text-rust hover:opacity-80 px-3 py-1.5 rounded-md text-xs font-medium transition"
+              className="bg-rust-soft text-rust hover:opacity-80 px-3 py-1.5 rounded-md text-xs font-medium transition flex items-center gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onXoa();
               }}
             >
-              🗑️ Ẩn/Xóa
+              <Trash2 className="w-3.5 h-3.5" /> Ẩn/Xóa
             </button>
           </div>
         </div>
