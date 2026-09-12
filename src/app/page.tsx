@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
+import { layHoSoKhachHienTai, HoSoKhach } from "../lib/khach";
 
 const ICON_DANH_MUC: Record<string, string> = {
   dien_lanh: "❄️",
@@ -14,6 +15,7 @@ const ICON_DANH_MUC: Record<string, string> = {
 export default function TrangChu() {
   const [daDangNhap, setDaDangNhap] = useState(false);
   const [laAdmin, setLaAdmin] = useState(false);
+  const [hoSoKhach, setHoSoKhach] = useState<HoSoKhach | null>(null);
 
   useEffect(() => {
     async function kiemTraDangNhap() {
@@ -22,9 +24,11 @@ export default function TrangChu() {
         setDaDangNhap(true);
         const role = data.session.user.user_metadata?.role;
         setLaAdmin(role === "admin");
+        setHoSoKhach(await layHoSoKhachHienTai());
       } else {
         setDaDangNhap(false);
         setLaAdmin(false);
+        setHoSoKhach(null);
       }
     }
     kiemTraDangNhap();
@@ -65,12 +69,14 @@ export default function TrangChu() {
 
         {daDangNhap && (
           <>
-            <Link href="/ho-so">
-              <button className="bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                Hồ sơ của tôi
-              </button>
-            </Link>
-            <Link href="/don-cua-toi">
+            {!hoSoKhach && (
+              <Link href="/ho-so">
+                <button className="bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
+                  Hồ sơ của tôi
+                </button>
+              </Link>
+            )}
+            <Link href={hoSoKhach ? "/don-cua-toi-khach" : "/don-cua-toi"}>
               <button className="bg-gold-soft hover:opacity-80 transition text-gold px-5 py-2.5 rounded-xl shadow-sm font-medium">
                 Đơn của tôi
               </button>

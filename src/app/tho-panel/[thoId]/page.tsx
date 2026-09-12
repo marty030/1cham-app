@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
@@ -31,6 +31,8 @@ export default function TrangLamViecTho() {
   const [khachDangChon, setKhachDangChon] = useState<HoiThoai | null>(null);
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
   const [noiDungMoi, setNoiDungMoi] = useState("");
+  const khachIdDangYeuCau = useRef<number | null>(null);
+  const cuoiDanhSachRef = useRef<HTMLDivElement>(null);
 
   const taiDanhSachHoiThoai = async () => {
     if (!thoId) return;
@@ -77,6 +79,7 @@ export default function TrangLamViecTho() {
   }, [thoId]);
 
   const taiTinNhanCuaKhach = async (khachId: number) => {
+    khachIdDangYeuCau.current = khachId;
     const { data, error } = await supabase
       .from("tin_nhan")
       .select("*")
@@ -84,12 +87,16 @@ export default function TrangLamViecTho() {
       .eq("khach_id", khachId)
       .order("created_at", { ascending: true });
 
+    // Nếu trong lúc chờ, thợ đã bấm sang khách khác thì bỏ qua kết quả trễ này
+    if (khachIdDangYeuCau.current !== khachId) return;
+
     if (data) setDanhSachTinNhan(data);
     if (error) console.error("Lỗi tải tin nhắn:", error.message);
   };
 
   function chonHoiThoai(hoiThoai: HoiThoai) {
     setKhachDangChon(hoiThoai);
+    setDanhSachTinNhan([]); // xóa tin nhắn cũ ngay, tránh hiện nhầm tin của khách trước
     taiTinNhanCuaKhach(hoiThoai.khach_id);
   }
 
@@ -125,6 +132,10 @@ export default function TrangLamViecTho() {
       supabase.removeChannel(channel);
     };
   }, [thoId]);
+
+  useEffect(() => {
+    cuoiDanhSachRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [danhSachTinNhan]);
 
   const guiTinNhanTraLoi = async () => {
     if (!noiDungMoi.trim() || !khachDangChon) return;
@@ -222,6 +233,7 @@ export default function TrangLamViecTho() {
             </div>
           ))
         )}
+        <div ref={cuoiDanhSachRef} />
       </div>
 
       <div className="p-3 bg-white border-t flex gap-2">

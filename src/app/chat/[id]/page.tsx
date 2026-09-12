@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { MessageCircle, Send } from "lucide-react";
@@ -22,6 +22,7 @@ export default function ChatPage() {
   const [dangKiemTra, setDangKiemTra] = useState(true);
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
   const [noiDungMoi, setNoiDungMoi] = useState("");
+  const cuoiDanhSachRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function kiemTraDangNhap() {
@@ -99,6 +100,10 @@ export default function ChatPage() {
     };
   }, [thoId, khachId]);
 
+  useEffect(() => {
+    cuoiDanhSachRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [danhSachTinNhan]);
+
   const guiTinNhan = async () => {
     if (!noiDungMoi.trim() || !khachId) return;
 
@@ -166,6 +171,7 @@ export default function ChatPage() {
             </div>
           ))
         )}
+        <div ref={cuoiDanhSachRef} />
       </div>
 
       <div className="p-3 bg-card border-t border-line flex gap-2">

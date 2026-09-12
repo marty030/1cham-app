@@ -61,12 +61,14 @@ export default function DonCuaToiKhach() {
     <div className="min-h-screen bg-paper p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-2 mb-4">
-          <Link href="/tho-gan-ban" className="text-sm text-rust hover:underline font-medium">
-            ArrowLeft
+          <Link href="/tho-gan-ban" className="text-sm text-rust hover:underline font-medium flex items-center gap-1">
+            <ArrowLeft className="w-4 h-4" /> Quay lại
           </Link>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-ink mb-6">ClipboardList</h1>
+        <h1 className="text-3xl font-extrabold text-ink mb-6 flex items-center gap-2">
+          <ClipboardList className="w-7 h-7" /> Đơn của tôi
+        </h1>
 
         <div className="flex flex-wrap gap-2 mb-8 bg-card p-2 rounded-2xl shadow-sm border border-line">
           {["Tất cả", "Chờ xác nhận", "Đã xác nhận", "Đã hoàn thành", "Đã hủy"].map((trangThaiTab) => {
@@ -135,13 +137,13 @@ export default function DonCuaToiKhach() {
                     </span>
 
                     <div className="flex items-start gap-2.5">
-                      <span className="text-ink-soft mt-0.5">Clock</span>
+                      <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
                       <span>{new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</span>
                     </div>
 
                     {don.gio_du_kien_den && (
                       <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
-                        <span className="text-teal mt-0.5">Car</span>
+                        <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
                         <span className="text-teal font-medium">
                           Thợ dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}
                         </span>
@@ -149,7 +151,7 @@ export default function DonCuaToiKhach() {
                     )}
 
                     <div className="flex items-start gap-2.5">
-                      <span className="text-ink-soft mt-0.5">Mapin</span>
+                      <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
                       <span className="line-clamp-2">{don.dia_chi_hen}</span>
                     </div>
                   </div>
