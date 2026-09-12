@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { useChieuCaoManHinhThuc } from "../../../lib/chieuCaoManHinh";
 import { MessageCircle, Send } from "lucide-react";
 
 type TinNhan = {
@@ -23,6 +24,7 @@ export default function ChatPage() {
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
   const [noiDungMoi, setNoiDungMoi] = useState("");
   const cuoiDanhSachRef = useRef<HTMLDivElement>(null);
+  const chieuCaoThuc = useChieuCaoManHinhThuc();
 
   useEffect(() => {
     async function kiemTraDangNhap() {
@@ -139,7 +141,10 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto border border-line h-dvh flex flex-col bg-paper overflow-hidden">
+    <div
+      className="max-w-md mx-auto border border-line h-dvh flex flex-col bg-paper overflow-hidden"
+      style={chieuCaoThuc ? { height: chieuCaoThuc } : undefined}
+    >
       <div className="p-4 bg-teal text-white font-bold flex items-center justify-between shadow">
         <div>
           <h1 className="text-base flex items-center gap-2">

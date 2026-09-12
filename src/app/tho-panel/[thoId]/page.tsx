@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
+import { useChieuCaoManHinhThuc } from "../../../lib/chieuCaoManHinh";
 import { ArrowLeft, Wrench, Send } from "lucide-react";
 
 type TinNhan = {
@@ -33,6 +34,7 @@ export default function TrangLamViecTho() {
   const [noiDungMoi, setNoiDungMoi] = useState("");
   const khachIdDangYeuCau = useRef<number | null>(null);
   const cuoiDanhSachRef = useRef<HTMLDivElement>(null);
+  const chieuCaoThuc = useChieuCaoManHinhThuc();
 
   const taiDanhSachHoiThoai = async () => {
     if (!thoId) return;
@@ -165,7 +167,10 @@ export default function TrangLamViecTho() {
 
   if (!khachDangChon) {
     return (
-      <div className="max-w-md mx-auto border h-dvh flex flex-col bg-slate-100 overflow-hidden">
+      <div
+        className="max-w-md mx-auto border h-dvh flex flex-col bg-slate-100 overflow-hidden"
+        style={chieuCaoThuc ? { height: chieuCaoThuc } : undefined}
+      >
         <div className="p-4 bg-emerald-700 text-white font-bold shadow">
           <h1 className="text-base flex items-center gap-2">
             <Wrench className="w-4 h-4" /> Bàn làm việc của Thợ #{thoId}
@@ -198,7 +203,10 @@ export default function TrangLamViecTho() {
   }
 
   return (
-    <div className="max-w-md mx-auto border h-dvh flex flex-col bg-slate-100 overflow-hidden">
+    <div
+      className="max-w-md mx-auto border h-dvh flex flex-col bg-slate-100 overflow-hidden"
+      style={chieuCaoThuc ? { height: chieuCaoThuc } : undefined}
+    >
       <div className="p-4 bg-emerald-700 text-white font-bold flex items-center gap-3 shadow">
         <button onClick={() => setKhachDangChon(null)} className="leading-none flex items-center justify-center">
           <ArrowLeft className="w-5 h-5" />
