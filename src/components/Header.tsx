@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import { Wrench, Inbox, LifeBuoy } from "lucide-react";
 
@@ -8,6 +8,7 @@ const SDT_ADMIN = "0865455171"; // Số Zalo admin để nhận báo lỗi/khi�
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const [thoId, setThoId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -33,6 +34,13 @@ export default function Header() {
   function moZaloHoTro() {
     window.open(`https://zalo.me/${SDT_ADMIN}`, "_blank");
   }
+
+  // Trang chat là giao diện toàn màn hình riêng (có thanh tiêu đề của chính nó),
+  // nên ẩn header chung của site để tránh cộng dồn chiều cao vượt quá màn hình.
+  const laTrangChatToanManHinh =
+    pathname?.startsWith("/chat/") || pathname?.startsWith("/tho-panel/");
+
+  if (laTrangChatToanManHinh) return null;
 
   return (
     <header className="bg-card border-b border-line px-6 py-3 flex justify-between items-center sticky top-0 z-50">

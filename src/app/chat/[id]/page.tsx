@@ -139,7 +139,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto border border-line h-screen flex flex-col bg-paper">
+    <div className="max-w-md mx-auto border border-line h-dvh flex flex-col bg-paper overflow-hidden">
       <div className="p-4 bg-teal text-white font-bold flex items-center justify-between shadow">
         <div>
           <h1 className="text-base flex items-center gap-2">
