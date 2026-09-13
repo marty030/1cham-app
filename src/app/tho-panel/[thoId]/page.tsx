@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
-import { useChieuCaoManHinhThuc } from "../../../lib/chieuCaoManHinh";
+import { useVungNhinThayThuc } from "../../../lib/chieuCaoManHinh";
 import { ArrowLeft, Wrench, Send } from "lucide-react";
 
 type TinNhan = {
@@ -34,7 +34,17 @@ export default function TrangLamViecTho() {
   const [noiDungMoi, setNoiDungMoi] = useState("");
   const khachIdDangYeuCau = useRef<number | null>(null);
   const cuoiDanhSachRef = useRef<HTMLDivElement>(null);
-  const chieuCaoThuc = useChieuCaoManHinhThuc();
+  const vungNhinThay = useVungNhinThayThuc();
+
+  // Khoá cuộn trang nền lại — chỉ khung tin nhắn bên trong được cuộn,
+  // tránh trang bị trôi/lệch khi bàn phím ảo bật lên.
+  useEffect(() => {
+    const cu = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = cu;
+    };
+  }, []);
 
   const taiDanhSachHoiThoai = async () => {
     if (!thoId) return;
@@ -168,8 +178,8 @@ export default function TrangLamViecTho() {
   if (!khachDangChon) {
     return (
       <div
-        className="max-w-md mx-auto border h-dvh flex flex-col bg-slate-100 overflow-hidden"
-        style={chieuCaoThuc ? { height: chieuCaoThuc } : undefined}
+        className="max-w-md mx-auto border flex flex-col bg-slate-100 overflow-hidden fixed inset-x-0"
+        style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
       >
         <div className="p-4 bg-emerald-700 text-white font-bold shadow">
           <h1 className="text-base flex items-center gap-2">
@@ -204,8 +214,8 @@ export default function TrangLamViecTho() {
 
   return (
     <div
-      className="max-w-md mx-auto border h-dvh flex flex-col bg-slate-100 overflow-hidden"
-      style={chieuCaoThuc ? { height: chieuCaoThuc } : undefined}
+      className="max-w-md mx-auto border flex flex-col bg-slate-100 overflow-hidden fixed inset-x-0"
+      style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
     >
       <div className="p-4 bg-emerald-700 text-white font-bold flex items-center gap-3 shadow">
         <button onClick={() => setKhachDangChon(null)} className="leading-none flex items-center justify-center">
@@ -251,7 +261,7 @@ export default function TrangLamViecTho() {
           onChange={(e) => setNoiDungMoi(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && guiTinNhanTraLoi()}
           placeholder="Trả lời khách hàng..."
-          className="flex-1 border rounded-full px-4 py-2 text-sm outline-none focus:border-emerald-500 text-black"
+          className="flex-1 border rounded-full px-4 py-2 text-base outline-none focus:border-emerald-500 text-black"
         />
         <button
           onClick={guiTinNhanTraLoi}

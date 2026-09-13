@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
-import { useChieuCaoManHinhThuc } from "../../../lib/chieuCaoManHinh";
+import { useVungNhinThayThuc } from "../../../lib/chieuCaoManHinh";
 import { MessageCircle, Send } from "lucide-react";
 
 type TinNhan = {
@@ -24,7 +24,17 @@ export default function ChatPage() {
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
   const [noiDungMoi, setNoiDungMoi] = useState("");
   const cuoiDanhSachRef = useRef<HTMLDivElement>(null);
-  const chieuCaoThuc = useChieuCaoManHinhThuc();
+  const vungNhinThay = useVungNhinThayThuc();
+
+  // Khoá cuộn trang nền lại — chỉ khung tin nhắn bên trong được cuộn,
+  // tránh trang bị trôi/lệch khi bàn phím ảo bật lên.
+  useEffect(() => {
+    const cu = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = cu;
+    };
+  }, []);
 
   useEffect(() => {
     async function kiemTraDangNhap() {
@@ -142,8 +152,8 @@ export default function ChatPage() {
 
   return (
     <div
-      className="max-w-md mx-auto border border-line h-dvh flex flex-col bg-paper overflow-hidden"
-      style={chieuCaoThuc ? { height: chieuCaoThuc } : undefined}
+      className="max-w-md mx-auto border border-line flex flex-col bg-paper overflow-hidden fixed inset-x-0"
+      style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
     >
       <div className="p-4 bg-teal text-white font-bold flex items-center justify-between shadow">
         <div>
@@ -186,7 +196,7 @@ export default function ChatPage() {
           onChange={(e) => setNoiDungMoi(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && guiTinNhan()}
           placeholder="Nhập tin nhắn..."
-          className="flex-1 border border-line rounded-full px-4 py-2 text-sm outline-none focus:border-teal text-ink"
+          className="flex-1 border border-line rounded-full px-4 py-2 text-base outline-none focus:border-teal text-ink"
         />
         <button
           onClick={guiTinNhan}
