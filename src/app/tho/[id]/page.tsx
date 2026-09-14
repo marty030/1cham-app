@@ -87,7 +87,6 @@ export default function TrangChiTietTho() {
   const [gioHenDayDu, setGioHenDayDu] = useState("");
   const [diaChiHen, setDiaChiHen] = useState("");
   const [ghiChu, setGhiChu] = useState("");
-  const [linkDonMoiTao, setLinkDonMoiTao] = useState<string | null>(null);
 
   useEffect(() => {
     layHoSoKhachHienTai().then(setHoSoKhach);
@@ -374,19 +373,15 @@ export default function TrangChiTietTho() {
             return;
           }
 
-          if (link) {
-            navigator.clipboard.writeText(link).catch(() => {});
-            setLinkDonMoiTao(link);
-          } else {
-            alert("Đặt lịch thành công nhưng không lấy được link đơn. Vui lòng nhờ thợ gửi lại link sau.");
-          }
-
           setDangDatLich(false);
           setTenKhach("");
           setSoDienThoai("");
           setGioHenDayDu("");
           setDiaChiHen("");
           setGhiChu("");
+
+          alert("Đặt lịch thành công!");
+          router.push("/don-cua-toi-khach");
         }}
         onGoiNgay={async () => {
           if (!tenKhach || !soDienThoai || !diaChiHen) {
@@ -416,13 +411,6 @@ export default function TrangChiTietTho() {
             return;
           }
 
-          if (link) {
-            navigator.clipboard.writeText(link).catch(() => {});
-            setLinkDonMoiTao(link);
-          } else {
-            alert("Đã tạo đơn nhưng không lấy được link. Vui lòng nhờ thợ gửi lại link sau.");
-          }
-
           setDangDatLich(false);
           setTenKhach("");
           setSoDienThoai("");
@@ -435,37 +423,10 @@ export default function TrangChiTietTho() {
             const soSach = tho.so_dien_thoai.replace(/\D/g, "");
             window.open(`https://zalo.me/${soSach}`, "_blank");
           }
+
+          router.push("/don-cua-toi-khach");
         }}
       />
-
-      {linkDonMoiTao && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-4">
-            <h3 className="text-lg font-bold text-ink">✅ Đặt lịch thành công!</h3>
-            <p className="text-sm text-ink-soft">
-              Lưu link này lại để xem trạng thái đơn, xác nhận hoàn thành và đánh giá thợ sau này.
-              Link đã được tự động copy vào clipboard.
-            </p>
-            <div className="bg-paper border border-line rounded-lg px-3 py-2 text-sm text-ink-soft break-all font-mono">
-              {linkDonMoiTao}
-            </div>
-            <div className="flex gap-2">
-              <a
-                href={linkDonMoiTao}
-                className="flex-1 text-center bg-rust hover:opacity-90 text-white font-semibold py-2.5 rounded-lg transition-colors"
-              >
-                Mở trang đơn
-              </a>
-              <button
-                onClick={() => setLinkDonMoiTao(null)}
-                className="flex-1 bg-line hover:bg-ink-soft hover:text-white text-ink-soft font-semibold py-2.5 rounded-lg transition-colors"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

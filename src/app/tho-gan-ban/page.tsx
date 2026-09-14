@@ -8,7 +8,7 @@ import { layHoSoKhachHienTai, HoSoKhach } from "../../lib/khach";
 import TheTho from "../../components/TheTho";
 import FormThemTho from "../../components/FormThemTho";
 import Link from "next/link";
-import { ArrowLeft, LogOut, LogIn, UserPlus, User, ClipboardList, Settings } from "lucide-react";
+import { ArrowLeft, LogOut, LogIn, UserPlus, User, ClipboardList, Settings, MessageCircle } from "lucide-react";
 
 function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -73,7 +73,6 @@ function NoiDungTrangDanhSach() {
   const [laAdmin, setLaAdmin] = useState(false);
   const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [linkDonMoiTao, setLinkDonMoiTao] = useState<string | null>(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -234,6 +233,13 @@ function NoiDungTrangDanhSach() {
                 <ClipboardList className="w-4 h-4" /> Đơn của tôi
               </button>
             </Link>
+            {hoSoKhach && (
+              <Link href="/tin-nhan-cua-toi">
+                <button className="flex items-center gap-2 bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
+                  <MessageCircle className="w-4 h-4" /> Tin nhắn
+                </button>
+              </Link>
+            )}
           </>
         )}
 
@@ -337,19 +343,15 @@ function NoiDungTrangDanhSach() {
                   return;
                 }
 
-                if (link) {
-                  navigator.clipboard.writeText(link).catch(() => {});
-                  setLinkDonMoiTao(link);
-                } else {
-                  alert("Đặt lịch thành công nhưng không lấy được link đơn. Vui lòng nhờ thợ gửi lại link sau.");
-                }
-
                 setViTriDatLich(null);
                 setTenKhach("");
                 setSoDienThoai("");
                 setGioHenDayDu("");
                 setDiaChiHen("");
                 setGhiChu("");
+
+                alert("Đặt lịch thành công!");
+                router.push("/don-cua-toi-khach");
               }}
               onHuyDatLich={() => {
                 setViTriDatLich(null);
@@ -387,13 +389,6 @@ function NoiDungTrangDanhSach() {
                   return;
                 }
 
-                if (link) {
-                  navigator.clipboard.writeText(link).catch(() => {});
-                  setLinkDonMoiTao(link);
-                } else {
-                  alert("Đã tạo đơn nhưng không lấy được link. Vui lòng nhờ thợ gửi lại link sau.");
-                }
-
                 setViTriDatLich(null);
                 setTenKhach("");
                 setSoDienThoai("");
@@ -406,6 +401,8 @@ function NoiDungTrangDanhSach() {
                   const soSach = tho.so_dien_thoai.replace(/\D/g, "");
                   window.open(`https://zalo.me/${soSach}`, "_blank");
                 }
+
+                router.push("/don-cua-toi-khach");
               }}
             />
           );
@@ -445,35 +442,6 @@ function NoiDungTrangDanhSach() {
               }
             }}
           />
-        </div>
-      )}
-
-      {linkDonMoiTao && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-4">
-            <h3 className="text-lg font-bold text-ink">✅ Đặt lịch thành công!</h3>
-            <p className="text-sm text-ink-soft">
-              Lưu link này lại để xem trạng thái đơn, xác nhận hoàn thành và đánh giá thợ sau này.
-              Link đã được tự động copy vào clipboard.
-            </p>
-            <div className="bg-paper border border-line rounded-lg px-3 py-2 text-sm text-ink-soft break-all font-mono">
-              {linkDonMoiTao}
-            </div>
-            <div className="flex gap-2">
-              <a
-                href={linkDonMoiTao}
-                className="flex-1 text-center bg-rust hover:opacity-90 text-white font-semibold py-2.5 rounded-lg transition-colors"
-              >
-                Mở trang đơn
-              </a>
-              <button
-                onClick={() => setLinkDonMoiTao(null)}
-                className="flex-1 bg-line hover:bg-ink-soft hover:text-white text-ink-soft font-semibold py-2.5 rounded-lg transition-colors"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

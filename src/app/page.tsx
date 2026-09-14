@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabase } from "../lib/supabase";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
 import { layHoSoKhachHienTai, HoSoKhach } from "../lib/khach";
+import { MessageCircle } from "lucide-react";
 
 const ICON_DANH_MUC: Record<string, string> = {
   dien_lanh: "❄️",
@@ -81,6 +82,13 @@ export default function TrangChu() {
                 Đơn của tôi
               </button>
             </Link>
+            {hoSoKhach && (
+              <Link href="/tin-nhan-cua-toi">
+                <button className="bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4" /> Tin nhắn
+                </button>
+              </Link>
+            )}
           </>
         )}
 

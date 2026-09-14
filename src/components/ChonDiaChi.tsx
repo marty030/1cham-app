@@ -185,36 +185,39 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
     );
   }
 
-  // Đã chọn xong — hiển thị thẻ tóm tắt gọn, kèm nút "Đổi" để chọn lại
+  // Đã chọn xong — hiển thị thẻ tóm tắt gọn, kèm nút "Đổi" để chọn lại.
+  // Icon + địa chỉ xếp full-width phía trên, nút "Đổi" xếp riêng một hàng bên dưới
+  // (tránh flex-row chia cột khiến địa chỉ dài bị bóp hẹp).
   if (diaChiDaChon) {
     return (
-      <div className="bg-teal-soft border border-teal/20 rounded-lg px-3 py-2.5 flex items-start justify-between gap-3">
+      <div className="bg-teal-soft border border-teal/20 rounded-lg px-3 py-2.5 flex flex-col gap-2">
         <div className="flex items-start gap-2 text-sm text-teal">
-          {/* Vị trí 1: Thẻ đã chọn */}
           <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>{diaChiDaChon}</span>
+          <span className="break-words">{diaChiDaChon}</span>
         </div>
         <button
           type="button"
           onClick={doiDiaChi}
-          className="text-xs font-semibold text-rust shrink-0 hover:underline"
+          className="self-end text-xs font-semibold text-rust hover:underline"
         >
-          Đổi
+          Đổi địa chỉ
         </button>
       </div>
     );
   }
 
-  // Bước xác nhận trên bản đồ — kéo ghim để chỉnh chính xác
+  // Bước xác nhận trên bản đồ — kéo ghim để chỉnh chính xác.
+  // key={buoc} đảm bảo React huỷ hẳn khối này (và bản đồ Goong bên trong) khi
+  // chuyển sang bước khác, tránh sót lại canvas bản đồ cũ đè lên layout.
   if (buoc === "xac_nhan") {
     return (
-      <div className="flex flex-col gap-2">
+      <div key={buoc} className="flex flex-col gap-2 w-full">
         <div
           ref={mapContainerRef}
           className="w-full h-56 rounded-lg overflow-hidden border border-line"
         />
         <p className="text-xs text-ink-soft text-center">Kéo ghim để chỉnh đúng vị trí</p>
-        <div className="bg-paper border border-line rounded-lg px-3 py-2 text-sm text-ink min-h-[2.5rem] flex items-center">
+        <div className="w-full bg-paper border border-line rounded-lg px-3 py-2 text-sm text-ink min-h-[2.5rem] flex items-center break-words">
           {dangTaiDiaChi
             ? "Đang xác định địa chỉ..."
             : diaChiXacNhan || "Không xác định được địa chỉ ở vị trí này, thử kéo ghim sang chỗ khác"}
@@ -262,7 +265,7 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
           value={tuKhoa}
           onChange={(e) => setTuKhoa(e.target.value)}
           placeholder="Nhập số nhà, tên đường, phường/xã..."
-          className="border border-line rounded-lg px-3 py-2 text-sm w-full outline-none focus:border-teal"
+          className="border border-line rounded-lg px-3 py-2 text-base w-full outline-none focus:border-teal"
         />
         {(goiY.length > 0 || dangTimKiem) && (
           <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-card border border-line rounded-lg shadow-md max-h-56 overflow-y-auto">

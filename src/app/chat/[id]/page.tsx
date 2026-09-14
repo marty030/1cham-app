@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { useVungNhinThayThuc } from "../../../lib/chieuCaoManHinh";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, ArrowLeft } from "lucide-react";
 
 type TinNhan = {
   id: number;
@@ -155,7 +156,10 @@ export default function ChatPage() {
       className="max-w-md mx-auto border border-line flex flex-col bg-paper overflow-hidden fixed inset-x-0"
       style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
     >
-      <div className="p-4 bg-teal text-white font-bold flex items-center justify-between shadow">
+      <div className="p-4 bg-teal text-white font-bold flex items-center gap-3 shadow">
+        <Link href="/tin-nhan-cua-toi" className="leading-none flex items-center justify-center">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
         <div>
           <h1 className="text-base flex items-center gap-2">
             <MessageCircle className="w-4 h-4" /> Trò chuyện với Thợ #{thoId}
