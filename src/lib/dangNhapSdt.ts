@@ -20,47 +20,46 @@ export function taoEmailNoiBo(soDienThoai: string): string {
  * sinh) gắn với một số điện thoại — tra theo thứ tự bảng khach rồi đến bảng
  * tho. Dùng để người dùng đăng nhập bằng số điện thoại thay vì phải nhớ
  * email đã dùng lúc đăng ký.
+ *
+ * Gọi qua RPC (hàm SECURITY DEFINER `tim_email_theo_sdt` ở phía Supabase)
+ * thay vì SELECT trực tiếp bảng khach/tho — vì RLS trên 2 bảng này chặn đọc
+ * ẩn danh (anon) để bảo vệ số điện thoại khách, và lúc đăng nhập người dùng
+ * đang ở trạng thái anon (chưa có phiên) nên SELECT trực tiếp luôn trả về
+ * rỗng. Hàm RPC chạy với quyền cao hơn RLS nhưng chỉ trả đúng 1 email, không
+ * lộ dữ liệu khác.
  */
 export async function timEmailTheoSoDienThoai(soDienThoai: string): Promise<string | null> {
   const soSach = chuanHoaSdt(soDienThoai);
   if (!soSach) return null;
 
-  const { data: khachData } = await supabase
-    .from("khach")
-    .select("email_dang_nhap")
-    .eq("so_dien_thoai", soSach)
-    .maybeSingle();
-  if (khachData?.email_dang_nhap) return khachData.email_dang_nhap;
+  const { data, error } = await supabase.rpc("tim_email_theo_sdt", {
+    so_dien_thoai_input: soSach,
+  });
 
-  const { data: thoData } = await supabase
-    .from("tho")
-    .select("email_dang_nhap")
-    .eq("so_dien_thoai", soSach)
-    .maybeSingle();
-  if (thoData?.email_dang_nhap) return thoData.email_dang_nhap;
+  if (error) {
+    console.error("Lỗi tra email theo số điện thoại (RPC):", error);
+    return null;
+  }
 
-  return null;
+  return data || null;
 }
 
 /**
  * Kiểm tra một số điện thoại đã có tài khoản (khách hoặc thợ) hay chưa —
- * dùng để chặn đăng ký trùng, tránh việc tra email-theo-SDT bị mơ hồ sau này.
+ * dùng để chặn đăng ký trùng. Cũng gọi qua RPC vì lý do RLS như trên.
  */
 export async function daCoTaiKhoanTheoSdt(soDienThoai: string): Promise<boolean> {
   const soSach = chuanHoaSdt(soDienThoai);
   if (!soSach) return false;
 
-  const { data: khachData } = await supabase
-    .from("khach")
-    .select("id")
-    .eq("so_dien_thoai", soSach)
-    .maybeSingle();
-  if (khachData) return true;
+  const { data, error } = await supabase.rpc("da_co_tai_khoan_theo_sdt", {
+    so_dien_thoai_input: soSach,
+  });
 
-  const { data: thoData } = await supabase
-    .from("tho")
-    .select("id")
-    .eq("so_dien_thoai", soSach)
-    .maybeSingle();
-  return !!thoData;
+  if (error) {
+    console.error("Lỗi kiểm tra số điện thoại đã tồn tại (RPC):", error);
+    return false;
+  }
+
+  return !!data;
 }
