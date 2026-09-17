@@ -3,19 +3,33 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { DANH_MUC_NGHE } from "../../lib/danhMuc";
-import { chuanHoaSdt, taoEmailNoiBo, daCoTaiKhoanTheoSdt } from "../../lib/dangNhapSdt";
+import { chuanHoaSdt, sdtHopLe, taoEmailNoiBo, daCoTaiKhoanTheoSdt } from "../../lib/dangNhapSdt";
 import { UserPlus } from "lucide-react";
+import TruongMatKhau from "../../components/TruongMatKhau";
 
 export default function DangKy() {
   const [soDienThoaiTho, setSoDienThoaiTho] = useState("");
   const [tenTho, setTenTho] = useState("");
   const [matKhau, setMatKhau] = useState("");
+  const [xacNhanMatKhau, setXacNhanMatKhau] = useState("");
   const [email, setEmail] = useState("");
   const [ngheTho, setNgheTho] = useState("");
   const [diaChiTho, setDiaChiTho] = useState("");
   const [danhMucDaChon, setDanhMucDaChon] = useState<string[]>([]);
   const [dangDangKy, setDangDangKy] = useState(false);
   const router = useRouter();
+
+  const [daCham, setDaCham] = useState({
+    sdt: false,
+    ten: false,
+    matKhau: false,
+    xacNhan: false,
+  });
+
+  const sdtLoi = daCham.sdt && !sdtHopLe(soDienThoaiTho);
+  const tenLoi = daCham.ten && !tenTho.trim();
+  const matKhauLoi = daCham.matKhau && matKhau.length < 6;
+  const xacNhanLoi = daCham.xacNhan && (xacNhanMatKhau !== matKhau || !xacNhanMatKhau);
 
   function toggleDanhMuc(giaTri: string) {
     setDanhMucDaChon((truoc) =>
@@ -24,22 +38,28 @@ export default function DangKy() {
   }
 
   async function xuLyDangKy() {
+    setDaCham({ sdt: true, ten: true, matKhau: true, xacNhan: true });
+
     if (danhMucDaChon.length === 0) {
       alert("Vui lòng chọn ít nhất 1 ngành bạn nhận làm.");
       return;
     }
 
     const soSach = chuanHoaSdt(soDienThoaiTho);
-    if (!soSach) {
-      alert("Vui lòng nhập số điện thoại — khách sẽ dùng số này để liên lạc với bạn.");
+    if (!sdtHopLe(soDienThoaiTho)) {
+      alert("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0) — khách sẽ dùng số này để liên lạc với bạn.");
       return;
     }
     if (!tenTho.trim()) {
       alert("Vui lòng nhập tên của bạn.");
       return;
     }
-    if (!matKhau) {
-      alert("Vui lòng nhập mật khẩu.");
+    if (matKhau.length < 6) {
+      alert("Mật khẩu cần ít nhất 6 ký tự.");
+      return;
+    }
+    if (xacNhanMatKhau !== matKhau) {
+      alert("Xác nhận mật khẩu không khớp.");
       return;
     }
 
@@ -94,7 +114,7 @@ export default function DangKy() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-paper">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-paper py-10">
       <div className="border border-line rounded-2xl p-6 w-80 bg-card shadow-sm">
         <h1 className="text-xl font-bold mb-4 text-ink">Đăng ký làm thợ</h1>
 
@@ -106,26 +126,53 @@ export default function DangKy() {
           placeholder="Số điện thoại liên lạc"
           value={soDienThoaiTho}
           onChange={(e) => setSoDienThoaiTho(e.target.value)}
-          className="border border-line rounded-lg px-3 py-2 mb-1 w-full outline-none focus:border-teal"
+          onBlur={() => setDaCham((t) => ({ ...t, sdt: true }))}
+          className={`border rounded-lg px-3 py-2 mb-1 w-full outline-none transition ${
+            sdtLoi ? "border-rust focus:border-rust" : "border-line focus:border-teal"
+          }`}
         />
-        <p className="text-xs text-ink-soft mb-2">
-          Nhập số thật — khách sẽ gọi/nhắn Zalo qua số này để đặt lịch với bạn.
-        </p>
+        {sdtLoi ? (
+          <p className="text-xs text-rust mb-2">Số điện thoại cần đủ 10 số, bắt đầu bằng 0.</p>
+        ) : (
+          <p className="text-xs text-ink-soft mb-2">
+            Nhập số thật — khách sẽ gọi/nhắn Zalo qua số này để đặt lịch với bạn.
+          </p>
+        )}
 
         <input
           type="text"
           placeholder="Tên của bạn"
           value={tenTho}
           onChange={(e) => setTenTho(e.target.value)}
-          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
+          onBlur={() => setDaCham((t) => ({ ...t, ten: true }))}
+          className={`border rounded-lg px-3 py-2 mb-1 w-full outline-none transition ${
+            tenLoi ? "border-rust focus:border-rust" : "border-line focus:border-teal"
+          }`}
         />
-        <input
-          type="password"
-          placeholder="Mật khẩu"
-          value={matKhau}
-          onChange={(e) => setMatKhau(e.target.value)}
-          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
-        />
+        {tenLoi && <p className="text-xs text-rust mb-2">Vui lòng nhập tên của bạn.</p>}
+
+        <div className="mb-1">
+          <TruongMatKhau
+            value={matKhau}
+            onChange={setMatKhau}
+            onBlur={() => setDaCham((t) => ({ ...t, matKhau: true }))}
+            placeholder="Mật khẩu (ít nhất 6 ký tự)"
+            loi={matKhauLoi}
+          />
+        </div>
+        {matKhauLoi && <p className="text-xs text-rust mb-2">Mật khẩu cần ít nhất 6 ký tự.</p>}
+
+        <div className="mb-1">
+          <TruongMatKhau
+            value={xacNhanMatKhau}
+            onChange={setXacNhanMatKhau}
+            onBlur={() => setDaCham((t) => ({ ...t, xacNhan: true }))}
+            placeholder="Xác nhận mật khẩu"
+            loi={xacNhanLoi}
+          />
+        </div>
+        {xacNhanLoi && <p className="text-xs text-rust mb-2">Xác nhận mật khẩu chưa khớp.</p>}
+
         <input
           type="email"
           placeholder="Email (có thể bỏ trống)"

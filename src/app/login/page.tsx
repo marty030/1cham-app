@@ -2,20 +2,33 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import { timEmailTheoSoDienThoai } from "../../lib/dangNhapSdt";
+import { timEmailTheoSoDienThoai, sdtHopLe } from "../../lib/dangNhapSdt";
 import { LogIn } from "lucide-react";
+import TruongMatKhau from "../../components/TruongMatKhau";
 
 function NoiDungDangNhap() {
   const [soDienThoai, setSoDienThoai] = useState("");
   const [matKhau, setMatKhau] = useState("");
   const [dangDangNhap, setDangDangNhap] = useState(false);
+  const [daChamSdt, setDaChamSdt] = useState(false);
+  const [daChamMatKhau, setDaChamMatKhau] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const duongDanTiepTheo = searchParams.get("next") || "/";
 
+  const sdtLoi = daChamSdt && !sdtHopLe(soDienThoai);
+  const matKhauLoi = daChamMatKhau && !matKhau;
+
   async function xuLyDangNhap() {
-    if (!soDienThoai.trim()) {
-      alert("Vui lòng nhập số điện thoại.");
+    setDaChamSdt(true);
+    setDaChamMatKhau(true);
+
+    if (!sdtHopLe(soDienThoai)) {
+      alert("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0).");
+      return;
+    }
+    if (!matKhau) {
+      alert("Vui lòng nhập mật khẩu.");
       return;
     }
 
@@ -46,20 +59,32 @@ function NoiDungDangNhap() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-paper">
       <div className="border border-line rounded-2xl p-6 w-80 bg-card shadow-sm">
         <h1 className="text-xl font-bold mb-4 text-ink">Đăng nhập</h1>
+
         <input
           type="tel"
           placeholder="Số điện thoại"
           value={soDienThoai}
           onChange={(e) => setSoDienThoai(e.target.value)}
-          className="border border-line rounded-lg px-3 py-2 mb-2 w-full outline-none focus:border-teal"
+          onBlur={() => setDaChamSdt(true)}
+          className={`border rounded-lg px-3 py-2 mb-1 w-full outline-none transition ${
+            sdtLoi ? "border-rust focus:border-rust" : "border-line focus:border-teal"
+          }`}
         />
-        <input
-          type="password"
-          placeholder="Mật khẩu"
-          value={matKhau}
-          onChange={(e) => setMatKhau(e.target.value)}
-          className="border border-line rounded-lg px-3 py-2 mb-3 w-full outline-none focus:border-teal"
-        />
+        {sdtLoi && (
+          <p className="text-xs text-rust mb-1">Số điện thoại cần đủ 10 số, bắt đầu bằng 0.</p>
+        )}
+
+        <div className="mb-3 mt-1">
+          <TruongMatKhau
+            value={matKhau}
+            onChange={setMatKhau}
+            onBlur={() => setDaChamMatKhau(true)}
+            placeholder="Mật khẩu"
+            loi={matKhauLoi}
+          />
+          {matKhauLoi && <p className="text-xs text-rust mt-1">Vui lòng nhập mật khẩu.</p>}
+        </div>
+
         <button
           className="bg-teal hover:opacity-90 transition text-white px-4 py-2 rounded-lg w-full font-medium disabled:opacity-50 flex items-center justify-center gap-2"
           onClick={xuLyDangNhap}

@@ -5,6 +5,16 @@ export function chuanHoaSdt(soDienThoai: string): string {
 }
 
 /**
+ * Kiểm tra số điện thoại đủ 10 chữ số và bắt đầu bằng 0 (đúng định dạng số
+ * di động Việt Nam hiện hành) — dùng để tô viền đỏ khi người dùng nhập thiếu
+ * hoặc sai định dạng, trước khi kịp bấm nút gửi.
+ */
+export function sdtHopLe(soDienThoai: string): boolean {
+  const soSach = chuanHoaSdt(soDienThoai);
+  return /^0\d{9}$/.test(soSach);
+}
+
+/**
  * Sinh một email nội bộ (không dùng để nhận thư) khi người dùng không nhập
  * email thật lúc đăng ký — Supabase Auth bắt buộc phải có email hoặc SDT đã
  * xác minh OTP để tạo tài khoản, và ở đây ta chưa làm OTP thật, nên dùng

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "../lib/supabase";
-import { Wrench, Inbox, LifeBuoy } from "lucide-react";
+import { Wrench, Inbox, LifeBuoy, Settings } from "lucide-react";
 
 const SDT_ADMIN = "0865455171"; // Số Zalo admin để nhận báo lỗi/khiếu nại
 
@@ -10,12 +10,15 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [thoId, setThoId] = useState<number | null>(null);
+  const [daDangNhap, setDaDangNhap] = useState(false);
 
   useEffect(() => {
     const kiemTraQuyenTho = async () => {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
+        setDaDangNhap(true);
+
         const { data: thoData } = await supabase
           .from("tho")
           .select("id")
@@ -25,6 +28,8 @@ export default function Header() {
         if (thoData) {
           setThoId(thoData.id);
         }
+      } else {
+        setDaDangNhap(false);
       }
     };
 
@@ -59,6 +64,15 @@ export default function Header() {
             className="bg-teal hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition shadow-sm"
           >
             <Inbox className="w-4 h-4" /> Hộp thư Thợ
+          </button>
+        )}
+
+        {daDangNhap && (
+          <button
+            onClick={() => router.push("/cai-dat")}
+            className="bg-card border border-line hover:bg-line text-ink-soft font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition"
+          >
+            <Settings className="w-4 h-4" /> Cài đặt
           </button>
         )}
 

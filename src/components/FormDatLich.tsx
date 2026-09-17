@@ -2,6 +2,7 @@
 import { useState } from "react";
 import ChonDiaChi from "./ChonDiaChi";
 import ChonKhungGio from "./ChonKhungGio";
+import { sdtHopLe } from "../lib/dangNhapSdt";
 import { X, Zap, CalendarClock, PhoneCall, CalendarCheck } from "lucide-react";
 type FormDatLichProps = {
   hienForm: boolean;
@@ -39,6 +40,31 @@ export default function FormDatLich({
   onHuy,
 }: FormDatLichProps) {
   const [cheDo, setCheDo] = useState<"ngay_bay_gio" | "gio_khac">("ngay_bay_gio");
+  const [daCham, setDaCham] = useState({ ten: false, sdt: false });
+
+  const tenLoi = daCham.ten && !tenKhach.trim();
+  const sdtLoi = daCham.sdt && !sdtHopLe(soDienThoai);
+
+  function kiemTraTruocKhiGui(): boolean {
+    setDaCham({ ten: true, sdt: true });
+    if (!tenKhach.trim()) {
+      alert("Vui lòng nhập họ và tên.");
+      return false;
+    }
+    if (!sdtHopLe(soDienThoai)) {
+      alert("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0).");
+      return false;
+    }
+    return true;
+  }
+
+  function xuLyGoiNgay() {
+    if (kiemTraTruocKhiGui()) onGoiNgay();
+  }
+
+  function xuLyXacNhan() {
+    if (kiemTraTruocKhiGui()) onXacNhan();
+  }
 
   if (!hienForm) return null;
 
@@ -98,8 +124,14 @@ export default function FormDatLich({
               placeholder="Nhập tên của bạn"
               value={tenKhach}
               onChange={(e) => onDoiTenKhach(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-line focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all"
+              onBlur={() => setDaCham((t) => ({ ...t, ten: true }))}
+              className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${
+                tenLoi
+                  ? "border-rust focus:ring-rust/30 focus:border-rust"
+                  : "border-line focus:ring-teal/30 focus:border-teal"
+              }`}
             />
+            {tenLoi && <p className="text-xs text-rust mt-1">Vui lòng nhập họ và tên.</p>}
           </div>
 
           <div>
@@ -109,8 +141,16 @@ export default function FormDatLich({
               placeholder="09xx xxx xxx"
               value={soDienThoai}
               onChange={(e) => onDoiSoDienThoai(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-line focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all"
+              onBlur={() => setDaCham((t) => ({ ...t, sdt: true }))}
+              className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${
+                sdtLoi
+                  ? "border-rust focus:ring-rust/30 focus:border-rust"
+                  : "border-line focus:ring-teal/30 focus:border-teal"
+              }`}
             />
+            {sdtLoi && (
+              <p className="text-xs text-rust mt-1">Số điện thoại cần đủ 10 số, bắt đầu bằng 0.</p>
+            )}
           </div>
 
           {cheDo === "gio_khac" && (
@@ -146,7 +186,7 @@ export default function FormDatLich({
           </button>
           {cheDo === "ngay_bay_gio" ? (
             <button
-  onClick={onGoiNgay}
+  onClick={xuLyGoiNgay}
   className="flex-1 bg-rust text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition-colors shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
 >
   <PhoneCall className="w-4 h-4" /> Gọi ngay
@@ -154,7 +194,7 @@ export default function FormDatLich({
          
           ) : (
             <button
-              onClick={onXacNhan}
+              onClick={xuLyXacNhan}
               className="flex-1 flex items-center justify-center gap-1.5 bg-teal text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition-colors shadow-md active:scale-[0.98]"
             >
               <CalendarCheck className="w-4 h-4" /> Xác nhận đặt
