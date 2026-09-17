@@ -2,9 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "../lib/supabase";
-import { Wrench, Inbox, LifeBuoy, Settings } from "lucide-react";
-
-const SDT_ADMIN = "0865455171"; // Số Zalo admin để nhận báo lỗi/khiếu nại
+import { Wrench, Inbox, Settings } from "lucide-react";
 
 export default function Header() {
   const router = useRouter();
@@ -36,10 +34,6 @@ export default function Header() {
     kiemTraQuyenTho();
   }, []);
 
-  function moZaloHoTro() {
-    window.open(`https://zalo.me/${SDT_ADMIN}`, "_blank");
-  }
-
   // Trang chat là giao diện toàn màn hình riêng (có thanh tiêu đề của chính nó),
   // nên ẩn header chung của site để tránh cộng dồn chiều cao vượt quá màn hình.
   const laTrangChatToanManHinh =
@@ -48,13 +42,13 @@ export default function Header() {
   if (laTrangChatToanManHinh) return null;
 
   return (
-    <header className="bg-card border-b border-line px-6 py-3 flex justify-between items-center sticky top-0 z-50">
+        <header className="bg-card border-b border-line px-6 py-2.5 flex justify-between items-center sticky top-0 z-50">
       <div
         onClick={() => router.push("/")}
-        className="font-bold text-xl text-teal cursor-pointer flex items-center gap-2"
+        className="font-bold text-lg text-teal cursor-pointer flex items-center gap-2"
       >
         <Wrench className="w-5 h-5 shrink-0" />
-        SỬA CHỮA-BẢO TRÌ UY TÍN VÀ MINH BẠCH
+        Thợ Xịn
       </div>
 
       <div className="flex items-center gap-3">
@@ -75,13 +69,6 @@ export default function Header() {
             <Settings className="w-4 h-4" /> Cài đặt
           </button>
         )}
-
-        <button
-          onClick={moZaloHoTro}
-          className="bg-rust-soft hover:opacity-80 text-rust border border-rust/20 font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition"
-        >
-          <LifeBuoy className="w-4 h-4" /> Hỗ trợ
-        </button>
       </div>
     </header>
   );

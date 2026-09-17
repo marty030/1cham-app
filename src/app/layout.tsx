@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "1 Chạm Dịch Vụ",
+  title: "Thợ Xịn",
   description: "Kết nối thợ với người dùng",
 };
 

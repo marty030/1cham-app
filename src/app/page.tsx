@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabase } from "../lib/supabase";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
 import { layHoSoKhachHienTai, HoSoKhach } from "../lib/khach";
+import Footer from "../components/Footer";
 import {
   ShieldCheck,
   MessageCircle,
@@ -178,7 +179,7 @@ export default function TrangChu() {
       <section className="bg-card border-y border-line py-12 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-center text-xl font-bold text-ink mb-8">
-            Vì sao chọn 1 Chạm Dịch Vụ?
+           Vì sao chọn Thợ Xịn?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {CAM_KET.map((item) => {
@@ -253,6 +254,7 @@ export default function TrangChu() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }
