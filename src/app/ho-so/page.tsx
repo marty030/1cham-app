@@ -227,8 +227,9 @@ export default function HoSo() {
     <Star className="w-4 h-4 fill-gold text-gold" /> {hoSo.danh_gia_sao} · {hoSo.so_don_hoan_thanh} đơn hoàn thành
   </p>
   <div className="flex items-center justify-between border border-line rounded-lg px-3 py-2.5">
-    <span className="text-sm text-ink">
-      {dangNghi ? "🔴 Đang nghỉ" : "🟢 Đang hoạt động"}
+    <span className="text-sm text-ink font-medium inline-flex items-center gap-1.5">
+      <span className={`w-1.5 h-1.5 rounded-full ${dangNghi ? "bg-rust" : "bg-teal animate-pulse"}`}></span>
+      {dangNghi ? "Đang nghỉ" : "Đang hoạt động"}
     </span>
     {/* 1. NÚT NGHỈ / BẬT LẠI */}
     <button

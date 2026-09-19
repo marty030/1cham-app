@@ -203,8 +203,8 @@ export default function DonCuaToi() {
   return (
     <div className="min-h-screen bg-paper p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-extrabold text-ink mb-6 flex items-center gap-2">
-          <ClipboardList className="w-7 h-7" /> Đơn đặt lịch của tôi
+        <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-6 flex items-center gap-2">
+          <ClipboardList className="w-6 h-6" /> Đơn đặt lịch của tôi
         </h1>
 
         <div className="flex flex-wrap gap-2 mb-8 bg-card p-2 rounded-2xl shadow-sm border border-line">
@@ -343,10 +343,10 @@ export default function DonCuaToi() {
                           don.trang_thai
                         )}`}
                       >
-                        <option value="Chờ xác nhận">⏳ Chờ xác nhận</option>
-                        <option value="Đã xác nhận">👍 Đã xác nhận</option>
-                        <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
-                        <option value="Đã hủy">❌ Đã hủy</option>
+                        <option value="Chờ xác nhận">Chờ xác nhận</option>
+                        <option value="Đã xác nhận">Đã xác nhận</option>
+                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                        <option value="Đã hủy">Đã hủy</option>
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-ink-soft">
                         <svg className="w-4 h-4 fill-current opacity-70" viewBox="0 0 20 20">

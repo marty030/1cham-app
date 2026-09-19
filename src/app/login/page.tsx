@@ -56,48 +56,63 @@ function NoiDungDangNhap() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-paper">
-      <div className="border border-line rounded-2xl p-6 w-80 bg-card shadow-sm">
-        <h1 className="text-xl font-bold mb-4 text-ink">Đăng nhập</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-paper px-4">
+      <div className="w-full max-w-sm bg-card border border-line rounded-2xl p-6 sm:p-8 shadow-sm">
+        <h1 className="text-2xl font-bold text-ink mb-6 flex items-center gap-2">
+          <LogIn className="w-6 h-6 text-teal" /> Đăng nhập
+        </h1>
 
-        <input
-          type="tel"
-          placeholder="Số điện thoại"
-          value={soDienThoai}
-          onChange={(e) => setSoDienThoai(e.target.value)}
-          onBlur={() => setDaChamSdt(true)}
-          className={`border rounded-lg px-3 py-2 mb-1 w-full outline-none transition ${
-            sdtLoi ? "border-rust focus:border-rust" : "border-line focus:border-teal"
-          }`}
-        />
-        {sdtLoi && (
-          <p className="text-xs text-rust mb-1">Số điện thoại cần đủ 10 số, bắt đầu bằng 0.</p>
-        )}
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-ink mb-1.5">
+              Số điện thoại <span className="text-rust">*</span>
+            </label>
+            <input
+              type="tel"
+              placeholder="09xx xxx xxx"
+              value={soDienThoai}
+              onChange={(e) => setSoDienThoai(e.target.value)}
+              onBlur={() => setDaChamSdt(true)}
+              className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${
+                sdtLoi
+                  ? "border-rust focus:ring-rust/30 focus:border-rust"
+                  : "border-line focus:ring-teal/30 focus:border-teal"
+              }`}
+            />
+            {sdtLoi && (
+              <p className="text-xs text-rust mt-1">Số điện thoại cần đủ 10 số, bắt đầu bằng 0.</p>
+            )}
+          </div>
 
-        <div className="mb-3 mt-1">
-          <TruongMatKhau
-            value={matKhau}
-            onChange={setMatKhau}
-            onBlur={() => setDaChamMatKhau(true)}
-            placeholder="Mật khẩu"
-            loi={matKhauLoi}
-          />
-          {matKhauLoi && <p className="text-xs text-rust mt-1">Vui lòng nhập mật khẩu.</p>}
+          <div>
+            <label className="block text-sm font-semibold text-ink mb-1.5">
+              Mật khẩu <span className="text-rust">*</span>
+            </label>
+            <TruongMatKhau
+              value={matKhau}
+              onChange={setMatKhau}
+              onBlur={() => setDaChamMatKhau(true)}
+              placeholder="Nhập mật khẩu"
+              loi={matKhauLoi}
+            />
+            {matKhauLoi && <p className="text-xs text-rust mt-1">Vui lòng nhập mật khẩu.</p>}
+          </div>
+
+          <button
+            className="bg-teal hover:opacity-90 transition text-white px-4 py-2.5 rounded-lg w-full font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
+            onClick={xuLyDangNhap}
+            disabled={dangDangNhap}
+          >
+            <LogIn className="w-4 h-4" />
+            <span>{dangDangNhap ? "Đang đăng nhập..." : "Đăng nhập"}</span>
+          </button>
         </div>
 
-        <button
-          className="bg-teal hover:opacity-90 transition text-white px-4 py-2 rounded-lg w-full font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-          onClick={xuLyDangNhap}
-          disabled={dangDangNhap}
-        >
-          <LogIn className="w-4 h-4" />
-          <span>{dangDangNhap ? "Đang đăng nhập..." : "Đăng nhập"}</span>
-        </button>
-        <p className="text-sm text-center mt-3 text-ink-soft">
+        <p className="text-sm text-center mt-5 text-ink-soft">
           Chưa có tài khoản khách hàng?{" "}
           <a
             href={`/dang-ky-khach${duongDanTiepTheo !== "/" ? `?next=${encodeURIComponent(duongDanTiepTheo)}` : ""}`}
-            className="text-teal underline"
+            className="text-teal font-semibold underline"
           >
             Đăng ký ngay
           </a>

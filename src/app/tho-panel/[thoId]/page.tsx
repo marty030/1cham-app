@@ -28,6 +28,7 @@ export default function TrangLamViecTho() {
   const params = useParams();
   const thoId = params.thoId as string;
 
+  const [tenTho, setTenTho] = useState<string>("");
   const [danhSachHoiThoai, setDanhSachHoiThoai] = useState<HoiThoai[]>([]);
   const [khachDangChon, setKhachDangChon] = useState<HoiThoai | null>(null);
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
@@ -45,6 +46,15 @@ export default function TrangLamViecTho() {
       document.body.style.overflow = cu;
     };
   }, []);
+
+  useEffect(() => {
+    async function layTenTho() {
+      if (!thoId) return;
+      const { data } = await supabase.from("tho").select("ten").eq("id", thoId).single();
+      if (data?.ten) setTenTho(data.ten);
+    }
+    layTenTho();
+  }, [thoId]);
 
   const taiDanhSachHoiThoai = async () => {
     if (!thoId) return;
@@ -168,7 +178,7 @@ export default function TrangLamViecTho() {
       .select();
 
     if (error) {
-      console.error("Lỗi gửi tin nhắn — message:", error.message, "| code:", error.code);
+      console.error("Lỗi gửi tin nhắn:", error.message, "| code:", error.code);
       setNoiDungMoi(currentText);
     } else if (data && data.length > 0) {
       setDanhSachTinNhan((prev) => [...prev, data[0]]);
@@ -178,32 +188,32 @@ export default function TrangLamViecTho() {
   if (!khachDangChon) {
     return (
       <div
-        className="max-w-md mx-auto border flex flex-col bg-slate-100 overflow-hidden fixed inset-x-0"
+        className="max-w-md mx-auto border border-line flex flex-col bg-paper overflow-hidden fixed inset-x-0"
         style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
       >
-        <div className="p-4 bg-emerald-700 text-white font-bold shadow">
+        <div className="p-4 bg-teal text-white font-bold shadow">
           <h1 className="text-base flex items-center gap-2">
-            <Wrench className="w-4 h-4" /> Bàn làm việc của Thợ #{thoId}
+            <Wrench className="w-4 h-4" /> Bàn làm việc {tenTho ? `— ${tenTho}` : ""}
           </h1>
-          <p className="text-xs text-emerald-200">Danh sách hội thoại</p>
+          <p className="text-xs text-white/80">Danh sách hội thoại</p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {danhSachHoiThoai.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm mt-10">Chưa có khách nào nhắn tin.</p>
+            <p className="text-center text-ink-soft text-sm mt-10">Chưa có khách nào nhắn tin.</p>
           ) : (
             danhSachHoiThoai.map((ht) => (
               <button
                 key={ht.khach_id}
                 onClick={() => chonHoiThoai(ht)}
-                className="w-full text-left p-4 bg-white border-b hover:bg-gray-50 transition flex flex-col gap-1"
+                className="w-full text-left p-4 bg-card border-b border-line hover:bg-paper transition flex flex-col gap-1"
               >
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-800">{ht.ten_khach}</span>
-                  <span className="text-[10px] text-gray-400">
+                  <span className="font-semibold text-ink">{ht.ten_khach}</span>
+                  <span className="text-[10px] text-ink-soft">
                     {new Date(ht.thoi_gian_cuoi).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", ...TUY_CHON_GIO_VN })}
                   </span>
                 </div>
-                <span className="text-sm text-gray-500 line-clamp-1">{ht.tin_nhan_cuoi}</span>
+                <span className="text-sm text-ink-soft line-clamp-1">{ht.tin_nhan_cuoi}</span>
               </button>
             ))
           )}
@@ -214,16 +224,16 @@ export default function TrangLamViecTho() {
 
   return (
     <div
-      className="max-w-md mx-auto border flex flex-col bg-slate-100 overflow-hidden fixed inset-x-0"
+      className="max-w-md mx-auto border border-line flex flex-col bg-paper overflow-hidden fixed inset-x-0"
       style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
     >
-      <div className="p-4 bg-emerald-700 text-white font-bold flex items-center gap-3 shadow">
+      <div className="p-4 bg-teal text-white font-bold flex items-center gap-3 shadow">
         <button onClick={() => setKhachDangChon(null)} className="leading-none flex items-center justify-center">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
           <h1 className="text-base">{khachDangChon.ten_khach}</h1>
-          <p className="text-xs text-emerald-200">
+          <p className="text-xs text-white/80">
             {khachDangChon.coDonXacNhan
               ? khachDangChon.so_dien_thoai
               : "SĐT ẩn — hiện sau khi đơn được xác nhận"}
@@ -233,15 +243,15 @@ export default function TrangLamViecTho() {
 
       <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
         {danhSachTinNhan.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm mt-10">Chưa có tin nhắn nào từ khách hàng.</p>
+          <p className="text-center text-ink-soft text-sm mt-10">Chưa có tin nhắn nào từ khách hàng.</p>
         ) : (
           danhSachTinNhan.map((msg) => (
             <div
               key={msg.id}
               className={`p-3 rounded-xl max-w-[80%] ${
                 msg.sender_type === "tho"
-                  ? "bg-emerald-600 text-white self-end rounded-br-none"
-                  : "bg-white text-gray-800 self-start rounded-bl-none shadow-sm"
+                  ? "bg-teal text-white self-end rounded-br-none"
+                  : "bg-card text-ink self-start rounded-bl-none shadow-sm border border-line"
               }`}
             >
               <p className="text-[10px] opacity-75 mb-1 font-semibold">
@@ -254,18 +264,18 @@ export default function TrangLamViecTho() {
         <div ref={cuoiDanhSachRef} />
       </div>
 
-      <div className="p-3 bg-white border-t flex gap-2">
+      <div className="p-3 bg-card border-t border-line flex gap-2">
         <input
           type="text"
           value={noiDungMoi}
           onChange={(e) => setNoiDungMoi(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && guiTinNhanTraLoi()}
           placeholder="Trả lời khách hàng..."
-          className="flex-1 border rounded-full px-4 py-2 text-base outline-none focus:border-emerald-500 text-black"
+          className="flex-1 border border-line rounded-full px-4 py-2 text-base outline-none focus:border-teal text-ink"
         />
         <button
           onClick={guiTinNhanTraLoi}
-          className="bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-emerald-700 transition flex items-center justify-center gap-1.5"
+          className="bg-teal text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition flex items-center justify-center gap-1.5"
         >
           <Send className="w-4 h-4" />
           <span>Gửi</span>

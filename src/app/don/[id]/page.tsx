@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { layHoSoKhachHienTai } from "../../../lib/khach";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
-import { Clock, Car, MapPin, StickyNote, CheckCircle2, Star, Send } from "lucide-react";
+import { Clock, Car, MapPin, StickyNote, CheckCircle2, Star, Send, Hourglass } from "lucide-react";
+import NhanTrangThai from "../../../components/NhanTrangThai";
 
 type DonDatLich = {
   id: number;
@@ -19,13 +20,6 @@ type DonDatLich = {
   tho_xac_nhan_hoan_thanh: boolean;
   khach_xac_nhan_hoan_thanh: boolean;
   tho: { ten: string } | null;
-};
-
-const NHAN_TRANG_THAI: Record<string, { text: string; mau: string }> = {
-  "Chờ xác nhận": { text: "⏳ Chờ thợ xác nhận", mau: "bg-gold-soft text-gold border-gold/20" },
-  "Đã xác nhận": { text: "👍 Thợ đã xác nhận", mau: "bg-teal-soft text-teal border-teal/20" },
-  "Đã hoàn thành": { text: "✅ Đã hoàn thành", mau: "bg-teal text-white border-teal" },
-  "Đã hủy": { text: "❌ Đã hủy", mau: "bg-rust-soft text-rust border-rust/20" },
 };
 
 export default function TrangDonKhach() {
@@ -125,11 +119,6 @@ export default function TrangDonKhach() {
     );
   }
 
-  const nhan = NHAN_TRANG_THAI[don.trang_thai] ?? {
-    text: don.trang_thai,
-    mau: "bg-line text-ink-soft border-line",
-  };
-
   const coTheXacNhanHoanThanh =
     don.trang_thai === "Đã xác nhận" && !don.khach_xac_nhan_hoan_thanh && laChuDon;
 
@@ -144,9 +133,7 @@ export default function TrangDonKhach() {
         </div>
 
         <div className="p-6 flex flex-col gap-4">
-          <span className={`self-start text-sm font-semibold px-3 py-1.5 rounded-full border ${nhan.mau}`}>
-            {nhan.text}
-          </span>
+          <NhanTrangThai trangThai={don.trang_thai} className="self-start text-sm px-3 py-1.5" />
 
           <div className="flex flex-col gap-2 text-sm text-ink-soft">
             <div className="flex items-start gap-2.5">
@@ -205,8 +192,8 @@ export default function TrangDonKhach() {
           )}
 
           {don.trang_thai === "Đã xác nhận" && don.khach_xac_nhan_hoan_thanh && !don.tho_xac_nhan_hoan_thanh && (
-            <p className="text-sm text-teal bg-teal-soft border border-teal/20 rounded-lg p-3">
-              ⏳ Bạn đã xác nhận hoàn thành — đang chờ thợ xác nhận để hoàn tất đơn.
+            <p className="text-sm text-teal bg-teal-soft border border-teal/20 rounded-lg p-3 flex items-center gap-2">
+              <Hourglass className="w-4 h-4 shrink-0" /> Bạn đã xác nhận hoàn thành — đang chờ thợ xác nhận để hoàn tất đơn.
             </p>
           )}
 

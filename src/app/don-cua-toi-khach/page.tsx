@@ -6,13 +6,7 @@ import { layHoSoKhachHienTai } from "../../lib/khach";
 import { TUY_CHON_GIO_VN } from "../../lib/thoiGianVN";
 import Link from "next/link";
 import { ArrowLeft, ClipboardList, Clock, Car, MapPin, ArrowRight } from "lucide-react";
-
-const NHAN_TRANG_THAI: Record<string, { text: string; mau: string }> = {
-  "Chờ xác nhận": { text: "⏳ Chờ thợ xác nhận", mau: "bg-gold-soft text-gold border-gold/20" },
-  "Đã xác nhận": { text: "👍 Thợ đã xác nhận", mau: "bg-teal-soft text-teal border-teal/20" },
-  "Đã hoàn thành": { text: "✅ Đã hoàn thành", mau: "bg-teal text-white border-teal" },
-  "Đã hủy": { text: "❌ Đã hủy", mau: "bg-rust-soft text-rust border-rust/20" },
-};
+import NhanTrangThai from "../../components/NhanTrangThai";
 
 export default function DonCuaToiKhach() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
@@ -66,8 +60,8 @@ export default function DonCuaToiKhach() {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-ink mb-6 flex items-center gap-2">
-          <ClipboardList className="w-7 h-7" /> Đơn của tôi
+        <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-6 flex items-center gap-2">
+          <ClipboardList className="w-6 h-6" /> Đơn của tôi
         </h1>
 
         <div className="flex flex-wrap gap-2 mb-8 bg-card p-2 rounded-2xl shadow-sm border border-line">
@@ -113,11 +107,6 @@ export default function DonCuaToiKhach() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {danhSachHienThi.map((don) => {
-              const nhan = NHAN_TRANG_THAI[don.trang_thai] ?? {
-                text: don.trang_thai,
-                mau: "bg-line text-ink-soft border-line",
-              };
-
               return (
                 <Link
                   key={don.id}
@@ -132,9 +121,7 @@ export default function DonCuaToiKhach() {
                   </div>
 
                   <div className="p-5 flex-1 flex flex-col gap-3 text-sm text-ink-soft">
-                    <span className={`self-start text-xs font-semibold px-3 py-1.5 rounded-full border ${nhan.mau}`}>
-                      {nhan.text}
-                    </span>
+                    <NhanTrangThai trangThai={don.trang_thai} className="self-start" />
 
                     <div className="flex items-start gap-2.5">
                       <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />

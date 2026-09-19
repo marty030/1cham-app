@@ -98,8 +98,8 @@ export default function TinNhanCuaToiKhach() {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-ink mb-6 flex items-center gap-2">
-          <MessageCircle className="w-7 h-7" /> Tin nhắn của tôi
+        <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-6 flex items-center gap-2">
+          <MessageCircle className="w-6 h-6" /> Tin nhắn của tôi
         </h1>
 
         {danhSachHoiThoai.length === 0 ? (

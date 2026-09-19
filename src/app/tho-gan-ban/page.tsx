@@ -178,7 +178,7 @@ function NoiDungTrangDanhSach() {
         </Link>
       </div>
 
-      <h1 className="text-3xl md:text-4xl font-bold mb-2 text-ink">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-ink">
         {tenDanhMucLoc ? `Thợ ${tenDanhMucLoc.toLowerCase()} gần bạn` : "Thợ gần bạn"}
       </h1>
       {tenDanhMucLoc && (

@@ -21,6 +21,7 @@ export default function ChatPage() {
   const thoId = params.id as string;
 
   const [khachId, setKhachId] = useState<number | null>(null);
+  const [tenTho, setTenTho] = useState<string>("");
   const [dangKiemTra, setDangKiemTra] = useState(true);
   const [danhSachTinNhan, setDanhSachTinNhan] = useState<TinNhan[]>([]);
   const [noiDungMoi, setNoiDungMoi] = useState("");
@@ -51,9 +52,6 @@ export default function ChatPage() {
         .eq("user_id", sessionData.session.user.id)
         .single();
 
-      console.log("DEBUG — session user id:", sessionData.session.user.id);
-      console.log("DEBUG — hoSoKhach:", hoSoKhach, "| lỗi:", loiKhach);
-
       if (!hoSoKhach) {
         alert("Chỉ tài khoản khách hàng mới được chat tại đây.");
         router.push("/");
@@ -64,6 +62,15 @@ export default function ChatPage() {
     }
     kiemTraDangNhap();
   }, [router]);
+
+  useEffect(() => {
+    async function layTenTho() {
+      if (!thoId) return;
+      const { data } = await supabase.from("tho").select("ten").eq("id", thoId).single();
+      if (data?.ten) setTenTho(data.ten);
+    }
+    layTenTho();
+  }, [thoId]);
 
   const taiTinNhan = async () => {
     if (!thoId || !khachId) return;
@@ -162,7 +169,7 @@ export default function ChatPage() {
         </Link>
         <div>
           <h1 className="text-base flex items-center gap-2">
-            <MessageCircle className="w-4 h-4" /> Trò chuyện với Thợ #{thoId}
+            <MessageCircle className="w-4 h-4" /> {tenTho ? `Trò chuyện với ${tenTho}` : "Đang tải..."}
           </h1>
           <p className="text-xs text-white/80">Đang hoạt động</p>
         </div>
