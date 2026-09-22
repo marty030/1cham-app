@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { useVungNhinThayThuc } from "../../../lib/chieuCaoManHinh";
 import { MessageCircle, Send, ArrowLeft } from "lucide-react";
+import { useThongBao } from "../../../components/ThongBao";
 
 type TinNhan = {
   id: number;
@@ -27,6 +28,7 @@ export default function ChatPage() {
   const [noiDungMoi, setNoiDungMoi] = useState("");
   const cuoiDanhSachRef = useRef<HTMLDivElement>(null);
   const vungNhinThay = useVungNhinThayThuc();
+  const thongBao = useThongBao();
 
   // Khoá cuộn trang nền lại — chỉ khung tin nhắn bên trong được cuộn,
   // tránh trang bị trôi/lệch khi bàn phím ảo bật lên.
@@ -53,7 +55,7 @@ export default function ChatPage() {
         .single();
 
       if (!hoSoKhach) {
-        alert("Chỉ tài khoản khách hàng mới được chat tại đây.");
+        thongBao("Chỉ tài khoản khách hàng mới được chat tại đây.", "thongtin");
         router.push("/");
         return;
       }

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import "@goongmaps/goong-js/dist/goong-js.css";
 import { GOONG_API_KEY, GOONG_MAPTILES_KEY, geocodeNguocLai } from "../lib/goong";
 import { LocateFixed, MapPin } from "lucide-react";
+import { useThongBao } from "./ThongBao";
 
 type ChonDiaChiProps = {
   onDoiDiaChi: (diaChi: string) => void;
@@ -28,6 +29,7 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
   const [dangDinhVi, setDangDinhVi] = useState(false);
   const [dangTaiDiaChi, setDangTaiDiaChi] = useState(false);
   const [toaDo, setToaDo] = useState<{ lat: number; lng: number } | null>(null);
+  const thongBao = useThongBao();
   const [diaChiXacNhan, setDiaChiXacNhan] = useState("");
   const [diaChiDaChon, setDiaChiDaChon] = useState("");
 
@@ -85,11 +87,11 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
       if (vt && diaChi) {
         moBuocXacNhan(vt.lat, vt.lng, diaChi);
       } else {
-        alert("Không lấy được vị trí của địa chỉ này, thử chọn địa chỉ khác nhé.");
+        thongBao("Không lấy được vị trí của địa chỉ này, thử chọn địa chỉ khác nhé.", "loi");
       }
     } catch (err) {
       console.error("Lỗi lấy chi tiết địa điểm (Goong Place Detail):", err);
-      alert("Có lỗi khi lấy chi tiết địa điểm, thử lại nhé.");
+      thongBao("Có lỗi khi lấy chi tiết địa điểm, thử lại nhé.", "loi");
     } finally {
       setDangTaiDiaChi(false);
     }
@@ -97,7 +99,7 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
 
   function dinhViHienTai() {
     if (!navigator.geolocation) {
-      alert("Trình duyệt của bạn không hỗ trợ định vị.");
+      thongBao("Trình duyệt của bạn không hỗ trợ định vị.", "thongtin");
       return;
     }
 
@@ -112,7 +114,7 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
       },
       (loi) => {
         console.error("Lỗi lấy vị trí:", loi);
-        alert("Không lấy được vị trí — kiểm tra đã bật quyền định vị cho trình duyệt chưa.");
+        thongBao("Không lấy được vị trí — kiểm tra đã bật quyền định vị cho trình duyệt chưa.", "loi");
         setDangDinhVi(false);
       }
     );
@@ -186,8 +188,6 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
   }
 
   // Đã chọn xong — hiển thị thẻ tóm tắt gọn, kèm nút "Đổi" để chọn lại.
-  // Icon + địa chỉ xếp full-width phía trên, nút "Đổi" xếp riêng một hàng bên dưới
-  // (tránh flex-row chia cột khiến địa chỉ dài bị bóp hẹp).
   if (diaChiDaChon) {
     return (
       <div className="bg-teal-soft border border-teal/20 rounded-lg px-3 py-2.5 flex flex-col gap-2">
@@ -207,8 +207,6 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
   }
 
   // Bước xác nhận trên bản đồ — kéo ghim để chỉnh chính xác.
-  // key={buoc} đảm bảo React huỷ hẳn khối này (và bản đồ Goong bên trong) khi
-  // chuyển sang bước khác, tránh sót lại canvas bản đồ cũ đè lên layout.
   if (buoc === "xac_nhan") {
     return (
       <div key={buoc} className="flex flex-col gap-2 w-full">
@@ -246,7 +244,6 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
   // Bước nhập — dùng vị trí hiện tại hoặc tìm kiếm theo địa chỉ
   return (
     <div className="flex flex-col gap-2">
-      {/* Vị trí 2: Nút định vị */}
       <button
         type="button"
         onClick={dinhViHienTai}
@@ -273,7 +270,6 @@ export default function ChonDiaChi({ onDoiDiaChi }: ChonDiaChiProps) {
               <p className="text-xs text-ink-soft px-3 py-2">Đang tìm...</p>
             ) : (
               goiY.map((gy) => (
-                /* Vị trí 3: Item gợi ý (Thêm flex items-center gap-2 vào className nút) */
                 <button
                   key={gy.place_id}
                   type="button"

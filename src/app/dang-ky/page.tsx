@@ -6,6 +6,7 @@ import { DANH_MUC_NGHE } from "../../lib/danhMuc";
 import { chuanHoaSdt, sdtHopLe, taoEmailNoiBo, daCoTaiKhoanTheoSdt } from "../../lib/dangNhapSdt";
 import { UserPlus } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
+import { useThongBao } from "../../components/ThongBao";
 
 export default function DangKy() {
   const [soDienThoaiTho, setSoDienThoaiTho] = useState("");
@@ -18,6 +19,7 @@ export default function DangKy() {
   const [danhMucDaChon, setDanhMucDaChon] = useState<string[]>([]);
   const [dangDangKy, setDangDangKy] = useState(false);
   const router = useRouter();
+  const thongBao = useThongBao();
 
   const [daCham, setDaCham] = useState({
     sdt: false,
@@ -41,25 +43,25 @@ export default function DangKy() {
     setDaCham({ sdt: true, ten: true, matKhau: true, xacNhan: true });
 
     if (danhMucDaChon.length === 0) {
-      alert("Vui lòng chọn ít nhất 1 ngành bạn nhận làm.");
+      thongBao("Vui lòng chọn ít nhất 1 ngành bạn nhận làm.", "canhbao");
       return;
     }
 
     const soSach = chuanHoaSdt(soDienThoaiTho);
     if (!sdtHopLe(soDienThoaiTho)) {
-      alert("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0) — khách sẽ dùng số này để liên lạc với bạn.");
+      thongBao("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0) — khách sẽ dùng số này để liên lạc với bạn.", "canhbao");
       return;
     }
     if (!tenTho.trim()) {
-      alert("Vui lòng nhập tên của bạn.");
+      thongBao("Vui lòng nhập tên của bạn.", "canhbao");
       return;
     }
     if (matKhau.length < 6) {
-      alert("Mật khẩu cần ít nhất 6 ký tự.");
+      thongBao("Mật khẩu cần ít nhất 6 ký tự.", "canhbao");
       return;
     }
     if (xacNhanMatKhau !== matKhau) {
-      alert("Xác nhận mật khẩu không khớp.");
+      thongBao("Xác nhận mật khẩu không khớp.", "loi");
       return;
     }
 
@@ -67,7 +69,7 @@ export default function DangKy() {
 
     if (await daCoTaiKhoanTheoSdt(soSach)) {
       setDangDangKy(false);
-      alert("Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.");
+      thongBao("Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.", "loi");
       return;
     }
 
@@ -80,7 +82,7 @@ export default function DangKy() {
 
     if (error) {
       setDangDangKy(false);
-      alert("Đăng ký thất bại: " + error.message);
+      thongBao("Đăng ký thất bại: " + error.message, "loi");
       return;
     }
 
@@ -103,12 +105,12 @@ export default function DangKy() {
     setDangDangKy(false);
 
     if (loiTaoHoSo) {
-      alert("Lỗi tạo hồ sơ: " + loiTaoHoSo.message);
+      thongBao("Lỗi tạo hồ sơ: " + loiTaoHoSo.message, "loi");
     } else if (data.session) {
-      alert("Đăng ký thành công!");
+      thongBao("Đăng ký thành công!", "thanhcong");
       router.push("/tho-gan-ban");
     } else {
-      alert("Đăng ký thành công! Vui lòng đăng nhập lại bằng số điện thoại vừa đăng ký.");
+      thongBao("Đăng ký thành công! Vui lòng đăng nhập lại bằng số điện thoại vừa đăng ký.", "thanhcong");
       router.push("/login");
     }
   }

@@ -15,12 +15,14 @@ import {
   CheckCircle2,
   Link2,
 } from "lucide-react";
+import { useThongBao } from "../../components/ThongBao";
 
 export default function DonCuaToi() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
   const [dangTai, setDangTai] = useState(true);
   const [boLoc, setBoLoc] = useState("Tất cả");
   const router = useRouter();
+  const thongBao = useThongBao();
 
   const [donDangXacNhan, setDonDangXacNhan] = useState<number | null>(null);
   const [gioDenDuKienDayDu, setGioDenDuKienDayDu] = useState("");
@@ -73,7 +75,7 @@ export default function DonCuaToi() {
           .update({ trang_thai: "Đã xác nhận" })
           .eq("id", idDon);
         if (error) {
-          alert("Lỗi: " + error.message);
+          thongBao("Lỗi: " + error.message, "loi");
         } else {
           setDanhSachDon((truoc) =>
             truoc.map((d) => (d.id === idDon ? { ...d, trang_thai: "Đã xác nhận" } : d))
@@ -97,7 +99,7 @@ export default function DonCuaToi() {
       .update({ trang_thai: trangThaiMoi })
       .eq("id", idDon);
     if (error) {
-      alert("Lỗi: " + error.message);
+      thongBao("Lỗi: " + error.message, "loi");
     } else {
       setDanhSachDon((truoc) =>
         truoc.map((d) => (d.id === idDon ? { ...d, trang_thai: trangThaiMoi } : d))
@@ -113,7 +115,7 @@ export default function DonCuaToi() {
       .single();
 
     if (loiLayDon || !donMoiNhat) {
-      alert("Không lấy được dữ liệu đơn, thử lại.");
+      thongBao("Không lấy được dữ liệu đơn, thử lại.", "loi");
       return;
     }
 
@@ -130,13 +132,13 @@ export default function DonCuaToi() {
       .eq("id", idDon);
 
     if (error) {
-      alert("Lỗi: " + error.message);
+      thongBao("Lỗi: " + error.message, "loi");
     } else {
       setDanhSachDon((truoc) =>
         truoc.map((d) => (d.id === idDon ? { ...d, ...capNhat } : d))
       );
       if (!khachDaXacNhan) {
-        alert("Đã ghi nhận bạn hoàn thành. Đơn sẽ chuyển 'Đã hoàn thành' khi khách cũng xác nhận.");
+        thongBao("Đã ghi nhận bạn hoàn thành. Đơn sẽ chuyển 'Đã hoàn thành' khi khách cũng xác nhận.", "thanhcong");
       }
     }
   }
@@ -144,12 +146,12 @@ export default function DonCuaToi() {
   function copyLinkChoKhach(idDon: number) {
     const link = `${window.location.origin}/don/${idDon}`;
     navigator.clipboard.writeText(link);
-    alert("Đã copy link! Gửi link này cho khách qua Zalo nhé.");
+    thongBao("Đã copy link! Gửi link này cho khách qua Zalo nhé.", "thanhcong");
   }
 
   async function xacNhanKemGioDen(idDon: number) {
     if (!gioDenDuKienDayDu) {
-      alert("Vui lòng chọn ngày và giờ dự kiến đến.");
+      thongBao("Vui lòng chọn ngày và giờ dự kiến đến.", "canhbao");
       return;
     }
 
@@ -161,7 +163,7 @@ export default function DonCuaToi() {
       .eq("id", idDon);
 
     if (error) {
-      alert("Lỗi: " + error.message);
+      thongBao("Lỗi: " + error.message, "loi");
     } else {
       setDanhSachDon((truoc) =>
         truoc.map((d) =>

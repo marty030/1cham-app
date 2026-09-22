@@ -5,6 +5,8 @@ import { supabase } from "../../lib/supabase";
 import { timEmailTheoSoDienThoai, sdtHopLe } from "../../lib/dangNhapSdt";
 import { LogIn } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
+import { useThongBao } from "../../components/ThongBao";
+import { dichLoiSupabase } from "../../lib/dichLoi";
 
 function NoiDungDangNhap() {
   const [soDienThoai, setSoDienThoai] = useState("");
@@ -15,6 +17,7 @@ function NoiDungDangNhap() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const duongDanTiepTheo = searchParams.get("next") || "/";
+  const thongBao = useThongBao();
 
   const sdtLoi = daChamSdt && !sdtHopLe(soDienThoai);
   const matKhauLoi = daChamMatKhau && !matKhau;
@@ -24,11 +27,11 @@ function NoiDungDangNhap() {
     setDaChamMatKhau(true);
 
     if (!sdtHopLe(soDienThoai)) {
-      alert("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0).");
+      thongBao("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0).", "canhbao");
       return;
     }
     if (!matKhau) {
-      alert("Vui lòng nhập mật khẩu.");
+      thongBao("Vui lòng nhập mật khẩu.", "canhbao");
       return;
     }
 
@@ -37,7 +40,7 @@ function NoiDungDangNhap() {
     const email = await timEmailTheoSoDienThoai(soDienThoai);
     if (!email) {
       setDangDangNhap(false);
-      alert("Không tìm thấy tài khoản với số điện thoại này. Kiểm tra lại hoặc đăng ký mới.");
+      thongBao("Không tìm thấy tài khoản với số điện thoại này. Kiểm tra lại hoặc đăng ký mới.", "loi");
       return;
     }
 
@@ -49,8 +52,9 @@ function NoiDungDangNhap() {
     setDangDangNhap(false);
 
     if (error) {
-      alert("Đăng nhập thất bại: " + error.message);
+      thongBao("Đăng nhập thất bại: " + dichLoiSupabase(error.message), "loi");
     } else {
+      thongBao("Đăng nhập thành công!", "thanhcong");
       router.push(duongDanTiepTheo);
     }
   }

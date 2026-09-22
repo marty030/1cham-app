@@ -4,6 +4,7 @@ import ChonDiaChi from "./ChonDiaChi";
 import ChonKhungGio from "./ChonKhungGio";
 import { sdtHopLe } from "../lib/dangNhapSdt";
 import { X, Zap, CalendarClock, PhoneCall, CalendarCheck } from "lucide-react";
+import { useThongBao } from "./ThongBao";
 type FormDatLichProps = {
   hienForm: boolean;
   thoId: number;
@@ -41,6 +42,7 @@ export default function FormDatLich({
 }: FormDatLichProps) {
   const [cheDo, setCheDo] = useState<"ngay_bay_gio" | "gio_khac">("ngay_bay_gio");
   const [daCham, setDaCham] = useState({ ten: false, sdt: false });
+  const thongBao = useThongBao();
 
   const tenLoi = daCham.ten && !tenKhach.trim();
   const sdtLoi = daCham.sdt && !sdtHopLe(soDienThoai);
@@ -48,11 +50,11 @@ export default function FormDatLich({
   function kiemTraTruocKhiGui(): boolean {
     setDaCham({ ten: true, sdt: true });
     if (!tenKhach.trim()) {
-      alert("Vui lòng nhập họ và tên.");
+      thongBao("Vui lòng nhập họ và tên.", "canhbao");
       return false;
     }
     if (!sdtHopLe(soDienThoai)) {
-      alert("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0).");
+      thongBao("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0).", "canhbao");
       return false;
     }
     return true;

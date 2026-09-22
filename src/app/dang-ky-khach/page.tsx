@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { chuanHoaSdt, sdtHopLe, taoEmailNoiBo, daCoTaiKhoanTheoSdt } from "../../lib/dangNhapSdt";
 import { UserPlus } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
+import { useThongBao } from "../../components/ThongBao";
 
 function NoiDungDangKyKhach() {
   const [soDienThoai, setSoDienThoai] = useState("");
@@ -16,6 +17,7 @@ function NoiDungDangKyKhach() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const duongDanTiepTheo = searchParams.get("next") || "/";
+  const thongBao = useThongBao();
 
   const [daCham, setDaCham] = useState({
     sdt: false,
@@ -34,19 +36,19 @@ function NoiDungDangKyKhach() {
 
     const soSach = chuanHoaSdt(soDienThoai);
     if (!sdtHopLe(soDienThoai)) {
-      alert("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0) — thợ sẽ dùng số này để liên lạc với bạn.");
+      thongBao("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0) — thợ sẽ dùng số này để liên lạc với bạn.", "canhbao");
       return;
     }
     if (!tenKhach.trim()) {
-      alert("Vui lòng nhập tên của bạn.");
+      thongBao("Vui lòng nhập tên của bạn.", "canhbao");
       return;
     }
     if (matKhau.length < 6) {
-      alert("Mật khẩu cần ít nhất 6 ký tự.");
+      thongBao("Mật khẩu cần ít nhất 6 ký tự.", "canhbao");
       return;
     }
     if (xacNhanMatKhau !== matKhau) {
-      alert("Xác nhận mật khẩu không khớp.");
+      thongBao("Xác nhận mật khẩu không khớp.", "loi");
       return;
     }
 
@@ -54,7 +56,7 @@ function NoiDungDangKyKhach() {
 
     if (await daCoTaiKhoanTheoSdt(soSach)) {
       setDangDangKy(false);
-      alert("Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.");
+      thongBao("Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.", "loi");
       return;
     }
 
@@ -70,7 +72,7 @@ function NoiDungDangKyKhach() {
 
     if (error) {
       setDangDangKy(false);
-      alert("Đăng ký thất bại: " + error.message);
+      thongBao("Đăng ký thất bại: " + error.message, "loi");
       return;
     }
 
@@ -88,7 +90,7 @@ function NoiDungDangKyKhach() {
     setDangDangKy(false);
 
     if (loiTaoHoSo) {
-      alert("Lỗi tạo hồ sơ khách: " + loiTaoHoSo.message);
+      thongBao("Lỗi tạo hồ sơ khách: " + loiTaoHoSo.message, "loi");
       return;
     }
 
@@ -96,7 +98,7 @@ function NoiDungDangKyKhach() {
       // Không cần xác nhận email — đã đăng nhập luôn, quay lại đúng trang đang dở.
       router.push(duongDanTiepTheo);
     } else {
-      alert("Đăng ký thành công! Vui lòng đăng nhập lại bằng số điện thoại vừa đăng ký.");
+      thongBao("Đăng ký thành công! Vui lòng đăng nhập lại bằng số điện thoại vừa đăng ký.", "thanhcong");
       router.push(
         `/login${duongDanTiepTheo !== "/" ? `?next=${encodeURIComponent(duongDanTiepTheo)}` : ""}`
       );

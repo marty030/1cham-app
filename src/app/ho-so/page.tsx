@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import ChonKhuVucHoatDong from "../../components/ChonKhuVucHoatDong";
 import { Camera, MapPin, PauseCircle, PlayCircle, Save, Star } from "lucide-react";
+import { useThongBao } from "../../components/ThongBao";
+import { dichLoiSupabase } from "../../lib/dichLoi";
 
 export default function HoSo() {
   const [hoSo, setHoSo] = useState<any>(null);
@@ -20,6 +22,7 @@ export default function HoSo() {
   const [dangLuu, setDangLuu] = useState(false);
   const router = useRouter();
   const inputAnhRef = useRef<HTMLInputElement>(null);
+  const thongBao = useThongBao();
 
   useEffect(() => {
     async function layHoSo() {
@@ -70,9 +73,9 @@ export default function HoSo() {
     setDangLuu(false);
 
     if (error) {
-      alert("Lỗi khi lưu: " + error.message);
+      thongBao("Lỗi khi lưu: " + dichLoiSupabase(error.message), "loi");
     } else {
-      alert("Cập nhật hồ sơ thành công!");
+      thongBao("Cập nhật hồ sơ thành công!", "thanhcong");
     }
   }
 
@@ -84,7 +87,7 @@ export default function HoSo() {
       .eq("id", hoSo.id);
 
     if (error) {
-      alert("Lỗi: " + error.message);
+      thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
     } else {
       setDangNghi(trangThaiMoi);
     }
@@ -110,7 +113,7 @@ export default function HoSo() {
 
     if (loiUpload) {
       setDangTaiAnh(false);
-      alert("Lỗi tải ảnh lên: " + loiUpload.message);
+      thongBao("Lỗi tải ảnh lên: " + dichLoiSupabase(loiUpload.message), "loi");
       return;
     }
 
@@ -127,7 +130,7 @@ export default function HoSo() {
     setDangTaiAnh(false);
 
     if (loiCapNhat) {
-      alert("Lỗi lưu ảnh đại diện: " + loiCapNhat.message);
+      thongBao("Lỗi lưu ảnh đại diện: " + dichLoiSupabase(loiCapNhat.message), "loi");
     } else {
       setAnhDaiDien(urlMoi);
     }

@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 import { chuanHoaSdt, sdtHopLe } from "../../lib/dangNhapSdt";
 import { User, Phone, KeyRound, Save, Wrench, ArrowLeft } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
+import { useThongBao } from "../../components/ThongBao";
 
 type VaiTro = "khach" | "tho";
 
@@ -18,6 +19,7 @@ type HoSoTaiKhoan = {
 
 export default function CaiDat() {
   const router = useRouter();
+  const thongBao = useThongBao();
   const [dangTai, setDangTai] = useState(true);
   const [vaiTro, setVaiTro] = useState<VaiTro | null>(null);
   const [hoSo, setHoSo] = useState<HoSoTaiKhoan | null>(null);
@@ -95,11 +97,11 @@ export default function CaiDat() {
 
     const soSach = chuanHoaSdt(soDienThoai);
     if (!ten.trim()) {
-      alert("Vui lòng nhập tên.");
+      thongBao("Vui lòng nhập tên.", "canhbao");
       return;
     }
     if (!sdtHopLe(soDienThoai)) {
-      alert("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0).");
+      thongBao("Vui lòng nhập đúng số điện thoại (10 số, bắt đầu bằng 0).", "canhbao");
       return;
     }
 
@@ -111,11 +113,11 @@ export default function CaiDat() {
     setDangLuuThongTin(false);
 
     if (error) {
-      alert("Lỗi khi lưu: " + error.message);
+      thongBao("Lỗi khi lưu: " + error.message, "loi");
     } else {
       setSoDienThoai(soSach);
       setHoSo({ ...hoSo, ten: ten.trim(), so_dien_thoai: soSach });
-      alert("Cập nhật thông tin thành công!");
+      thongBao("Cập nhật thông tin thành công!", "thanhcong");
     }
   }
 
@@ -125,15 +127,15 @@ export default function CaiDat() {
     setDaCham((t) => ({ ...t, matKhauHienTai: true, matKhauMoi: true, xacNhan: true }));
 
     if (!matKhauHienTai || !matKhauMoi || !xacNhanMatKhauMoi) {
-      alert("Vui lòng nhập đủ mật khẩu hiện tại, mật khẩu mới và xác nhận.");
+      thongBao("Vui lòng nhập đủ mật khẩu hiện tại, mật khẩu mới và xác nhận.", "canhbao");
       return;
     }
     if (matKhauMoi.length < 6) {
-      alert("Mật khẩu mới cần ít nhất 6 ký tự.");
+      thongBao("Mật khẩu mới cần ít nhất 6 ký tự.", "canhbao");
       return;
     }
     if (matKhauMoi !== xacNhanMatKhauMoi) {
-      alert("Mật khẩu mới và xác nhận không khớp.");
+      thongBao("Mật khẩu mới và xác nhận không khớp.", "loi");
       return;
     }
 
@@ -148,7 +150,7 @@ export default function CaiDat() {
 
     if (loiXacThuc) {
       setDangDoiMatKhau(false);
-      alert("Mật khẩu hiện tại không đúng.");
+      thongBao("Mật khẩu hiện tại không đúng.", "thongtin");
       return;
     }
 
@@ -156,13 +158,13 @@ export default function CaiDat() {
     setDangDoiMatKhau(false);
 
     if (loiDoi) {
-      alert("Lỗi khi đổi mật khẩu: " + loiDoi.message);
+      thongBao("Lỗi khi đổi mật khẩu: " + loiDoi.message, "loi");
     } else {
       setMatKhauHienTai("");
       setMatKhauMoi("");
       setXacNhanMatKhauMoi("");
       setDaCham((t) => ({ ...t, matKhauHienTai: false, matKhauMoi: false, xacNhan: false }));
-      alert("Đổi mật khẩu thành công!");
+      thongBao("Đổi mật khẩu thành công!", "thanhcong");
     }
   }
 

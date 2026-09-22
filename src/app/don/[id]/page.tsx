@@ -7,6 +7,7 @@ import { layHoSoKhachHienTai } from "../../../lib/khach";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { Clock, Car, MapPin, StickyNote, CheckCircle2, Star, Send, Hourglass } from "lucide-react";
 import NhanTrangThai from "../../../components/NhanTrangThai";
+import { useThongBao } from "../../../components/ThongBao";
 
 type DonDatLich = {
   id: number;
@@ -35,6 +36,7 @@ export default function TrangDonKhach() {
   const [dangGui, setDangGui] = useState(false);
   const [dangXacNhan, setDangXacNhan] = useState(false);
   const [laChuDon, setLaChuDon] = useState(false);
+  const thongBao = useThongBao();
 
   useEffect(() => {
     layDon();
@@ -80,7 +82,7 @@ export default function TrangDonKhach() {
     if (!error) {
       setDon({ ...don, ...capNhat });
     } else {
-      alert(error.message || "Có lỗi khi xác nhận, thử lại nhé.");
+      thongBao(error.message || "Có lỗi khi xác nhận, thử lại nhé.", "loi");
     }
   }
 
@@ -99,7 +101,7 @@ export default function TrangDonKhach() {
     if (!error) {
       setDaGuiDanhGia(true);
     } else {
-      alert(error.message || "Có lỗi khi gửi đánh giá, thử lại nhé.");
+      thongBao(error.message || "Có lỗi khi gửi đánh giá, thử lại nhé.", "loi");
     }
   }
 

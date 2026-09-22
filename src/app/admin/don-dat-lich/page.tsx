@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { ClipboardList } from "lucide-react";
 import NhanTrangThai from "../../../components/NhanTrangThai";
+import { useThongBao } from "../../../components/ThongBao";
+import { dichLoiSupabase } from "../../../lib/dichLoi";
 
 export default function DonDatLich() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
   const [daDangNhap, setDaDangNhap] = useState<boolean | null>(null);
   const router = useRouter();
+  const thongBao = useThongBao();
 
   useEffect(() => {
     async function kiemTra() {
@@ -46,7 +49,7 @@ export default function DonDatLich() {
       .update({ trang_thai: trangThaiMoi })
       .eq("id", idDon);
     if (error) {
-      alert("Lỗi: " + error.message);
+      thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
     } else {
       layDonDatLich();
     }

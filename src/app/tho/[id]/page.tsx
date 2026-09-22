@@ -8,6 +8,7 @@ import { isoVietNamHienTai, TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { layHoSoKhachHienTai, HoSoKhach } from "../../../lib/khach";
 import FormDatLich from "../../../components/FormDatLich";
 import { ArrowLeft, MessageCircle, CalendarDays, Star, MapPin } from "lucide-react";
+import { useThongBao } from "../../../components/ThongBao";
 
 type DanhGia = {
   so_sao: number;
@@ -73,6 +74,7 @@ async function taoDonVaLayLink(supabaseClient: any, duLieuDon: any): Promise<{ t
 export default function TrangChiTietTho() {
   const params = useParams();
   const router = useRouter();
+  const thongBao = useThongBao();
   const thoId = params.id as string;
 
   const [tho, setTho] = useState<any>(null);
@@ -157,7 +159,7 @@ export default function TrangChiTietTho() {
 
   function moDatLich() {
     if (!hoSoKhach) {
-      alert("Vui lòng đăng nhập bằng tài khoản khách hàng trước khi đặt lịch.");
+      thongBao("Vui lòng đăng nhập bằng tài khoản khách hàng trước khi đặt lịch.", "canhbao");
       router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
       return;
     }
@@ -348,11 +350,11 @@ export default function TrangChiTietTho() {
         }}
         onXacNhan={async () => {
           if (!gioHenDayDu) {
-            alert("Vui lòng chọn ngày & giờ hẹn.");
+            thongBao("Vui lòng chọn ngày & giờ hẹn.", "canhbao");
             return;
           }
           if (!hoSoKhach) {
-            alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+            thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "thongtin");
             router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
             return;
           }
@@ -369,7 +371,7 @@ export default function TrangChiTietTho() {
           });
 
           if (!thanhCong) {
-            alert("Đặt lịch thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)");
+            thongBao("Đặt lịch thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");
             return;
           }
 
@@ -380,16 +382,16 @@ export default function TrangChiTietTho() {
           setDiaChiHen("");
           setGhiChu("");
 
-          alert("Đặt lịch thành công!");
+          thongBao("Đặt lịch thành công!", "thanhcong");
           router.push("/don-cua-toi-khach");
         }}
         onGoiNgay={async () => {
           if (!tenKhach || !soDienThoai || !diaChiHen) {
-            alert("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.");
+            thongBao("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.", "canhbao");
             return;
           }
           if (!hoSoKhach) {
-            alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+            thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "thongtin");
             router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
             return;
           }
@@ -407,7 +409,7 @@ export default function TrangChiTietTho() {
           });
 
           if (!thanhCong) {
-            alert("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)");
+            thongBao("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");
             return;
           }
 
@@ -418,7 +420,7 @@ export default function TrangChiTietTho() {
           setGhiChu("");
 
           if (!tho.so_dien_thoai) {
-            alert("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.");
+            thongBao("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.", "loi");
           } else {
             const soSach = tho.so_dien_thoai.replace(/\D/g, "");
             window.open(`https://zalo.me/${soSach}`, "_blank");

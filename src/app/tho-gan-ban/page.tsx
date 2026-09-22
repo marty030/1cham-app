@@ -9,6 +9,8 @@ import TheTho from "../../components/TheTho";
 import FormThemTho from "../../components/FormThemTho";
 import Link from "next/link";
 import { ArrowLeft, LogOut, LogIn, UserPlus, User, ClipboardList, Settings, MessageCircle } from "lucide-react";
+import { useThongBao, useXacNhan } from "../../components/ThongBao";
+import { dichLoiSupabase } from "../../lib/dichLoi";
 
 function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -73,6 +75,8 @@ function NoiDungTrangDanhSach() {
   const [laAdmin, setLaAdmin] = useState(false);
   const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const thongBao = useThongBao();
+  const xacNhanHopThoai = useXacNhan();
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -161,7 +165,7 @@ function NoiDungTrangDanhSach() {
   function moDatLich(index: number) {
     if (!hoSoKhach) {
       const duongDanHienTai = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
-      alert("Vui lòng đăng nhập bằng tài khoản khách hàng trước khi đặt lịch.");
+      thongBao("Vui lòng đăng nhập bằng tài khoản khách hàng trước khi đặt lịch.", "canhbao");
       router.push(`/login?next=${encodeURIComponent(duongDanHienTai)}`);
       return;
     }
@@ -297,8 +301,8 @@ function NoiDungTrangDanhSach() {
                 layDanhSachTho();
               }}
               onXoa={async () => {
-                const xacNhan = confirm("Bạn có chắc muốn ẩn thợ này?");
-                if (xacNhan) {
+                const dongY = await xacNhanHopThoai("Bạn có chắc muốn ẩn thợ này?");
+                if (dongY) {
                   await supabase.from("tho").update({ an_hien: false }).eq("id", tho.id);
                   layDanhSachTho();
                 }
@@ -317,11 +321,11 @@ function NoiDungTrangDanhSach() {
               onDoiGhiChu={(giaTri) => setGhiChu(giaTri)}
               onXacNhanDatLich={async () => {
                 if (!gioHenDayDu) {
-                  alert("Vui lòng chọn ngày & giờ hẹn.");
+                  thongBao("Vui lòng chọn ngày & giờ hẹn.", "canhbao");
                   return;
                 }
                 if (!hoSoKhach) {
-                  alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+                  thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "canhbao");
                   router.push(`/login?next=${encodeURIComponent(pathname)}`);
                   return;
                 }
@@ -339,7 +343,7 @@ function NoiDungTrangDanhSach() {
                 });
 
                 if (!thanhCong) {
-                  alert("Đặt lịch thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)");
+                  thongBao("Đặt lịch thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");
                   return;
                 }
 
@@ -350,7 +354,7 @@ function NoiDungTrangDanhSach() {
                 setDiaChiHen("");
                 setGhiChu("");
 
-                alert("Đặt lịch thành công!");
+                thongBao("Đặt lịch thành công!", "thanhcong");
                 router.push("/don-cua-toi-khach");
               }}
               onHuyDatLich={() => {
@@ -360,11 +364,11 @@ function NoiDungTrangDanhSach() {
               }}
               onGoiNgay={async () => {
                 if (!tenKhach || !soDienThoai || !diaChiHen) {
-                  alert("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.");
+                  thongBao("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.", "canhbao");
                   return;
                 }
                 if (!hoSoKhach) {
-                  alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+                  thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "canhbao");
                   router.push(`/login?next=${encodeURIComponent(pathname)}`);
                   return;
                 }
@@ -385,7 +389,7 @@ function NoiDungTrangDanhSach() {
                 const { thanhCong, link } = await taoDonVaLayLink(supabase, duLieuDon);
 
                 if (!thanhCong) {
-                  alert("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)");
+                  thongBao("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");
                   return;
                 }
 
@@ -396,7 +400,7 @@ function NoiDungTrangDanhSach() {
                 setGhiChu("");
 
                 if (!tho.so_dien_thoai) {
-                  alert("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.");
+                  thongBao("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.", "loi");
                 } else {
                   const soSach = tho.so_dien_thoai.replace(/\D/g, "");
                   window.open(`https://zalo.me/${soSach}`, "_blank");
@@ -423,7 +427,7 @@ function NoiDungTrangDanhSach() {
             onToggleDanhMuc={toggleDanhMucMoi}
             onThem={async () => {
               if (danhMucMoi.length === 0) {
-                alert("Vui lòng chọn ít nhất 1 ngành thợ này nhận làm.");
+                thongBao("Vui lòng chọn ít nhất 1 ngành thợ này nhận làm.", "canhbao");
                 return;
               }
 
@@ -431,9 +435,9 @@ function NoiDungTrangDanhSach() {
                 { ten: tenMoi, nghe: ngheMoi, dia_chi: diaChiMoi, danh_muc: danhMucMoi },
               ]);
               if (error) {
-                alert("Lỗi khi thêm: " + error.message);
+                thongBao("Lỗi khi thêm: " + dichLoiSupabase(error.message), "loi");
               } else {
-                alert("Thêm thợ thành công!");
+                thongBao("Thêm thợ thành công!", "thanhcong");
                 layDanhSachTho();
                 setTenMoi("");
                 setNgheMoi("");
