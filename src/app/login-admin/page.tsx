@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { ShieldCheck } from "lucide-react";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import { useThongBao } from "../../components/ThongBao";
 
 export default function LoginAdmin() {
   const [email, setEmail] = useState("");
@@ -11,6 +12,7 @@ export default function LoginAdmin() {
   const [dangDangNhap, setDangDangNhap] = useState(false);
   const [loi, setLoi] = useState("");
   const router = useRouter();
+  const thongBao = useThongBao();
 
   async function xuLyDangNhap() {
     setLoi("");
@@ -41,6 +43,7 @@ export default function LoginAdmin() {
       return;
     }
 
+    thongBao("Đăng nhập thành công!", "thanhcong");
     router.push("/admin/don-dat-lich");
   }
 

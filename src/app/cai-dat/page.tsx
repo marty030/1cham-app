@@ -7,6 +7,7 @@ import { chuanHoaSdt, sdtHopLe } from "../../lib/dangNhapSdt";
 import { User, Phone, KeyRound, Save, Wrench, ArrowLeft } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
+import { dichLoiSupabase } from "../../lib/dichLoi";
 
 type VaiTro = "khach" | "tho";
 
@@ -113,7 +114,7 @@ export default function CaiDat() {
     setDangLuuThongTin(false);
 
     if (error) {
-      thongBao("Lỗi khi lưu: " + error.message, "loi");
+      thongBao("Lỗi khi lưu: " + dichLoiSupabase(error.message), "loi");
     } else {
       setSoDienThoai(soSach);
       setHoSo({ ...hoSo, ten: ten.trim(), so_dien_thoai: soSach });
@@ -150,7 +151,7 @@ export default function CaiDat() {
 
     if (loiXacThuc) {
       setDangDoiMatKhau(false);
-      thongBao("Mật khẩu hiện tại không đúng.", "thongtin");
+      thongBao("Mật khẩu hiện tại không đúng.", "loi");
       return;
     }
 
@@ -158,7 +159,7 @@ export default function CaiDat() {
     setDangDoiMatKhau(false);
 
     if (loiDoi) {
-      thongBao("Lỗi khi đổi mật khẩu: " + loiDoi.message, "loi");
+      thongBao("Lỗi khi đổi mật khẩu: " + dichLoiSupabase(loiDoi.message), "loi");
     } else {
       setMatKhauHienTai("");
       setMatKhauMoi("");

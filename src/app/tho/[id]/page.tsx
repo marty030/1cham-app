@@ -354,7 +354,7 @@ export default function TrangChiTietTho() {
             return;
           }
           if (!hoSoKhach) {
-            thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "thongtin");
+            thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "canhbao");
             router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
             return;
           }
@@ -391,7 +391,7 @@ export default function TrangChiTietTho() {
             return;
           }
           if (!hoSoKhach) {
-            thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "thongtin");
+            thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "canhbao");
             router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
             return;
           }

@@ -7,6 +7,7 @@ import { chuanHoaSdt, sdtHopLe, taoEmailNoiBo, daCoTaiKhoanTheoSdt } from "../..
 import { UserPlus } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
+import { dichLoiSupabase } from "../../lib/dichLoi";
 
 export default function DangKy() {
   const [soDienThoaiTho, setSoDienThoaiTho] = useState("");
@@ -82,7 +83,7 @@ export default function DangKy() {
 
     if (error) {
       setDangDangKy(false);
-      thongBao("Đăng ký thất bại: " + error.message, "loi");
+      thongBao("Đăng ký thất bại: " + dichLoiSupabase(error.message), "loi");
       return;
     }
 
@@ -105,7 +106,7 @@ export default function DangKy() {
     setDangDangKy(false);
 
     if (loiTaoHoSo) {
-      thongBao("Lỗi tạo hồ sơ: " + loiTaoHoSo.message, "loi");
+      thongBao("Lỗi tạo hồ sơ: " + dichLoiSupabase(loiTaoHoSo.message), "loi");
     } else if (data.session) {
       thongBao("Đăng ký thành công!", "thanhcong");
       router.push("/tho-gan-ban");

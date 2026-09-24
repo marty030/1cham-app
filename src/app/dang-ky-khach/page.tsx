@@ -6,6 +6,7 @@ import { chuanHoaSdt, sdtHopLe, taoEmailNoiBo, daCoTaiKhoanTheoSdt } from "../..
 import { UserPlus } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
+import { dichLoiSupabase } from "../../lib/dichLoi";
 
 function NoiDungDangKyKhach() {
   const [soDienThoai, setSoDienThoai] = useState("");
@@ -72,7 +73,7 @@ function NoiDungDangKyKhach() {
 
     if (error) {
       setDangDangKy(false);
-      thongBao("Đăng ký thất bại: " + error.message, "loi");
+      thongBao("Đăng ký thất bại: " + dichLoiSupabase(error.message), "loi");
       return;
     }
 
@@ -90,12 +91,13 @@ function NoiDungDangKyKhach() {
     setDangDangKy(false);
 
     if (loiTaoHoSo) {
-      thongBao("Lỗi tạo hồ sơ khách: " + loiTaoHoSo.message, "loi");
+      thongBao("Lỗi tạo hồ sơ khách: " + dichLoiSupabase(loiTaoHoSo.message), "loi");
       return;
     }
 
     if (data.session) {
       // Không cần xác nhận email — đã đăng nhập luôn, quay lại đúng trang đang dở.
+      thongBao("Đăng ký thành công!", "thanhcong");
       router.push(duongDanTiepTheo);
     } else {
       thongBao("Đăng ký thành công! Vui lòng đăng nhập lại bằng số điện thoại vừa đăng ký.", "thanhcong");

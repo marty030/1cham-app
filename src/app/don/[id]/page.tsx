@@ -8,6 +8,7 @@ import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { Clock, Car, MapPin, StickyNote, CheckCircle2, Star, Send, Hourglass } from "lucide-react";
 import NhanTrangThai from "../../../components/NhanTrangThai";
 import { useThongBao } from "../../../components/ThongBao";
+import { dichLoiSupabase } from "../../../lib/dichLoi";
 
 type DonDatLich = {
   id: number;
@@ -82,7 +83,7 @@ export default function TrangDonKhach() {
     if (!error) {
       setDon({ ...don, ...capNhat });
     } else {
-      thongBao(error.message || "Có lỗi khi xác nhận, thử lại nhé.", "loi");
+      thongBao(error.message ? dichLoiSupabase(error.message) : "Có lỗi khi xác nhận, thử lại nhé.", "loi");
     }
   }
 
@@ -101,7 +102,7 @@ export default function TrangDonKhach() {
     if (!error) {
       setDaGuiDanhGia(true);
     } else {
-      thongBao(error.message || "Có lỗi khi gửi đánh giá, thử lại nhé.", "loi");
+      thongBao(error.message ? dichLoiSupabase(error.message) : "Có lỗi khi gửi đánh giá, thử lại nhé.", "loi");
     }
   }
 

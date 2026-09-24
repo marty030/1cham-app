@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import "@goongmaps/goong-js/dist/goong-js.css";
 import { GOONG_API_KEY, GOONG_MAPTILES_KEY, geocodeNguocLai, taoVongTronGeoJSON } from "../lib/goong";
 import { LocateFixed } from "lucide-react";
+import { useThongBao } from "./ThongBao";
 
 type ChonKhuVucHoatDongProps = {
   viDo: number | null;
@@ -33,6 +34,7 @@ export default function ChonKhuVucHoatDong({
 
   const [dangDinhVi, setDangDinhVi] = useState(false);
   const [dangTaiDiaChi, setDangTaiDiaChi] = useState(false);
+  const thongBao = useThongBao();
 
   const toaDoBanDau = {
     lat: viDo ?? TOA_DO_MAC_DINH.lat,
@@ -119,7 +121,7 @@ export default function ChonKhuVucHoatDong({
 
   function dinhViHienTai() {
     if (!navigator.geolocation) {
-      alert("Trình duyệt của bạn không hỗ trợ định vị.");
+      thongBao("Trình duyệt của bạn không hỗ trợ định vị.", "thongtin");
       return;
     }
 
@@ -144,7 +146,7 @@ export default function ChonKhuVucHoatDong({
       },
       (loi) => {
         console.error("Lỗi lấy vị trí:", loi);
-        alert("Không lấy được vị trí — kiểm tra đã bật quyền định vị cho trình duyệt chưa.");
+        thongBao("Không lấy được vị trí — kiểm tra đã bật quyền định vị cho trình duyệt chưa.", "loi");
         setDangDinhVi(false);
       }
     );

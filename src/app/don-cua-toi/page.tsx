@@ -16,6 +16,7 @@ import {
   Link2,
 } from "lucide-react";
 import { useThongBao } from "../../components/ThongBao";
+import { dichLoiSupabase } from "../../lib/dichLoi";
 
 export default function DonCuaToi() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
@@ -75,7 +76,7 @@ export default function DonCuaToi() {
           .update({ trang_thai: "Đã xác nhận" })
           .eq("id", idDon);
         if (error) {
-          thongBao("Lỗi: " + error.message, "loi");
+          thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
         } else {
           setDanhSachDon((truoc) =>
             truoc.map((d) => (d.id === idDon ? { ...d, trang_thai: "Đã xác nhận" } : d))
@@ -99,7 +100,7 @@ export default function DonCuaToi() {
       .update({ trang_thai: trangThaiMoi })
       .eq("id", idDon);
     if (error) {
-      thongBao("Lỗi: " + error.message, "loi");
+      thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
     } else {
       setDanhSachDon((truoc) =>
         truoc.map((d) => (d.id === idDon ? { ...d, trang_thai: trangThaiMoi } : d))
@@ -132,7 +133,7 @@ export default function DonCuaToi() {
       .eq("id", idDon);
 
     if (error) {
-      thongBao("Lỗi: " + error.message, "loi");
+      thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
     } else {
       setDanhSachDon((truoc) =>
         truoc.map((d) => (d.id === idDon ? { ...d, ...capNhat } : d))
@@ -163,7 +164,7 @@ export default function DonCuaToi() {
       .eq("id", idDon);
 
     if (error) {
-      thongBao("Lỗi: " + error.message, "loi");
+      thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
     } else {
       setDanhSachDon((truoc) =>
         truoc.map((d) =>
