@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { taoDonDatLich } from "../../lib/donDatLich";
 import { DANH_MUC_NGHE } from "../../lib/danhMuc";
 import { isoVietNamHienTai } from "../../lib/thoiGianVN";
 import { layHoSoKhachHienTai, HoSoKhach } from "../../lib/khach";
@@ -23,37 +24,6 @@ function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) 
       Math.sin(dLng / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
-}
-
-async function taoDonVaLayLink(supabaseClient: any, duLieuDon: any): Promise<{ thanhCong: boolean; link: string | null }> {
-  const { data, error } = await supabaseClient
-    .from("don_dat_lich")
-    .insert([duLieuDon])
-    .select()
-    .single();
-
-  if (!error && data) {
-    return { thanhCong: true, link: `${window.location.origin}/don/${data.id}` };
-  }
-
-  console.error("Insert don_dat_lich - lỗi hoặc không lấy lại được dòng vừa tạo:", error);
-
-  const { data: donDuPhong, error: loiDuPhong } = await supabaseClient
-    .from("don_dat_lich")
-    .select("id")
-    .eq("so_dien_thoai", duLieuDon.so_dien_thoai)
-    .eq("tho_id", duLieuDon.tho_id)
-    .eq("gio_hen", duLieuDon.gio_hen)
-    .order("id", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (loiDuPhong || !donDuPhong) {
-    console.error("Phương án dự phòng cũng thất bại (có thể insert đã thất bại thật sự):", loiDuPhong);
-    return { thanhCong: false, link: null };
-  }
-
-  return { thanhCong: true, link: `${window.location.origin}/don/${donDuPhong.id}` };
 }
 
 function NoiDungTrangDanhSach() {
@@ -330,7 +300,7 @@ function NoiDungTrangDanhSach() {
                   return;
                 }
 
-                const { thanhCong, link } = await taoDonVaLayLink(supabase, {
+                const thanhCong = await taoDonDatLich({
                   ten_khach: tenKhach,
                   so_dien_thoai: soDienThoai,
                   khach_id: hoSoKhach.id,
@@ -386,7 +356,7 @@ function NoiDungTrangDanhSach() {
                   che_do_dat_lich: "ngay_bay_gio",
                 };
 
-                const { thanhCong, link } = await taoDonVaLayLink(supabase, duLieuDon);
+                const thanhCong = await taoDonDatLich(duLieuDon);
 
                 if (!thanhCong) {
                   thongBao("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");

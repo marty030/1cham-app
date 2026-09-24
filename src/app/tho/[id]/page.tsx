@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { taoDonDatLich } from "../../../lib/donDatLich";
 import { DANH_MUC_NGHE } from "../../../lib/danhMuc";
 import { isoVietNamHienTai, TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { layHoSoKhachHienTai, HoSoKhach } from "../../../lib/khach";
@@ -38,37 +39,6 @@ function tinhCapDo(soDon: number) {
     ? Math.min(100, Math.round(((soDon - hienTai.nguong) / (ke.nguong - hienTai.nguong)) * 100))
     : 100;
   return { hienTai, ke, phanTram };
-}
-
-async function taoDonVaLayLink(supabaseClient: any, duLieuDon: any): Promise<{ thanhCong: boolean; link: string | null }> {
-  const { data, error } = await supabaseClient
-    .from("don_dat_lich")
-    .insert([duLieuDon])
-    .select()
-    .single();
-
-  if (!error && data) {
-    return { thanhCong: true, link: `${window.location.origin}/don/${data.id}` };
-  }
-
-  console.error("Insert don_dat_lich - lỗi hoặc không lấy lại được dòng vừa tạo:", error);
-
-  const { data: donDuPhong, error: loiDuPhong } = await supabaseClient
-    .from("don_dat_lich")
-    .select("id")
-    .eq("so_dien_thoai", duLieuDon.so_dien_thoai)
-    .eq("tho_id", duLieuDon.tho_id)
-    .eq("gio_hen", duLieuDon.gio_hen)
-    .order("id", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (loiDuPhong || !donDuPhong) {
-    console.error("Phương án dự phòng cũng thất bại (có thể insert đã thất bại thật sự):", loiDuPhong);
-    return { thanhCong: false, link: null };
-  }
-
-  return { thanhCong: true, link: `${window.location.origin}/don/${donDuPhong.id}` };
 }
 
 export default function TrangChiTietTho() {
@@ -359,7 +329,7 @@ export default function TrangChiTietTho() {
             return;
           }
 
-          const { thanhCong, link } = await taoDonVaLayLink(supabase, {
+          const thanhCong = await taoDonDatLich({
             ten_khach: tenKhach,
             so_dien_thoai: soDienThoai,
             khach_id: hoSoKhach.id,
@@ -396,7 +366,7 @@ export default function TrangChiTietTho() {
             return;
           }
 
-          const { thanhCong, link } = await taoDonVaLayLink(supabase, {
+          const thanhCong = await taoDonDatLich({
             ten_khach: tenKhach,
             so_dien_thoai: soDienThoai,
             khach_id: hoSoKhach.id,
