@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
-import { taoDonDatLich } from "../../../lib/donDatLich";
 import { DANH_MUC_NGHE } from "../../../lib/danhMuc";
-import { isoVietNamHienTai, TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
+import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { layHoSoKhachHienTai, HoSoKhach } from "../../../lib/khach";
 import FormDatLich from "../../../components/FormDatLich";
 import { ArrowLeft, MessageCircle, CalendarDays, Star, MapPin } from "lucide-react";
-import { useThongBao } from "../../../components/ThongBao";
+import { useDatLich } from "../../../hooks/useDatLich";
 
 type DanhGia = {
   so_sao: number;
@@ -44,7 +43,6 @@ function tinhCapDo(soDon: number) {
 export default function TrangChiTietTho() {
   const params = useParams();
   const router = useRouter();
-  const thongBao = useThongBao();
   const thoId = params.id as string;
 
   const [tho, setTho] = useState<any>(null);
@@ -54,11 +52,10 @@ export default function TrangChiTietTho() {
 
   const [dangDatLich, setDangDatLich] = useState(false);
   const [hoSoKhach, setHoSoKhach] = useState<HoSoKhach | null>(null);
-  const [tenKhach, setTenKhach] = useState("");
-  const [soDienThoai, setSoDienThoai] = useState("");
-  const [gioHenDayDu, setGioHenDayDu] = useState("");
-  const [diaChiHen, setDiaChiHen] = useState("");
-  const [ghiChu, setGhiChu] = useState("");
+
+  // Nếu thợ chỉ làm đúng 1 ngành thì gán ngành đó cho đơn; thợ đa ngành thì để trống (chưa biết khách cần ngành nào)
+  const danhMucDon = tho && (tho.danh_muc || []).length === 1 ? tho.danh_muc[0] : null;
+  const datLich = useDatLich({ hoSoKhach, duongDanQuayLai: `/tho/${thoId}`, danhMuc: danhMucDon });
 
   useEffect(() => {
     layHoSoKhachHienTai().then(setHoSoKhach);
@@ -128,14 +125,7 @@ export default function TrangChiTietTho() {
   const chuCaiDau = tho.ten ? tho.ten.charAt(0).toUpperCase() : "T";
 
   function moDatLich() {
-    if (!hoSoKhach) {
-      thongBao("Vui lòng đăng nhập bằng tài khoản khách hàng trước khi đặt lịch.", "canhbao");
-      router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
-      return;
-    }
-    setTenKhach(hoSoKhach.ten || "");
-    setSoDienThoai(hoSoKhach.so_dien_thoai || "");
-    setDangDatLich(true);
+    if (datLich.batDau()) setDangDatLich(true);
   }
   const tenCacDanhMuc: string[] = (tho.danh_muc || []).map(
     (ma: string) => DANH_MUC_NGHE.find((m) => m.gia_tri === ma)?.nhan ?? ma
@@ -303,101 +293,22 @@ export default function TrangChiTietTho() {
       <FormDatLich
         hienForm={dangDatLich}
         thoId={tho.id}
-        tenKhach={tenKhach}
-        soDienThoai={soDienThoai}
-        gioHenDayDu={gioHenDayDu}
-        diaChiHen={diaChiHen}
-        ghiChu={ghiChu}
-        onDoiTenKhach={setTenKhach}
-        onDoiSoDienThoai={setSoDienThoai}
-        onDoiGioHenDayDu={setGioHenDayDu}
-        onDoiDiaChiHen={setDiaChiHen}
-        onDoiGhiChu={setGhiChu}
+        tenKhach={datLich.tenKhach}
+        soDienThoai={datLich.soDienThoai}
+        gioHenDayDu={datLich.gioHenDayDu}
+        diaChiHen={datLich.diaChiHen}
+        ghiChu={datLich.ghiChu}
+        onDoiTenKhach={datLich.setTenKhach}
+        onDoiSoDienThoai={datLich.setSoDienThoai}
+        onDoiGioHenDayDu={datLich.setGioHenDayDu}
+        onDoiDiaChiHen={datLich.setDiaChiHen}
+        onDoiGhiChu={datLich.setGhiChu}
         onHuy={() => {
           setDangDatLich(false);
-          setTenKhach("");
-          setSoDienThoai("");
+          datLich.huy();
         }}
-        onXacNhan={async () => {
-          if (!gioHenDayDu) {
-            thongBao("Vui lòng chọn ngày & giờ hẹn.", "canhbao");
-            return;
-          }
-          if (!hoSoKhach) {
-            thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "canhbao");
-            router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
-            return;
-          }
-
-          const thanhCong = await taoDonDatLich({
-            ten_khach: tenKhach,
-            so_dien_thoai: soDienThoai,
-            khach_id: hoSoKhach.id,
-            tho_id: tho.id,
-            gio_hen: gioHenDayDu,
-            dia_chi_hen: diaChiHen,
-            ghi_chu: ghiChu,
-            che_do_dat_lich: "gio_khac",
-          });
-
-          if (!thanhCong) {
-            thongBao("Đặt lịch thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");
-            return;
-          }
-
-          setDangDatLich(false);
-          setTenKhach("");
-          setSoDienThoai("");
-          setGioHenDayDu("");
-          setDiaChiHen("");
-          setGhiChu("");
-
-          thongBao("Đặt lịch thành công!", "thanhcong");
-          router.push("/don-cua-toi-khach");
-        }}
-        onGoiNgay={async () => {
-          if (!tenKhach || !soDienThoai || !diaChiHen) {
-            thongBao("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.", "canhbao");
-            return;
-          }
-          if (!hoSoKhach) {
-            thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "canhbao");
-            router.push(`/login?next=${encodeURIComponent(`/tho/${thoId}`)}`);
-            return;
-          }
-
-          const thanhCong = await taoDonDatLich({
-            ten_khach: tenKhach,
-            so_dien_thoai: soDienThoai,
-            khach_id: hoSoKhach.id,
-            tho_id: tho.id,
-            gio_hen: isoVietNamHienTai(),
-            dia_chi_hen: diaChiHen,
-            ghi_chu: ghiChu,
-            trang_thai: "Chờ xác nhận",
-            che_do_dat_lich: "ngay_bay_gio",
-          });
-
-          if (!thanhCong) {
-            thongBao("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");
-            return;
-          }
-
-          setDangDatLich(false);
-          setTenKhach("");
-          setSoDienThoai("");
-          setDiaChiHen("");
-          setGhiChu("");
-
-          if (!tho.so_dien_thoai) {
-            thongBao("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.", "loi");
-          } else {
-            const soSach = tho.so_dien_thoai.replace(/\D/g, "");
-            window.open(`https://zalo.me/${soSach}`, "_blank");
-          }
-
-          router.push("/don-cua-toi-khach");
-        }}
+        onXacNhan={() => datLich.xacNhan(tho, () => setDangDatLich(false))}
+        onGoiNgay={() => datLich.goiNgay(tho, () => setDangDatLich(false))}
       />
     </div>
   );

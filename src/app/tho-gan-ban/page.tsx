@@ -1,10 +1,8 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import { taoDonDatLich } from "../../lib/donDatLich";
 import { DANH_MUC_NGHE } from "../../lib/danhMuc";
-import { isoVietNamHienTai } from "../../lib/thoiGianVN";
 import { layHoSoKhachHienTai, HoSoKhach } from "../../lib/khach";
 import TheTho from "../../components/TheTho";
 import FormThemTho from "../../components/FormThemTho";
@@ -12,6 +10,7 @@ import Link from "next/link";
 import { ArrowLeft, LogOut, LogIn, UserPlus, User, ClipboardList, Settings, MessageCircle } from "lucide-react";
 import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import { useDatLich } from "../../hooks/useDatLich";
 
 function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -28,7 +27,6 @@ function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) 
 
 function NoiDungTrangDanhSach() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   const danhMucLoc = searchParams.get("danh_muc");
   const tenDanhMucLoc = DANH_MUC_NGHE.find((m) => m.gia_tri === danhMucLoc)?.nhan ?? null;
@@ -37,16 +35,13 @@ function NoiDungTrangDanhSach() {
   const [daDangNhap, setDaDangNhap] = useState(false);
   const [hoSoKhach, setHoSoKhach] = useState<HoSoKhach | null>(null);
   const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
-  const [tenKhach, setTenKhach] = useState("");
-  const [soDienThoai, setSoDienThoai] = useState("");
-  const [gioHenDayDu, setGioHenDayDu] = useState("");
-  const [diaChiHen, setDiaChiHen] = useState("");
-  const [ghiChu, setGhiChu] = useState("");
   const [laAdmin, setLaAdmin] = useState(false);
   const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const thongBao = useThongBao();
   const xacNhanHopThoai = useXacNhan();
+  const duongDanHienTai = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+  const datLich = useDatLich({ hoSoKhach, duongDanQuayLai: duongDanHienTai, danhMuc: danhMucLoc });
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -133,15 +128,7 @@ function NoiDungTrangDanhSach() {
   });
 
   function moDatLich(index: number) {
-    if (!hoSoKhach) {
-      const duongDanHienTai = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
-      thongBao("Vui lòng đăng nhập bằng tài khoản khách hàng trước khi đặt lịch.", "canhbao");
-      router.push(`/login?next=${encodeURIComponent(duongDanHienTai)}`);
-      return;
-    }
-    setTenKhach(hoSoKhach.ten || "");
-    setSoDienThoai(hoSoKhach.so_dien_thoai || "");
-    setViTriDatLich(index);
+    if (datLich.batDau()) setViTriDatLich(index);
   }
 
   return (
@@ -278,106 +265,23 @@ function NoiDungTrangDanhSach() {
                 }
               }}
               dangDatLich={viTriDatLich === index}
-              tenKhach={tenKhach}
-              soDienThoai={soDienThoai}
-              gioHenDayDu={gioHenDayDu}
-              diaChiHen={diaChiHen}
-              ghiChu={ghiChu}
+              tenKhach={datLich.tenKhach}
+              soDienThoai={datLich.soDienThoai}
+              gioHenDayDu={datLich.gioHenDayDu}
+              diaChiHen={datLich.diaChiHen}
+              ghiChu={datLich.ghiChu}
               onMoDatLich={() => moDatLich(index)}
-              onDoiTenKhach={(giaTri) => setTenKhach(giaTri)}
-              onDoiSoDienThoai={(giaTri) => setSoDienThoai(giaTri)}
-              onDoiGioHenDayDu={(giaTri) => setGioHenDayDu(giaTri)}
-              onDoiDiaChiHen={(giaTri) => setDiaChiHen(giaTri)}
-              onDoiGhiChu={(giaTri) => setGhiChu(giaTri)}
-              onXacNhanDatLich={async () => {
-                if (!gioHenDayDu) {
-                  thongBao("Vui lòng chọn ngày & giờ hẹn.", "canhbao");
-                  return;
-                }
-                if (!hoSoKhach) {
-                  thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "canhbao");
-                  router.push(`/login?next=${encodeURIComponent(pathname)}`);
-                  return;
-                }
-
-                const thanhCong = await taoDonDatLich({
-                  ten_khach: tenKhach,
-                  so_dien_thoai: soDienThoai,
-                  khach_id: hoSoKhach.id,
-                  tho_id: tho.id,
-                  gio_hen: gioHenDayDu,
-                  dia_chi_hen: diaChiHen,
-                  ghi_chu: ghiChu,
-                  danh_muc: danhMucLoc,
-                  che_do_dat_lich: "gio_khac",
-                });
-
-                if (!thanhCong) {
-                  thongBao("Đặt lịch thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");
-                  return;
-                }
-
-                setViTriDatLich(null);
-                setTenKhach("");
-                setSoDienThoai("");
-                setGioHenDayDu("");
-                setDiaChiHen("");
-                setGhiChu("");
-
-                thongBao("Đặt lịch thành công!", "thanhcong");
-                router.push("/don-cua-toi-khach");
-              }}
+              onDoiTenKhach={datLich.setTenKhach}
+              onDoiSoDienThoai={datLich.setSoDienThoai}
+              onDoiGioHenDayDu={datLich.setGioHenDayDu}
+              onDoiDiaChiHen={datLich.setDiaChiHen}
+              onDoiGhiChu={datLich.setGhiChu}
+              onXacNhanDatLich={() => datLich.xacNhan(tho, () => setViTriDatLich(null))}
               onHuyDatLich={() => {
                 setViTriDatLich(null);
-                setTenKhach("");
-                setSoDienThoai("");
+                datLich.huy();
               }}
-              onGoiNgay={async () => {
-                if (!tenKhach || !soDienThoai || !diaChiHen) {
-                  thongBao("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.", "canhbao");
-                  return;
-                }
-                if (!hoSoKhach) {
-                  thongBao("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "canhbao");
-                  router.push(`/login?next=${encodeURIComponent(pathname)}`);
-                  return;
-                }
-
-                const duLieuDon = {
-                  ten_khach: tenKhach,
-                  so_dien_thoai: soDienThoai,
-                  khach_id: hoSoKhach.id,
-                  tho_id: tho.id,
-                  gio_hen: isoVietNamHienTai(),
-                  dia_chi_hen: diaChiHen,
-                  ghi_chu: ghiChu,
-                  trang_thai: "Chờ xác nhận",
-                  danh_muc: danhMucLoc,
-                  che_do_dat_lich: "ngay_bay_gio",
-                };
-
-                const thanhCong = await taoDonDatLich(duLieuDon);
-
-                if (!thanhCong) {
-                  thongBao("Tạo đơn thất bại, vui lòng thử lại. (Chi tiết lỗi xem ở Console - F12)", "loi");
-                  return;
-                }
-
-                setViTriDatLich(null);
-                setTenKhach("");
-                setSoDienThoai("");
-                setDiaChiHen("");
-                setGhiChu("");
-
-                if (!tho.so_dien_thoai) {
-                  thongBao("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.", "loi");
-                } else {
-                  const soSach = tho.so_dien_thoai.replace(/\D/g, "");
-                  window.open(`https://zalo.me/${soSach}`, "_blank");
-                }
-
-                router.push("/don-cua-toi-khach");
-              }}
+              onGoiNgay={() => datLich.goiNgay(tho, () => setViTriDatLich(null))}
             />
           );
         })}
