@@ -10,6 +10,7 @@ type TheThoProps = {
   dangMo: boolean;
   dangSua: boolean;
   ngheSua: string;
+  danhMucSua: string[];
   daDangNhap: boolean;
   dangLamViec: boolean;
   dangNghi: boolean;
@@ -21,8 +22,10 @@ type TheThoProps = {
   ghiChu: string;
   khoangCach: number | null;
   onXemChiTiet: () => void;
-  onBatDauSua: () => void;
+    onBatDauSua: () => void;
+  onHuySua: () => void;
   onDoiNgheSua: (giaTri: string) => void;
+  onToggleDanhMucSua: (giaTri: string) => void;
   onLuuSua: () => void;
   onXoa: () => void;
   onMoDatLich: () => void;
@@ -40,6 +43,7 @@ export default function TheTho({
   tho,
   dangSua,
   ngheSua,
+  danhMucSua,
   daDangNhap,
   dangLamViec,
   dangNghi,
@@ -50,8 +54,10 @@ export default function TheTho({
   diaChiHen,
   ghiChu,
   khoangCach,
-  onBatDauSua,
+    onBatDauSua,
+  onHuySua,
   onDoiNgheSua,
+  onToggleDanhMucSua,
   onLuuSua,
   onXoa,
   onMoDatLich,
@@ -160,6 +166,20 @@ export default function TheTho({
             className="border border-line rounded-md px-3 py-1.5 text-sm w-full outline-none focus:border-gold bg-card"
             placeholder="Sửa nghề nghiệp..."
           />
+          <div className="flex flex-col gap-1.5 border border-line rounded-md p-2.5 bg-card">
+            <p className="text-xs font-semibold text-ink-soft">Ngành nhận làm</p>
+            {DANH_MUC_NGHE.map((muc) => (
+              <label key={muc.gia_tri} className="flex items-center gap-2 text-sm text-ink-soft">
+                <input
+                  type="checkbox"
+                  checked={danhMucSua.includes(muc.gia_tri)}
+                  onChange={() => onToggleDanhMucSua(muc.gia_tri)}
+                  className="w-4 h-4 accent-gold"
+                />
+                {muc.nhan}
+              </label>
+            ))}
+          </div>
           <div className="flex gap-2">
             <button
               className="bg-teal hover:opacity-90 text-white px-3 py-1.5 rounded-md text-sm font-medium flex-1 transition"
@@ -167,9 +187,9 @@ export default function TheTho({
             >
               Lưu
             </button>
-            <button
+                        <button
               className="bg-line hover:bg-ink-soft hover:text-white text-ink-soft px-3 py-1.5 rounded-md text-sm font-medium transition"
-              onClick={onBatDauSua}
+              onClick={onHuySua}
             >
               Hủy
             </button>

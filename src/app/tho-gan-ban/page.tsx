@@ -3,14 +3,15 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, usePathname } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { DANH_MUC_NGHE } from "../../lib/danhMuc";
-import { layHoSoKhachHienTai, HoSoKhach } from "../../lib/khach";
 import TheTho from "../../components/TheTho";
 import FormThemTho from "../../components/FormThemTho";
 import Link from "next/link";
-import { ArrowLeft, LogOut, LogIn, UserPlus, User, ClipboardList, Settings, MessageCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
 import { useDatLich } from "../../hooks/useDatLich";
+import { useTaiKhoanHienTai } from "../../hooks/useTaiKhoanHienTai";
+import ThanhDieuHuong from "../../components/ThanhDieuHuong";
 
 function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -32,12 +33,9 @@ function NoiDungTrangDanhSach() {
   const tenDanhMucLoc = DANH_MUC_NGHE.find((m) => m.gia_tri === danhMucLoc)?.nhan ?? null;
 
   const [viTriDangMo, setViTriDangMo] = useState<number | null>(null);
-  const [daDangNhap, setDaDangNhap] = useState(false);
-  const [hoSoKhach, setHoSoKhach] = useState<HoSoKhach | null>(null);
   const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
-  const [laAdmin, setLaAdmin] = useState(false);
   const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { daDangNhap, laAdmin, hoSoKhach, currentUserId, dangXuat } = useTaiKhoanHienTai();
   const thongBao = useThongBao();
   const xacNhanHopThoai = useXacNhan();
   const duongDanHienTai = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
@@ -55,25 +53,6 @@ function NoiDungTrangDanhSach() {
         console.log("Không lấy được vị trí:", loi);
       }
     );
-  }, []);
-
-  useEffect(() => {
-    async function kiemTraDangNhap() {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setDaDangNhap(true);
-        setCurrentUserId(data.session.user.id);
-        const role = data.session.user.user_metadata?.role;
-        setLaAdmin(role === "admin");
-        setHoSoKhach(await layHoSoKhachHienTai());
-      } else {
-        setDaDangNhap(false);
-        setLaAdmin(false);
-        setCurrentUserId(null);
-        setHoSoKhach(null);
-      }
-    }
-    kiemTraDangNhap();
   }, []);
 
   const [danhSachTho, setDanhSachTho] = useState<any[]>([]);
@@ -110,9 +89,16 @@ function NoiDungTrangDanhSach() {
   const [danhMucMoi, setDanhMucMoi] = useState<string[]>([]);
   const [viTriDangSua, setViTriDangSua] = useState<number | null>(null);
   const [ngheSua, setNgheSua] = useState("");
+  const [danhMucSua, setDanhMucSua] = useState<string[]>([]);
 
   function toggleDanhMucMoi(giaTri: string) {
     setDanhMucMoi((truoc) =>
+      truoc.includes(giaTri) ? truoc.filter((d) => d !== giaTri) : [...truoc, giaTri]
+    );
+  }
+
+  function toggleDanhMucSua(giaTri: string) {
+    setDanhMucSua((truoc) =>
       truoc.includes(giaTri) ? truoc.filter((d) => d !== giaTri) : [...truoc, giaTri]
     );
   }
@@ -148,70 +134,13 @@ function NoiDungTrangDanhSach() {
         </Link>
       )}
       {!tenDanhMucLoc && <div className="mb-6" />}
-
-      <div className="flex flex-wrap justify-center gap-3 w-full max-w-4xl mb-10">
-        {daDangNhap ? (
-          <button
-            className="flex items-center gap-2 bg-line hover:bg-ink-soft hover:text-white text-ink-soft transition px-5 py-2.5 rounded-xl shadow-sm font-medium"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              setDaDangNhap(false);
-            }}
-          >
-            <LogOut className="w-4 h-4" /> Đăng xuất
-          </button>
-        ) : (
-          <>
-            <Link href="/login">
-              <button className="flex items-center gap-2 bg-card hover:bg-teal-soft transition text-teal border border-teal/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                <LogIn className="w-4 h-4" /> Đăng nhập
-              </button>
-            </Link>
-            <Link href="/dang-ky">
-              <button className="flex items-center gap-2 bg-teal hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                <UserPlus className="w-4 h-4" /> Đăng ký làm thợ
-              </button>
-            </Link>
-            <Link href="/dang-ky-khach">
-              <button className="flex items-center gap-2 bg-card hover:bg-rust-soft transition text-rust border border-rust/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                <UserPlus className="w-4 h-4" /> Đăng ký làm khách hàng
-              </button>
-            </Link>
-          </>
-        )}
-
-        {daDangNhap && (
-          <>
-            {!hoSoKhach && (
-              <Link href="/ho-so">
-                <button className="flex items-center gap-2 bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                  <User className="w-4 h-4" /> Hồ sơ của tôi
-                </button>
-              </Link>
-            )}
-            <Link href={hoSoKhach ? "/don-cua-toi-khach" : "/don-cua-toi"}>
-              <button className="flex items-center gap-2 bg-gold-soft hover:opacity-80 transition text-gold px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                <ClipboardList className="w-4 h-4" /> Đơn của tôi
-              </button>
-            </Link>
-            {hoSoKhach && (
-              <Link href="/tin-nhan-cua-toi">
-                <button className="flex items-center gap-2 bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
-                  <MessageCircle className="w-4 h-4" /> Tin nhắn
-                </button>
-              </Link>
-            )}
-          </>
-        )}
-
-        {laAdmin && (
-          <Link href="/admin/don-dat-lich">
-            <button className="flex items-center gap-2 bg-gold hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
-              <Settings className="w-4 h-4" /> Xem đơn đặt lịch
-            </button>
-          </Link>
-        )}
-      </div>
+      <ThanhDieuHuong
+        daDangNhap={daDangNhap}
+        laAdmin={laAdmin}
+        hoSoKhach={hoSoKhach}
+        onDangXuat={dangXuat}
+        bienThe="day_du"
+      />
 
       {thoTrongBanKinh.length === 0 && (
         <p className="text-ink-soft mb-8">Chưa có thợ nào ở ngành này trong khu vực của bạn.</p>
@@ -245,15 +174,23 @@ function NoiDungTrangDanhSach() {
               dangMo={viTriDangMo === index}
               dangSua={viTriDangSua === index}
               ngheSua={ngheSua}
+              danhMucSua={danhMucSua}
               daDangNhap={laAdmin}
               onXemChiTiet={() => setViTriDangMo(viTriDangMo === index ? null : index)}
               onBatDauSua={() => {
                 setViTriDangSua(index);
                 setNgheSua(tho.nghe);
+                setDanhMucSua(tho.danh_muc || []);
               }}
-              onDoiNgheSua={(giaTri) => setNgheSua(giaTri)}
+                           onDoiNgheSua={(giaTri) => setNgheSua(giaTri)}
+              onHuySua={() => setViTriDangSua(null)}
+              onToggleDanhMucSua={toggleDanhMucSua}
               onLuuSua={async () => {
-                await supabase.from("tho").update({ nghe: ngheSua }).eq("id", tho.id);
+                if (danhMucSua.length === 0) {
+                  thongBao("Vui lòng chọn ít nhất 1 ngành thợ này nhận làm.", "canhbao");
+                  return;
+                }
+                await supabase.from("tho").update({ nghe: ngheSua, danh_muc: danhMucSua }).eq("id", tho.id);
                 setViTriDangSua(null);
                 layDanhSachTho();
               }}

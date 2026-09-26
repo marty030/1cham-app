@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { useVungNhinThayThuc } from "../../../lib/chieuCaoManHinh";
@@ -26,6 +26,7 @@ type HoiThoai = {
 
 export default function TrangLamViecTho() {
   const params = useParams();
+  const router = useRouter();
   const thoId = params.thoId as string;
 
   const [tenTho, setTenTho] = useState<string>("");
@@ -191,11 +192,20 @@ export default function TrangLamViecTho() {
         className="max-w-md mx-auto border border-line flex flex-col bg-paper overflow-hidden fixed inset-x-0"
         style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
       >
-        <div className="p-4 bg-teal text-white font-bold shadow">
-          <h1 className="text-base flex items-center gap-2">
-            <Wrench className="w-4 h-4" /> Bàn làm việc {tenTho ? `— ${tenTho}` : ""}
-          </h1>
-          <p className="text-xs text-white/80">Danh sách hội thoại</p>
+        <div className="p-4 bg-teal text-white font-bold shadow flex items-center gap-3">
+          <button
+            onClick={() => router.push("/")}
+            className="leading-none flex items-center justify-center shrink-0"
+            aria-label="Rời khỏi bàn làm việc"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-base flex items-center gap-2">
+              <Wrench className="w-4 h-4" /> Bàn làm việc {tenTho ? `— ${tenTho}` : ""}
+            </h1>
+            <p className="text-xs text-white/80">Danh sách hội thoại</p>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto">
           {danhSachHoiThoai.length === 0 ? (

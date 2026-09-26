@@ -1,10 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "../lib/supabase";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
-import { layHoSoKhachHienTai, HoSoKhach } from "../lib/khach";
 import Footer from "../components/Footer";
+import ThanhDieuHuong from "../components/ThanhDieuHuong";
+import { useTaiKhoanHienTai } from "../hooks/useTaiKhoanHienTai";
 import {
   ShieldCheck,
   MessageCircle,
@@ -69,86 +68,17 @@ const CAC_BUOC = [
 ];
 
 export default function TrangChu() {
-  const [daDangNhap, setDaDangNhap] = useState(false);
-  const [laAdmin, setLaAdmin] = useState(false);
-  const [hoSoKhach, setHoSoKhach] = useState<HoSoKhach | null>(null);
-
-  useEffect(() => {
-    async function kiemTraDangNhap() {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setDaDangNhap(true);
-        const role = data.session.user.user_metadata?.role;
-        setLaAdmin(role === "admin");
-        setHoSoKhach(await layHoSoKhachHienTai());
-      } else {
-        setDaDangNhap(false);
-        setLaAdmin(false);
-        setHoSoKhach(null);
-      }
-    }
-    kiemTraDangNhap();
-  }, []);
+  const { daDangNhap, laAdmin, hoSoKhach, dangXuat } = useTaiKhoanHienTai();
 
   return (
     <div className="min-h-screen bg-paper">
-      {/* Thanh tài khoản — gọn, đẩy sang phải, không tranh vị trí với nội dung chính */}
-      <div className="flex flex-wrap justify-end gap-2 px-4 sm:px-6 py-3 max-w-5xl mx-auto">
-        {daDangNhap ? (
-          <button
-            className="bg-card border border-line hover:bg-line text-ink-soft transition px-4 py-2 rounded-lg text-sm font-medium"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              setDaDangNhap(false);
-            }}
-          >
-            Đăng xuất
-          </button>
-        ) : (
-          <>
-            <Link href="/login">
-              <button className="bg-card hover:bg-teal-soft transition text-teal border border-teal/30 px-4 py-2 rounded-lg text-sm font-medium">
-                Đăng nhập
-              </button>
-            </Link>
-            <Link href="/dang-ky-khach">
-              <button className="bg-card hover:bg-rust-soft transition text-rust border border-rust/30 px-4 py-2 rounded-lg text-sm font-medium">
-                Đăng ký khách hàng
-              </button>
-            </Link>
-            <Link href="/dang-ky">
-              <button className="bg-teal hover:opacity-90 transition text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Đăng ký làm thợ
-              </button>
-            </Link>
-          </>
-        )}
-
-        {daDangNhap && (
-          <>
-            {!hoSoKhach && (
-              <Link href="/ho-so">
-                <button className="bg-teal-soft hover:opacity-80 transition text-teal px-4 py-2 rounded-lg text-sm font-medium">
-                  Hồ sơ của tôi
-                </button>
-              </Link>
-            )}
-            <Link href={hoSoKhach ? "/don-cua-toi-khach" : "/don-cua-toi"}>
-              <button className="bg-gold-soft hover:opacity-80 transition text-gold px-4 py-2 rounded-lg text-sm font-medium">
-                Đơn của tôi
-              </button>
-            </Link>
-          </>
-        )}
-
-        {laAdmin && (
-          <Link href="/admin/don-dat-lich">
-            <button className="bg-gold hover:opacity-90 transition text-white px-4 py-2 rounded-lg text-sm font-medium">
-              Xem đơn đặt lịch
-            </button>
-          </Link>
-        )}
-      </div>
+      <ThanhDieuHuong
+        daDangNhap={daDangNhap}
+        laAdmin={laAdmin}
+        hoSoKhach={hoSoKhach}
+        onDangXuat={dangXuat}
+        bienThe="gon"
+      />
 
       {/* HERO */}
       <section className="text-center max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-14">
