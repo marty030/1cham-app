@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from "lucide-react";
 
 type LoaiThongBao = "thanhcong" | "loi" | "canhbao" | "thongtin";
@@ -8,6 +8,7 @@ type MucThongBao = {
   id: number;
   noiDung: string;
   loai: LoaiThongBao;
+  rung: number; // tăng mỗi lần thông báo trùng nội dung lặp lại, dùng để phát lại hiệu ứng rung thay vì chồng thêm dòng mới
 };
 
 type XacNhanState = {
@@ -31,19 +32,49 @@ const CAU_HINH_LOAI: Record<LoaiThongBao, { mau: string; Icon: typeof CheckCircl
 
 export function ThongBaoProvider({ children }: { children: React.ReactNode }) {
   const [danhSach, setDanhSach] = useState<MucThongBao[]>([]);
+  const danhSachRef = useRef<MucThongBao[]>([]);
+  useEffect(() => {
+    danhSachRef.current = danhSach;
+  }, [danhSach]);
+
   const [xacNhanState, setXacNhanState] = useState<XacNhanState>(null);
   const dem = useRef(0);
+  // Mỗi toast có 1 hẹn giờ tự đóng riêng, lưu theo id để hủy/đặt lại khi cần
+  const henGioDong = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
-  const thongBao = useCallback((noiDung: string, loai: LoaiThongBao = "thongtin") => {
-    dem.current += 1;
-    const id = dem.current;
-    setDanhSach((truoc) => [...truoc, { id, noiDung, loai }]);
-    setTimeout(() => {
+  const datLaiHenDong = useCallback((id: number) => {
+    const cu = henGioDong.current.get(id);
+    if (cu) clearTimeout(cu);
+    const moi = setTimeout(() => {
       setDanhSach((truoc) => truoc.filter((m) => m.id !== id));
+      henGioDong.current.delete(id);
     }, 4000);
+    henGioDong.current.set(id, moi);
   }, []);
 
+  const thongBao = useCallback(
+    (noiDung: string, loai: LoaiThongBao = "thongtin") => {
+      // Nếu đang hiện đúng thông báo này rồi (cùng nội dung + cùng mức độ) thì không chồng thêm
+      // dòng mới — chỉ phát lại hiệu ứng rung và gia hạn thời gian hiện, tránh bấm lặp gây rối màn hình
+      const trung = danhSachRef.current.find((m) => m.noiDung === noiDung && m.loai === loai);
+      if (trung) {
+        setDanhSach((truoc) => truoc.map((m) => (m.id === trung.id ? { ...m, rung: m.rung + 1 } : m)));
+        datLaiHenDong(trung.id);
+        return;
+      }
+
+      dem.current += 1;
+      const id = dem.current;
+      setDanhSach((truoc) => [...truoc, { id, noiDung, loai, rung: 0 }]);
+      datLaiHenDong(id);
+    },
+    [datLaiHenDong]
+  );
+
   const dong = useCallback((id: number) => {
+    const cu = henGioDong.current.get(id);
+    if (cu) clearTimeout(cu);
+    henGioDong.current.delete(id);
     setDanhSach((truoc) => truoc.filter((m) => m.id !== id));
   }, []);
 
@@ -68,12 +99,14 @@ export function ThongBaoProvider({ children }: { children: React.ReactNode }) {
           const { mau, Icon } = CAU_HINH_LOAI[m.loai];
           return (
             <div
-              key={m.id}
-              className={`pointer-events-auto w-full max-w-sm shadow-lg rounded-xl border px-4 py-3 flex items-start gap-2.5 animate-[toast-in_0.2s_ease-out] ${mau}`}
+              key={`${m.id}-${m.rung}`}
+              className={`pointer-events-auto w-full max-w-sm shadow-lg rounded-xl border px-4 py-3 flex items-start gap-2.5 ${
+                m.rung === 0 ? "animate-[toast-in_0.2s_ease-out]" : "animate-[toast-rung_0.3s_ease-in-out]"
+              } ${mau}`}
             >
               <Icon className="w-5 h-5 shrink-0 mt-0.5" />
               <p className="text-sm font-medium flex-1">{m.noiDung}</p>
-              <button onClick={() => dong(m.id)} className="shrink-0 opacity-80 hover:opacity-100">
+              <button onClick={() => dong(m.id)} className="shrink-0 opacity-80 hover:opacity-100 p-2 -m-2">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -113,6 +146,24 @@ export function ThongBaoProvider({ children }: { children: React.ReactNode }) {
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+        @keyframes toast-rung {
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          20% {
+            transform: translateX(-6px);
+          }
+          40% {
+            transform: translateX(6px);
+          }
+          60% {
+            transform: translateX(-4px);
+          }
+          80% {
+            transform: translateX(4px);
           }
         }
       `}</style>

@@ -166,7 +166,7 @@ export default function ChatPage() {
       style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
     >
       <div className="p-4 bg-teal text-white font-bold flex items-center gap-3 shadow">
-        <Link href="/tin-nhan-cua-toi" className="leading-none flex items-center justify-center">
+                <Link href="/tin-nhan-cua-toi" className="leading-none flex items-center justify-center p-2 -m-2">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
