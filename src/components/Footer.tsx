@@ -36,7 +36,7 @@ export default function Footer() {
         <div className="flex flex-col gap-3">
           <div className="font-semibold text-ink text-sm">Khu vực hoạt động</div>
           <div className="flex items-start gap-2 text-sm text-ink-soft">
-            <MapPin className="w-4 h-4 shrink-0 mt-0.5" /> Hà Đông, Hà Nội
+            <MapPin className="w-4 h-4 shrink-0 mt-0.5" /> Hà Nội
           </div>
         </div>
       </div>
