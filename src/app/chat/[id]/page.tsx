@@ -74,7 +74,7 @@ export default function ChatPage() {
     layTenTho();
   }, [thoId]);
 
-  const taiTinNhan = async () => {
+   const taiTinNhan = async () => {
     if (!thoId || !khachId) return;
 
     const { data, error } = await supabase
@@ -86,6 +86,18 @@ export default function ChatPage() {
 
     if (data) setDanhSachTinNhan(data);
     if (error) console.error("Lỗi tải tin nhắn:", error);
+
+    // Đang mở đúng hội thoại này -> đánh dấu mọi tin nhắn từ thợ là đã đọc
+    supabase
+      .from("tin_nhan")
+      .update({ da_doc: true })
+      .eq("tho_id", thoId)
+      .eq("khach_id", khachId)
+      .eq("sender_type", "tho")
+      .eq("da_doc", false)
+      .then(({ error: loiDanhDauDoc }) => {
+        if (loiDanhDauDoc) console.error("Lỗi đánh dấu đã đọc:", loiDanhDauDoc);
+      });
   };
 
   useEffect(() => {
@@ -105,13 +117,17 @@ export default function ChatPage() {
           table: "tin_nhan",
           filter: `tho_id=eq.${thoId}`,
         },
-        (payload: { new: TinNhan }) => {
+                (payload: { new: TinNhan }) => {
           if (payload.new && payload.new.khach_id === khachId) {
             setDanhSachTinNhan((prev) => {
               const isExist = prev.some((item) => item.id === payload.new.id);
               if (isExist) return prev;
               return [...prev, payload.new];
             });
+            // Trang đang mở sẵn -> tin nhắn thợ vừa gửi cũng coi như đã đọc ngay
+            if (payload.new.sender_type === "tho") {
+              supabase.from("tin_nhan").update({ da_doc: true }).eq("id", payload.new.id).then();
+            }
           }
         }
       )
@@ -166,9 +182,21 @@ export default function ChatPage() {
       style={{ top: vungNhinThay?.top ?? 0, height: vungNhinThay?.height ?? "100dvh" }}
     >
       <div className="p-4 bg-teal text-white font-bold flex items-center gap-3 shadow">
-                <Link href="/tin-nhan-cua-toi" className="leading-none flex items-center justify-center p-2 -m-2">
+                        <button
+          onClick={() => {
+            // Không push thêm 1 trang /tin-nhan-cua-toi mới vào lịch sử — nếu vào đây
+            // từ hộp thư thì lùi lại đúng chỗ đó; chỉ khi không có gì để lùi (mở link
+            // trực tiếp) mới điều hướng cứng sang /tin-nhan-cua-toi.
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/tin-nhan-cua-toi");
+            }
+          }}
+          className="leading-none flex items-center justify-center p-2 -m-2"
+        >
           <ArrowLeft className="w-5 h-5" />
-        </Link>
+        </button>
         <div>
           <h1 className="text-base flex items-center gap-2">
             <MessageCircle className="w-4 h-4" /> {tenTho ? `Trò chuyện với ${tenTho}` : "Đang tải..."}

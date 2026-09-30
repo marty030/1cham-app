@@ -4,6 +4,8 @@ import { DANH_MUC_NGHE } from "../lib/danhMuc";
 import Footer from "../components/Footer";
 import ThanhDieuHuong from "../components/ThanhDieuHuong";
 import { useTaiKhoanHienTai } from "../hooks/useTaiKhoanHienTai";
+import { useSoDonCanXuLy } from "../hooks/useSoDonCanXuLy";
+import { useSoTinNhanChuaDoc } from "../hooks/useSoTinNhanChuaDoc";
 import {
   ShieldCheck,
   MessageCircle,
@@ -68,18 +70,20 @@ const CAC_BUOC = [
 ];
 
 export default function TrangChu() {
-  const { daDangNhap, laAdmin, hoSoKhach, dangXuat } = useTaiKhoanHienTai();
-
+    const { daDangNhap, laAdmin, hoSoKhach, currentUserId, dangXuat } = useTaiKhoanHienTai();
+    const soDonCanXuLy = useSoDonCanXuLy(daDangNhap, hoSoKhach, currentUserId);
+  const soTinNhanChuaDoc = useSoTinNhanChuaDoc(daDangNhap, hoSoKhach, currentUserId);
   return (
     <div className="min-h-screen bg-paper">
-      <ThanhDieuHuong
+            <ThanhDieuHuong
         daDangNhap={daDangNhap}
         laAdmin={laAdmin}
         hoSoKhach={hoSoKhach}
         onDangXuat={dangXuat}
+               soDonCanXuLy={soDonCanXuLy}
+        soTinNhanChuaDoc={soTinNhanChuaDoc}
         bienThe="gon"
       />
-
       {/* HERO */}
       <section className="text-center max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-14">
         <div className="inline-flex items-center gap-1.5 bg-teal-soft text-teal text-xs font-semibold px-3 py-1.5 rounded-full mb-5">

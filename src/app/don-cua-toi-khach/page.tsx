@@ -5,14 +5,18 @@ import { supabase } from "../../lib/supabase";
 import { layHoSoKhachHienTai } from "../../lib/khach";
 import { TUY_CHON_GIO_VN } from "../../lib/thoiGianVN";
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, Clock, Car, MapPin, ArrowRight } from "lucide-react";
+import { ArrowLeft, ClipboardList, Clock, Car, MapPin, ArrowRight, XCircle } from "lucide-react";
 import NhanTrangThai from "../../components/NhanTrangThai";
+import { useThongBao, useXacNhan } from "../../components/ThongBao";
+import { dichLoiSupabase } from "../../lib/dichLoi";
 
 export default function DonCuaToiKhach() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
   const [dangTai, setDangTai] = useState(true);
   const [boLoc, setBoLoc] = useState("Tất cả");
   const router = useRouter();
+  const thongBao = useThongBao();
+  const xacNhanHopThoai = useXacNhan();
 
   useEffect(() => {
     async function layDon() {
@@ -37,6 +41,25 @@ export default function DonCuaToiKhach() {
     }
     layDon();
   }, [router]);
+
+  async function huyDon(idDon: number) {
+    const dongY = await xacNhanHopThoai("Hủy đơn này? Bạn sẽ cần đặt lịch lại nếu vẫn cần thợ.");
+    if (!dongY) return;
+
+    const { error } = await supabase
+      .from("don_dat_lich")
+      .update({ trang_thai: "Đã hủy" })
+      .eq("id", idDon);
+
+    if (error) {
+      thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
+    } else {
+      setDanhSachDon((truoc) =>
+        truoc.map((d) => (d.id === idDon ? { ...d, trang_thai: "Đã hủy" } : d))
+      );
+      thongBao("Đã hủy đơn.", "thanhcong");
+    }
+  }
 
   const danhSachHienThi = danhSachDon.filter((don) => {
     if (boLoc === "Tất cả") return true;
@@ -108,47 +131,59 @@ export default function DonCuaToiKhach() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {danhSachHienThi.map((don) => {
               return (
-                <Link
+                <div
                   key={don.id}
-                  href={`/don/${don.id}`}
                   className="bg-card border border-line rounded-2xl shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden"
                 >
-                  <div className="bg-paper px-5 py-4 border-b border-line">
-                    <p className="text-sm text-ink-soft font-medium mb-1">Thợ</p>
-                    <h3 className="text-lg font-bold text-ink line-clamp-1">
-                      {don.tho?.ten ?? "Đang cập nhật"}
-                    </h3>
-                  </div>
-
-                  <div className="p-5 flex-1 flex flex-col gap-3 text-sm text-ink-soft">
-                    <NhanTrangThai trangThai={don.trang_thai} className="self-start" />
-
-                    <div className="flex items-start gap-2.5">
-                      <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-                      <span>{new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</span>
+                  <Link href={`/don/${don.id}`} className="flex flex-col flex-1">
+                    <div className="bg-paper px-5 py-4 border-b border-line">
+                      <p className="text-sm text-ink-soft font-medium mb-1">Thợ</p>
+                      <h3 className="text-lg font-bold text-ink line-clamp-1">
+                        {don.tho?.ten ?? "Đang cập nhật"}
+                      </h3>
                     </div>
 
-                    {don.gio_du_kien_den && (
-                      <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
-                        <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
-                        <span className="text-teal font-medium">
-                          Thợ dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}
-                        </span>
+                    <div className="p-5 flex-1 flex flex-col gap-3 text-sm text-ink-soft">
+                      <NhanTrangThai trangThai={don.trang_thai} className="self-start" />
+
+                      <div className="flex items-start gap-2.5">
+                        <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
+                        <span>{new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</span>
                       </div>
-                    )}
 
-                    <div className="flex items-start gap-2.5">
-                      <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-                      <span className="line-clamp-2">{don.dia_chi_hen}</span>
+                      {don.gio_du_kien_den && (
+                        <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
+                          <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
+                          <span className="text-teal font-medium">
+                            Thợ dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-start gap-2.5">
+                        <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
+                        <span className="line-clamp-2">{don.dia_chi_hen}</span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="px-5 pb-5">
-  <span className="inline-flex items-center gap-1 text-xs font-semibold text-rust">
-    Xem chi tiết / xác nhận <ArrowRight className="w-3.5 h-3.5" />
-  </span>
-</div>
-                </Link>
+                    <div className="px-5 pb-5">
+                      <span className="inline-flex items-center justify-center gap-1.5 w-full text-sm font-semibold text-white bg-rust hover:opacity-90 transition px-4 py-2.5 rounded-xl shadow-sm">
+                        Xem chi tiết / xác nhận <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </div>
+                  </Link>
+
+                  {don.trang_thai === "Chờ xác nhận" && (
+                    <div className="px-5 pb-5 -mt-2">
+                      <button
+                        onClick={() => huyDon(don.id)}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-ink-soft border border-line hover:bg-rust-soft hover:text-rust hover:border-rust/30 py-2 rounded-lg transition"
+                      >
+                        <XCircle className="w-3.5 h-3.5" /> Hủy đơn
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

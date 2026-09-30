@@ -11,6 +11,8 @@ import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
 import { useDatLich } from "../../hooks/useDatLich";
 import { useTaiKhoanHienTai } from "../../hooks/useTaiKhoanHienTai";
+import { useSoDonCanXuLy } from "../../hooks/useSoDonCanXuLy";
+import { useSoTinNhanChuaDoc } from "../../hooks/useSoTinNhanChuaDoc";
 import ThanhDieuHuong from "../../components/ThanhDieuHuong";
 
 function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -35,7 +37,9 @@ function NoiDungTrangDanhSach() {
   const [viTriDangMo, setViTriDangMo] = useState<number | null>(null);
   const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
   const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
-  const { daDangNhap, laAdmin, hoSoKhach, currentUserId, dangXuat } = useTaiKhoanHienTai();
+    const { daDangNhap, laAdmin, hoSoKhach, currentUserId, dangXuat } = useTaiKhoanHienTai();
+    const soDonCanXuLy = useSoDonCanXuLy(daDangNhap, hoSoKhach, currentUserId);
+  const soTinNhanChuaDoc = useSoTinNhanChuaDoc(daDangNhap, hoSoKhach, currentUserId);
   const thongBao = useThongBao();
   const xacNhanHopThoai = useXacNhan();
   const duongDanHienTai = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
@@ -134,14 +138,15 @@ function NoiDungTrangDanhSach() {
         </Link>
       )}
       {!tenDanhMucLoc && <div className="mb-6" />}
-      <ThanhDieuHuong
+            <ThanhDieuHuong
         daDangNhap={daDangNhap}
         laAdmin={laAdmin}
         hoSoKhach={hoSoKhach}
         onDangXuat={dangXuat}
+                soDonCanXuLy={soDonCanXuLy}
+        soTinNhanChuaDoc={soTinNhanChuaDoc}
         bienThe="day_du"
       />
-
       {thoTrongBanKinh.length === 0 && (
         <p className="text-ink-soft mb-8">Chưa có thợ nào ở ngành này trong khu vực của bạn.</p>
       )}

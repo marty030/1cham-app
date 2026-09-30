@@ -16,6 +16,10 @@ type Props = {
   laAdmin: boolean;
   hoSoKhach: HoSoKhach | null;
   onDangXuat: () => void;
+  // Số đơn cần xử lý ngay (khách: chờ xác nhận hoàn thành; thợ: chờ xác nhận đơn mới) — hiện chấm đỏ khi > 0.
+  soDonCanXuLy?: number;
+  // Số hội thoại có tin nhắn chưa đọc (chỉ áp dụng cho khách) — hiện chấm đỏ khi > 0.
+  soTinNhanChuaDoc?: number;
   // "gon": thanh nhỏ, đẩy phải — dùng cho trang chủ (không tranh chỗ với nội dung chính).
   // "day_du": nút to, canh giữa — dùng cho trang làm việc (tho-gan-ban).
   bienThe?: "gon" | "day_du";
@@ -26,8 +30,20 @@ export default function ThanhDieuHuong({
   laAdmin,
   hoSoKhach,
   onDangXuat,
+  soDonCanXuLy = 0,
+  soTinNhanChuaDoc = 0,
   bienThe = "day_du",
 }: Props) {
+  const ChamDo = ({ so, nho = false }: { so: number; nho?: boolean }) =>
+    so > 0 ? (
+      <span
+        className={`absolute -top-1.5 -right-1.5 bg-rust text-white font-bold rounded-full flex items-center justify-center leading-none border-2 border-card ${
+          nho ? "min-w-[16px] h-[16px] text-[9px] px-0.5" : "min-w-[18px] h-[18px] text-[10px] px-1"
+        }`}
+      >
+        {so > 9 ? "9+" : so}
+      </span>
+    ) : null;
   if (bienThe === "gon") {
     return (
       <div className="flex flex-wrap justify-end gap-2 px-4 sm:px-6 py-3 max-w-5xl mx-auto">
@@ -67,16 +83,18 @@ export default function ThanhDieuHuong({
                 </button>
               </Link>
             )}
-            <Link href={hoSoKhach ? "/don-cua-toi-khach" : "/don-cua-toi"}>
+            <Link href={hoSoKhach ? "/don-cua-toi-khach" : "/don-cua-toi"} className="relative">
               <button className="flex items-center gap-1.5 bg-gold-soft hover:opacity-80 transition text-gold px-4 py-2 rounded-lg text-sm font-medium">
                 <ClipboardList className="w-3.5 h-3.5" /> Đơn của tôi
               </button>
+              <ChamDo so={soDonCanXuLy} nho />
             </Link>
             {hoSoKhach && (
-              <Link href="/tin-nhan-cua-toi">
+              <Link href="/tin-nhan-cua-toi" className="relative">
                 <button className="flex items-center gap-1.5 bg-teal-soft hover:opacity-80 transition text-teal px-4 py-2 rounded-lg text-sm font-medium">
                   <MessageCircle className="w-3.5 h-3.5" /> Tin nhắn
                 </button>
+                <ChamDo so={soTinNhanChuaDoc} nho />
               </Link>
             )}
           </>
@@ -109,14 +127,14 @@ export default function ThanhDieuHuong({
               <LogIn className="w-4 h-4" /> Đăng nhập
             </button>
           </Link>
-          <Link href="/dang-ky">
-            <button className="flex items-center gap-2 bg-teal hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
-              <UserPlus className="w-4 h-4" /> Đăng ký làm thợ
-            </button>
-          </Link>
           <Link href="/dang-ky-khach">
             <button className="flex items-center gap-2 bg-card hover:bg-rust-soft transition text-rust border border-rust/30 px-5 py-2.5 rounded-xl shadow-sm font-medium">
               <UserPlus className="w-4 h-4" /> Đăng ký làm khách hàng
+            </button>
+          </Link>
+          <Link href="/dang-ky">
+            <button className="flex items-center gap-2 bg-teal hover:opacity-90 transition text-white px-5 py-2.5 rounded-xl shadow-sm font-medium">
+              <UserPlus className="w-4 h-4" /> Đăng ký làm thợ
             </button>
           </Link>
         </>
@@ -131,16 +149,18 @@ export default function ThanhDieuHuong({
               </button>
             </Link>
           )}
-          <Link href={hoSoKhach ? "/don-cua-toi-khach" : "/don-cua-toi"}>
+          <Link href={hoSoKhach ? "/don-cua-toi-khach" : "/don-cua-toi"} className="relative">
             <button className="flex items-center gap-2 bg-gold-soft hover:opacity-80 transition text-gold px-5 py-2.5 rounded-xl shadow-sm font-medium">
               <ClipboardList className="w-4 h-4" /> Đơn của tôi
             </button>
+            <ChamDo so={soDonCanXuLy} />
           </Link>
           {hoSoKhach && (
-            <Link href="/tin-nhan-cua-toi">
+            <Link href="/tin-nhan-cua-toi" className="relative">
               <button className="flex items-center gap-2 bg-teal-soft hover:opacity-80 transition text-teal px-5 py-2.5 rounded-xl shadow-sm font-medium">
                 <MessageCircle className="w-4 h-4" /> Tin nhắn
               </button>
+              <ChamDo so={soTinNhanChuaDoc} />
             </Link>
           )}
         </>

@@ -117,10 +117,22 @@ export default function TrangLamViecTho() {
     if (error) console.error("Lỗi tải tin nhắn:", error.message);
   };
 
-  function chonHoiThoai(hoiThoai: HoiThoai) {
+    function chonHoiThoai(hoiThoai: HoiThoai) {
     setKhachDangChon(hoiThoai);
     setDanhSachTinNhan([]); // xóa tin nhắn cũ ngay, tránh hiện nhầm tin của khách trước
     taiTinNhanCuaKhach(hoiThoai.khach_id);
+
+    // Đang mở đúng hội thoại này -> đánh dấu mọi tin nhắn từ khách là đã đọc
+    supabase
+      .from("tin_nhan")
+      .update({ da_doc: true })
+      .eq("tho_id", thoId)
+      .eq("khach_id", hoiThoai.khach_id)
+      .eq("sender_type", "khach")
+      .eq("da_doc", false)
+      .then(({ error: loiDanhDauDoc }) => {
+        if (loiDanhDauDoc) console.error("Lỗi đánh dấu đã đọc:", loiDanhDauDoc);
+      });
   }
 
   useEffect(() => {
@@ -131,7 +143,7 @@ export default function TrangLamViecTho() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "tin_nhan", filter: `tho_id=eq.${thoId}` },
-        (payload: { new: TinNhan }) => {
+                (payload: { new: TinNhan }) => {
           const tinMoi = payload.new;
           if (!tinMoi) return;
 
@@ -144,6 +156,10 @@ export default function TrangLamViecTho() {
                 if (isExist) return prev;
                 return [...prev, tinMoi];
               });
+              // Đang mở sẵn đúng hội thoại này -> tin nhắn khách vừa gửi cũng coi như đã đọc ngay
+              if (tinMoi.sender_type === "khach") {
+                supabase.from("tin_nhan").update({ da_doc: true }).eq("id", tinMoi.id).then();
+              }
             }
             return khachHienTai;
           });

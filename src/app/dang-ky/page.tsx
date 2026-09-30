@@ -7,6 +7,7 @@ import { chuanHoaSdt, sdtHopLe, taoEmailNoiBo, daCoTaiKhoanTheoSdt } from "../..
 import { UserPlus } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
+import GoiYDiaChi from "../../components/GoiYDiaChi";
 import { dichLoiSupabase } from "../../lib/dichLoi";
 
 export default function DangKy() {
@@ -239,17 +240,11 @@ export default function DangKy() {
             </div>
           </div>
 
-          <div>
+                    <div>
             <label className="block text-sm font-semibold text-ink mb-1.5">Địa chỉ</label>
-            <input
-              type="text"
-              placeholder="Địa chỉ của bạn"
-              value={diaChiTho}
-              onChange={(e) => setDiaChiTho(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-line focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all"
-            />
+            <GoiYDiaChi value={diaChiTho} onChange={setDiaChiTho} placeholder="Địa chỉ của bạn" />
           </div>
-
+          
           <button
             className="bg-teal hover:opacity-90 transition text-white px-4 py-2.5 rounded-lg w-full font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
             onClick={xuLyDangKy}

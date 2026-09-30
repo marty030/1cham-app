@@ -92,10 +92,22 @@ export default function TinNhanCuaToiKhach() {
   return (
     <div className="min-h-screen bg-paper p-4 sm:p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 mb-4">
-          <Link href="/tho-gan-ban" className="text-sm text-rust hover:underline font-medium flex items-center gap-1">
+                <div className="flex items-center gap-2 mb-4">
+                    <button
+            onClick={() => {
+              // window.history.length > 1 nghĩa là tab này có trang trước đó để lùi về.
+              // Nếu trang này là trang đầu tiên được tải trong tab (ví dụ do F5 hoặc mở
+              // link trực tiếp), router.back() sẽ không làm gì cả -> về thẳng trang chủ.
+              if (window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/");
+              }
+            }}
+            className="text-sm text-rust hover:underline font-medium flex items-center gap-1"
+          >
             <ArrowLeft className="w-4 h-4" /> Quay lại
-          </Link>
+          </button>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-6 flex items-center gap-2">

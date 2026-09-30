@@ -13,9 +13,10 @@ import {
   StickyNote,
   Hourglass,
   CheckCircle2,
+  XCircle,
   Link2,
 } from "lucide-react";
-import { useThongBao } from "../../components/ThongBao";
+import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
 
 export default function DonCuaToi() {
@@ -24,6 +25,7 @@ export default function DonCuaToi() {
   const [boLoc, setBoLoc] = useState("Tất cả");
   const router = useRouter();
   const thongBao = useThongBao();
+  const xacNhanHopThoai = useXacNhan();
 
   const [donDangXacNhan, setDonDangXacNhan] = useState<number | null>(null);
   const [gioDenDuKienDayDu, setGioDenDuKienDayDu] = useState("");
@@ -148,6 +150,27 @@ export default function DonCuaToi() {
     const link = `${window.location.origin}/don/${idDon}`;
     navigator.clipboard.writeText(link);
     thongBao("Đã copy link! Gửi link này cho khách qua Zalo nhé.", "thanhcong");
+  }
+
+  async function huyDon(idDon: number) {
+    const dongY = await xacNhanHopThoai(
+      "Hủy đơn này? Khách sẽ thấy đơn chuyển sang trạng thái Đã hủy, không thể hoàn tác."
+    );
+    if (!dongY) return;
+
+    const { error } = await supabase
+      .from("don_dat_lich")
+      .update({ trang_thai: "Đã hủy" })
+      .eq("id", idDon);
+
+    if (error) {
+      thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
+    } else {
+      setDanhSachDon((truoc) =>
+        truoc.map((d) => (d.id === idDon ? { ...d, trang_thai: "Đã hủy" } : d))
+      );
+      thongBao("Đã hủy đơn.", "thanhcong");
+    }
   }
 
   async function xacNhanKemGioDen(idDon: number) {
@@ -336,6 +359,12 @@ export default function DonCuaToi() {
                       <CheckCircle2 className="w-4 h-4" /> Đã hoàn thành
                     </div>
                   </div>
+                ) : don.trang_thai === "Đã hủy" ? (
+                  <div className="p-5 pt-0 mt-auto">
+                    <div className="w-full flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl border bg-rust-soft text-rust border-rust/30">
+                      <XCircle className="w-4 h-4" /> Đã hủy
+                    </div>
+                  </div>
                 ) : (
                   <div className="p-5 pt-0 mt-auto flex flex-col gap-2">
                     <div className="relative">
@@ -349,7 +378,6 @@ export default function DonCuaToi() {
                         <option value="Chờ xác nhận">Chờ xác nhận</option>
                         <option value="Đã xác nhận">Đã xác nhận</option>
                         <option value="Đã hoàn thành">Đã hoàn thành</option>
-                        <option value="Đã hủy">Đã hủy</option>
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-ink-soft">
                         <svg className="w-4 h-4 fill-current opacity-70" viewBox="0 0 20 20">
@@ -358,15 +386,21 @@ export default function DonCuaToi() {
                       </div>
                     </div>
 
-                    {(don.trang_thai === "Đã xác nhận" || don.tho_xac_nhan_hoan_thanh) &&
-                      don.trang_thai !== "Đã hủy" && (
-                        <button
-                          onClick={() => copyLinkChoKhach(don.id)}
-                          className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-rust border border-rust/30 bg-rust-soft hover:opacity-80 py-2 rounded-lg transition"
-                        >
-                          <Link2 className="w-3.5 h-3.5" /> Copy link đơn cho khách
-                        </button>
-                      )}
+                    {(don.trang_thai === "Đã xác nhận" || don.tho_xac_nhan_hoan_thanh) && (
+                      <button
+                        onClick={() => copyLinkChoKhach(don.id)}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-rust border border-rust/30 bg-rust-soft hover:opacity-80 py-2 rounded-lg transition"
+                      >
+                        <Link2 className="w-3.5 h-3.5" /> Copy link đơn cho khách
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => huyDon(don.id)}
+                      className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-ink-soft border border-line hover:bg-rust-soft hover:text-rust hover:border-rust/30 py-2 rounded-lg transition"
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Hủy đơn
+                    </button>
                   </div>
                 )}
               </div>
