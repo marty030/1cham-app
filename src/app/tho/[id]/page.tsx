@@ -78,13 +78,16 @@ export default function TrangChiTietTho() {
       }
       setTho(thoData);
 
-      const { data: donData } = await supabase
-        .from("don_dat_lich")
-        .select("gio_hen, trang_thai")
-        .eq("tho_id", thoId)
-        .eq("trang_thai", "Đã xác nhận");
+      // Khung giờ bận lấy qua hàm SQL (chỉ trả tho_id, gio_hen, trang_thai — không lộ thông tin khách)
+      const bayGioMs = Date.now();
+      const { data: donData } = await supabase.rpc("khung_gio_ban", {
+        p_tho_id: thoId,
+        p_tu: new Date(bayGioMs - 2 * 60 * 60 * 1000).toISOString(),
+        p_den: new Date(bayGioMs + 2 * 60 * 60 * 1000).toISOString(),
+      });
 
       const banHienTai = (donData || []).some((don: any) => {
+        if (don.trang_thai !== "Đã xác nhận") return false;
         const gio = new Date(don.gio_hen);
         const bayGio = new Date();
         const chenhLech = Math.abs(gio.getTime() - bayGio.getTime()) / (1000 * 60 * 60);

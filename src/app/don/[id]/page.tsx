@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { layHoSoKhachHienTai } from "../../../lib/khach";
-import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
-import { Clock, Car, MapPin, StickyNote, CheckCircle2, Star, Send, Hourglass } from "lucide-react";
+import KhoiLichHen, { dinhDangGioNgan } from "../../../components/KhoiLichHen";
+import { Car, StickyNote, CheckCircle2, Star, Send, Hourglass } from "lucide-react";
 import NhanTrangThai from "../../../components/NhanTrangThai";
 import { useThongBao } from "../../../components/ThongBao";
 import { dichLoiSupabase } from "../../../lib/dichLoi";
@@ -117,7 +118,17 @@ export default function TrangDonKhach() {
   if (khongTimThay || !don) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper p-6">
-        <p className="text-ink-soft">Không tìm thấy đơn này. Kiểm tra lại link nhé.</p>
+        <div className="text-center max-w-sm">
+          <p className="text-ink-soft mb-3">
+            Không tìm thấy đơn này, hoặc bạn chưa đăng nhập đúng tài khoản đã đặt đơn.
+          </p>
+          <Link
+            href={`/login?next=${encodeURIComponent(`/don/${donId}`)}`}
+            className="text-rust font-semibold hover:underline"
+          >
+            Đăng nhập để xem đơn →
+          </Link>
+        </div>
       </div>
     );
   }
@@ -139,24 +150,16 @@ export default function TrangDonKhach() {
           <NhanTrangThai trangThai={don.trang_thai} className="self-start text-sm px-3 py-1.5" />
 
           <div className="flex flex-col gap-2 text-sm text-ink-soft">
-            <div className="flex items-start gap-2.5">
-              <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-              <span>Giờ hẹn: {new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</span>
-            </div>
+            <KhoiLichHen gioHen={don.gio_hen} diaChi={don.dia_chi_hen} />
 
             {don.gio_du_kien_den && (
               <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
                 <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
-                <span className="text-teal font-medium">
-                  Thợ dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}
+                <span className="text-teal font-semibold">
+                  Thợ dự kiến đến: {dinhDangGioNgan(don.gio_du_kien_den)}
                 </span>
               </div>
             )}
-
-            <div className="flex items-start gap-2.5">
-              <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-              <span>{don.dia_chi_hen}</span>
-            </div>
 
             {don.ghi_chu && (
               <div className="flex items-start gap-2.5 bg-gold-soft p-3 rounded-lg border border-gold/20">

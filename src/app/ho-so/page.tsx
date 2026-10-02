@@ -6,6 +6,7 @@ import ChonKhuVucHoatDong from "../../components/ChonKhuVucHoatDong";
 import { Camera, MapPin, PauseCircle, PlayCircle, Save, Star } from "lucide-react";
 import { useThongBao } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import { BAN_KINH_MAC_DINH_KM } from "../../lib/goong";
 
 export default function HoSo() {
   const [hoSo, setHoSo] = useState<any>(null);
@@ -15,7 +16,7 @@ export default function HoSo() {
   const [diaChi, setDiaChi] = useState("");
   const [viDo, setViDo] = useState<number | null>(null);
   const [kinhDo, setKinhDo] = useState<number | null>(null);
-  const [banKinh, setBanKinh] = useState(10);
+  const [banKinh, setBanKinh] = useState(BAN_KINH_MAC_DINH_KM);
   const [anhDaiDien, setAnhDaiDien] = useState<string | null>(null);
   const [dangTaiAnh, setDangTaiAnh] = useState(false);
   const [dangNghi, setDangNghi] = useState(false);
@@ -48,7 +49,7 @@ export default function HoSo() {
         setViDo(data.vi_do ?? null);
         setKinhDo(data.kinh_do ?? null);
         setDangNghi(data.dang_nghi || false);
-        setBanKinh(data.ban_kinh_hoat_dong ?? 10);
+        setBanKinh(data.ban_kinh_hoat_dong ?? BAN_KINH_MAC_DINH_KM);
         setAnhDaiDien(data.anh_dai_dien ?? null);
       }
       setDangTai(false);

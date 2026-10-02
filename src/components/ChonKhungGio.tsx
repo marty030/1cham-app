@@ -34,7 +34,7 @@ type ChonKhungGioProps = {
   thoId: number | string | undefined | null;
   value: string; // ISO có ghi rõ +07:00, ví dụ "2026-09-07T15:30:00+07:00"; rỗng nếu chưa chọn
   onChange: (giaTri: string) => void;
-  boQuaDonId?: number; // loại trừ chính đơn này khỏi danh sách "đã bị đặt" (dùng khi thợ xác nhận giờ cho chính đơn đó)
+  boQuaDonId?: number; // không còn tác dụng: đơn đang chờ không khóa giờ nên đơn của chính thợ chưa bao giờ nằm trong danh sách; giữ lại để các nơi gọi cũ không phải đổi
 };
 
 function tachNgayGioVN(gioTri: string): { ngay: string; gio: string } {
@@ -50,7 +50,7 @@ function tachNgayGioVN(gioTri: string): { ngay: string; gio: string } {
   return { ngay, gio: `${String(gio).padStart(2, "0")}:${String(phut).padStart(2, "0")}` };
 }
 
-export default function ChonKhungGio({ thoId, value, onChange, boQuaDonId }: ChonKhungGioProps) {
+export default function ChonKhungGio({ thoId, value, onChange }: ChonKhungGioProps) {
   const ngayInputRef = useRef<HTMLInputElement>(null);
   const fpRef = useRef<any>(null);
 
@@ -83,7 +83,8 @@ export default function ChonKhungGio({ thoId, value, onChange, boQuaDonId }: Cho
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Tải các khung giờ đã có đơn khác của đúng thợ này trong ngày đã chọn
+  // Tải các khung giờ đã được thợ xác nhận (hoặc đã hoàn thành) trong ngày đã chọn.
+  // Đơn còn "Chờ xác nhận" KHÔNG khóa khung giờ — chỉ khi thợ xác nhận thì giờ đó mới bị gạch.
   useEffect(() => {
     if (!ngayDaChon || !thoId) {
       setKhungGioDaDat(new Set());
@@ -95,26 +96,20 @@ export default function ChonKhungGio({ thoId, value, onChange, boQuaDonId }: Cho
       const batDauNgay = `${ngayDaChon}T00:00:00+07:00`;
       const ketThucNgay = `${ngayDaChon}T23:59:59+07:00`;
 
-      let truyVan = supabase
-        .from("don_dat_lich")
-        .select("gio_hen")
-        .eq("tho_id", thoId)
-        .neq("trang_thai", "Đã hủy")
-        .gte("gio_hen", batDauNgay)
-        .lte("gio_hen", ketThucNgay);
-
-      if (boQuaDonId) {
-        truyVan = truyVan.neq("id", boQuaDonId);
-      }
-
-      const { data, error } = await truyVan;
+      // Gọi hàm SQL khung_gio_ban: chỉ trả giờ của các đơn đã xác nhận/hoàn thành,
+      // không trả thông tin khách (vì bảng don_dat_lich không còn đọc công khai).
+      const { data, error } = await supabase.rpc("khung_gio_ban", {
+        p_tho_id: thoId,
+        p_tu: batDauNgay,
+        p_den: ketThucNgay,
+      });
 
       if (error) {
         console.error("Lỗi tải khung giờ đã đặt:", error);
         setKhungGioDaDat(new Set());
       } else {
-        const daDat = new Set(
-          (data || []).map((don: any) => {
+        const daDat = new Set<string>(
+          ((data as any[]) || []).map((don: any) => {
             const { gio, phut } = gioPhutVN(don.gio_hen);
             return lamTronXuong30Phut(gio, phut);
           })
@@ -125,7 +120,7 @@ export default function ChonKhungGio({ thoId, value, onChange, boQuaDonId }: Cho
     }
 
     taiDonTrongNgay();
-  }, [ngayDaChon, thoId, boQuaDonId]);
+  }, [ngayDaChon, thoId]);
 
   function chonKhungGio(gio: string) {
     setGioDaChon(gio);

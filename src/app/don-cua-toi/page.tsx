@@ -3,13 +3,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import ChonKhungGio from "../../components/ChonKhungGio";
-import { TUY_CHON_GIO_VN } from "../../lib/thoiGianVN";
+import KhoiLichHen, { dinhDangGioNgan } from "../../components/KhoiLichHen";
+import { gioPhutVN, taoISOTuVN, TUY_CHON_GIO_VN } from "../../lib/thoiGianVN";
 import {
   ClipboardList,
   Phone,
-  Clock,
   Car,
-  MapPin,
   StickyNote,
   Hourglass,
   CheckCircle2,
@@ -68,11 +67,48 @@ export default function DonCuaToi() {
     layDon();
   }, []);
 
+  // Vì đơn "Chờ xác nhận" không còn khóa khung giờ, 2 khách có thể cùng đặt một khung.
+  // Trước khi thợ xác nhận, kiểm tra thợ đã xác nhận đơn nào khác trong cùng khung 30 phút chưa
+  // (làm tròn giống ChonKhungGio). Nếu truy vấn lỗi thì cho qua, không chặn thợ.
+  async function daCoDonKhacDaXacNhanCungKhung(don: any): Promise<boolean> {
+    const { gio, phut } = gioPhutVN(don.gio_hen);
+    const ngay = new Date(don.gio_hen).toLocaleDateString("en-CA", TUY_CHON_GIO_VN);
+    const phutTron = Math.floor((gio * 60 + phut) / 30) * 30;
+    const hh = String(Math.floor(phutTron / 60)).padStart(2, "0");
+    const mm = String(phutTron % 60).padStart(2, "0");
+    const batDau = taoISOTuVN(ngay, `${hh}:${mm}`);
+    const ketThuc = new Date(new Date(batDau).getTime() + 30 * 60 * 1000).toISOString();
+
+    const { data, error } = await supabase
+      .from("don_dat_lich")
+      .select("id")
+      .eq("tho_id", don.tho_id)
+      .in("trang_thai", ["Đã xác nhận", "Đã hoàn thành"])
+      .neq("id", don.id)
+      .gte("gio_hen", batDau)
+      .lt("gio_hen", ketThuc)
+      .limit(1);
+
+    if (error) {
+      console.error("Lỗi kiểm tra trùng khung giờ:", error);
+      return false;
+    }
+    return (data?.length ?? 0) > 0;
+  }
+
   async function doiTrangThai(idDon: number, trangThaiMoi: string) {
     if (trangThaiMoi === "Đã xác nhận") {
       const don = danhSachDon.find((d) => d.id === idDon);
 
       if (don?.che_do_dat_lich === "gio_khac") {
+        if (await daCoDonKhacDaXacNhanCungKhung(don)) {
+          thongBao(
+            "Bạn đã xác nhận một đơn khác vào khung giờ này. Hãy hủy đơn này hoặc liên hệ khách để đổi giờ.",
+            "canhbao"
+          );
+          return;
+        }
+
         const { error } = await supabase
           .from("don_dat_lich")
           .update({ trang_thai: "Đã xác nhận" })
@@ -288,28 +324,22 @@ export default function DonCuaToi() {
                 </div>
 
                 <div className="p-5 flex-1 flex flex-col gap-3 text-sm text-ink-soft">
-                  <div className="flex items-start gap-2.5">
-                    <Phone className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-                    <span className="font-medium text-ink">{don.so_dien_thoai}</span>
+                  <div className="flex items-center gap-2.5">
+                    <Phone className="w-4 h-4 text-ink-soft shrink-0" />
+                    <span className="text-base font-semibold text-ink tabular-nums">{don.so_dien_thoai}</span>
                   </div>
-                  <div className="flex items-start gap-2.5">
-                    <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-                    <span>Khách hẹn: {new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</span>
-                  </div>
+
+                  <KhoiLichHen gioHen={don.gio_hen} diaChi={don.dia_chi_hen} nhanGio="Khách hẹn lúc" gioiHanDong />
 
                   {don.gio_du_kien_den && (
                     <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
                       <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
-                      <span className="text-teal font-medium">
-                        Bạn dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}
+                      <span className="text-teal font-semibold">
+                        Bạn dự kiến đến: {dinhDangGioNgan(don.gio_du_kien_den)}
                       </span>
                     </div>
                   )}
 
-                  <div className="flex items-start gap-2.5">
-                    <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-                    <span className="line-clamp-2">{don.dia_chi_hen}</span>
-                  </div>
                   {don.ghi_chu && (
                     <div className="flex items-start gap-2.5 bg-gold-soft p-3 rounded-lg border border-gold/20 mt-2">
                       <StickyNote className="w-4 h-4 text-gold mt-0.5 shrink-0" />

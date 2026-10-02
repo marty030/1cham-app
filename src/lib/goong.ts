@@ -1,6 +1,9 @@
 export const GOONG_API_KEY = process.env.NEXT_PUBLIC_GOONG_API_KEY || "";
 export const GOONG_MAPTILES_KEY = process.env.NEXT_PUBLIC_GOONG_MAPTILES_KEY || "";
 
+// Bán kính hoạt động mặc định (km) cho thợ chưa tự đặt bán kính riêng.
+export const BAN_KINH_MAC_DINH_KM = 15;
+
 export async function geocodeNguocLai(lat: number, lng: number): Promise<string> {
   try {
     const res = await fetch(
@@ -11,6 +14,26 @@ export async function geocodeNguocLai(lat: number, lng: number): Promise<string>
   } catch (err) {
     console.error("Lỗi reverse geocode (Goong):", err);
     return "";
+  }
+}
+
+// Lấy toạ độ + địa chỉ đầy đủ từ place_id (kết quả của Place/AutoComplete).
+// Trả về null nếu Goong không có dữ liệu hoặc lỗi mạng.
+export async function layChiTietDiaDiem(
+  placeId: string
+): Promise<{ lat: number; lng: number; diaChi: string } | null> {
+  try {
+    const res = await fetch(
+      `https://rsapi.goong.io/Place/Detail?place_id=${placeId}&api_key=${GOONG_API_KEY}`
+    );
+    const data = await res.json();
+    const vt = data?.result?.geometry?.location;
+    const diaChi = data?.result?.formatted_address;
+    if (vt && diaChi) return { lat: vt.lat, lng: vt.lng, diaChi };
+    return null;
+  } catch (err) {
+    console.error("Lỗi lấy chi tiết địa điểm (Goong Place Detail):", err);
+    return null;
   }
 }
 

@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { layHoSoKhachHienTai } from "../../lib/khach";
-import { TUY_CHON_GIO_VN } from "../../lib/thoiGianVN";
+import KhoiLichHen, { dinhDangGioNgan } from "../../components/KhoiLichHen";
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, Clock, Car, MapPin, ArrowRight, XCircle } from "lucide-react";
+import { ArrowLeft, ClipboardList, Car, ArrowRight, XCircle } from "lucide-react";
 import NhanTrangThai from "../../components/NhanTrangThai";
 import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
@@ -146,24 +146,16 @@ export default function DonCuaToiKhach() {
                     <div className="p-5 flex-1 flex flex-col gap-3 text-sm text-ink-soft">
                       <NhanTrangThai trangThai={don.trang_thai} className="self-start" />
 
-                      <div className="flex items-start gap-2.5">
-                        <Clock className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-                        <span>{new Date(don.gio_hen).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}</span>
-                      </div>
+                      <KhoiLichHen gioHen={don.gio_hen} diaChi={don.dia_chi_hen} gioiHanDong />
 
                       {don.gio_du_kien_den && (
                         <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
                           <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
-                          <span className="text-teal font-medium">
-                            Thợ dự kiến đến: {new Date(don.gio_du_kien_den).toLocaleString("vi-VN", TUY_CHON_GIO_VN)}
+                          <span className="text-teal font-semibold">
+                            Thợ dự kiến đến: {dinhDangGioNgan(don.gio_du_kien_den)}
                           </span>
                         </div>
                       )}
-
-                      <div className="flex items-start gap-2.5">
-                        <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />
-                        <span className="line-clamp-2">{don.dia_chi_hen}</span>
-                      </div>
                     </div>
 
                     <div className="px-5 pb-5">

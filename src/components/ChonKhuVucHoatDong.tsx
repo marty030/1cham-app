@@ -1,9 +1,16 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import "@goongmaps/goong-js/dist/goong-js.css";
-import { GOONG_API_KEY, GOONG_MAPTILES_KEY, geocodeNguocLai, taoVongTronGeoJSON } from "../lib/goong";
+import {
+  GOONG_API_KEY,
+  GOONG_MAPTILES_KEY,
+  geocodeNguocLai,
+  layChiTietDiaDiem,
+  taoVongTronGeoJSON,
+} from "../lib/goong";
 import { LocateFixed } from "lucide-react";
 import { useThongBao } from "./ThongBao";
+import GoiYDiaChi from "./GoiYDiaChi";
 
 type ChonKhuVucHoatDongProps = {
   viDo: number | null;
@@ -34,6 +41,7 @@ export default function ChonKhuVucHoatDong({
 
   const [dangDinhVi, setDangDinhVi] = useState(false);
   const [dangTaiDiaChi, setDangTaiDiaChi] = useState(false);
+  const [tuKhoa, setTuKhoa] = useState("");
   const thongBao = useThongBao();
 
   const toaDoBanDau = {
@@ -93,6 +101,7 @@ export default function ChonKhuVucHoatDong({
       marker.on("dragend", async () => {
         const lngLat = marker.getLngLat();
         capNhatVongTron(lngLat.lat, lngLat.lng);
+        setTuKhoa("");
         setDangTaiDiaChi(true);
         const diaChiMoi = await geocodeNguocLai(lngLat.lat, lngLat.lng);
         setDangTaiDiaChi(false);
@@ -119,6 +128,28 @@ export default function ChonKhuVucHoatDong({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [banKinh]);
 
+  // Thợ gõ địa chỉ và bấm chọn 1 gợi ý: lấy toạ độ, dời ghim + vòng tròn tới đó
+  async function chonDiaChiTuGoiY(placeId: string) {
+    setDangTaiDiaChi(true);
+    const chiTiet = await layChiTietDiaDiem(placeId);
+    setDangTaiDiaChi(false);
+
+    if (!chiTiet) {
+      thongBao("Không lấy được vị trí của địa chỉ này, thử chọn địa chỉ khác nhé.", "loi");
+      return;
+    }
+
+    const map = mapRef.current;
+    const marker = markerRef.current;
+    if (map && marker) {
+      marker.setLngLat([chiTiet.lng, chiTiet.lat]);
+      map.flyTo({ center: [chiTiet.lng, chiTiet.lat], zoom: 15 });
+      capNhatVongTron(chiTiet.lat, chiTiet.lng);
+    }
+    setTuKhoa("");
+    onDoiViTri(chiTiet.lat, chiTiet.lng, chiTiet.diaChi);
+  }
+
   function dinhViHienTai() {
     if (!navigator.geolocation) {
       thongBao("Trình duyệt của bạn không hỗ trợ định vị.", "thongtin");
@@ -138,6 +169,7 @@ export default function ChonKhuVucHoatDong({
           capNhatVongTron(latitude, longitude);
         }
 
+        setTuKhoa("");
         setDangTaiDiaChi(true);
         const diaChiMoi = await geocodeNguocLai(latitude, longitude);
         setDangTaiDiaChi(false);
@@ -163,12 +195,24 @@ export default function ChonKhuVucHoatDong({
 
   return (
     <div className="flex flex-col gap-2">
+      <div>
+        <label className="text-xs font-semibold text-ink-soft mb-1 block">
+          Nhập địa chỉ để tìm
+        </label>
+        <GoiYDiaChi
+          value={tuKhoa}
+          onChange={setTuKhoa}
+          onChonGoiY={(placeId) => chonDiaChiTuGoiY(placeId)}
+          placeholder="Ví dụ: 12 Quang Trung, Hà Đông"
+        />
+      </div>
+
       <div
         ref={mapContainerRef}
         className="w-full h-56 rounded-lg overflow-hidden border border-line"
       />
       <p className="text-xs text-ink-soft text-center">
-        Kéo ghim để đặt đúng tâm khu vực hoạt động — vùng tô màu là bán kính nhận khách
+        Chọn địa chỉ gợi ý, hoặc kéo ghim để chỉnh đúng tâm khu vực hoạt động
       </p>
 
       <div className="bg-paper border border-line rounded-lg px-3 py-2 text-sm text-ink min-h-[2.5rem] flex items-center">

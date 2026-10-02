@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import { BAN_KINH_MAC_DINH_KM } from "../../lib/goong";
 import { useDatLich } from "../../hooks/useDatLich";
 import { useTaiKhoanHienTai } from "../../hooks/useTaiKhoanHienTai";
 import { useSoDonCanXuLy } from "../../hooks/useSoDonCanXuLy";
@@ -34,8 +35,8 @@ function NoiDungTrangDanhSach() {
   const danhMucLoc = searchParams.get("danh_muc");
   const tenDanhMucLoc = DANH_MUC_NGHE.find((m) => m.gia_tri === danhMucLoc)?.nhan ?? null;
 
-  const [viTriDangMo, setViTriDangMo] = useState<number | null>(null);
-  const [viTriDatLich, setViTriDatLich] = useState<number | null>(null);
+  const [viTriDangMo, setViTriDangMo] = useState<string | number | null>(null);
+  const [viTriDatLich, setViTriDatLich] = useState<string | number | null>(null);
   const [viTriKhach, setViTriKhach] = useState<{ lat: number; lng: number } | null>(null);
     const { daDangNhap, laAdmin, hoSoKhach, currentUserId, dangXuat } = useTaiKhoanHienTai();
     const soDonCanXuLy = useSoDonCanXuLy(daDangNhap, hoSoKhach, currentUserId);
@@ -64,7 +65,13 @@ function NoiDungTrangDanhSach() {
 
   useEffect(() => {
     async function layDon() {
-      const { data } = await supabase.from("don_dat_lich").select("*");
+      // Chỉ lấy khung giờ bận (tho_id, gio_hen, trang_thai) của các đơn đã xác nhận quanh thời điểm
+      // hiện tại, qua hàm SQL — không đọc cả bảng đơn nên không lộ thông tin khách.
+      const bayGio = Date.now();
+      const { data } = await supabase.rpc("khung_gio_ban", {
+        p_tu: new Date(bayGio - 2 * 60 * 60 * 1000).toISOString(),
+        p_den: new Date(bayGio + 2 * 60 * 60 * 1000).toISOString(),
+      });
       setDanhSachDon(data || []);
     }
     layDon();
@@ -91,7 +98,7 @@ function NoiDungTrangDanhSach() {
   const [ngheMoi, setNgheMoi] = useState("");
   const [diaChiMoi, setDiaChiMoi] = useState("");
   const [danhMucMoi, setDanhMucMoi] = useState<string[]>([]);
-  const [viTriDangSua, setViTriDangSua] = useState<number | null>(null);
+  const [viTriDangSua, setViTriDangSua] = useState<string | number | null>(null);
   const [ngheSua, setNgheSua] = useState("");
   const [danhMucSua, setDanhMucSua] = useState<string[]>([]);
 
@@ -107,18 +114,36 @@ function NoiDungTrangDanhSach() {
     );
   }
 
-  const thoTrongBanKinh = danhSachTho.filter((tho) => {
-    if (currentUserId && tho.user_id === currentUserId) return false;
+  // Các state mở/sửa/đặt lịch bên dưới khóa theo tho.id (không theo vị trí trong danh sách)
+  // vì thứ tự đổi khi vị trí khách được lấy xong.
+  // Lọc: bỏ chính mình, lọc theo ngành, và chỉ giữ thợ mà khách nằm trong bán kính hoạt
+  // động do chính thợ đặt (thợ chưa đặt thì dùng mặc định BAN_KINH_MAC_DINH_KM).
+  // Thợ chưa có toạ độ, hoặc khi chưa lấy được vị trí khách, vẫn hiện (không đủ dữ liệu để loại).
+  // Sắp xếp: gần khách lên trên, xa xuống dưới; không có khoảng cách thì xếp cuối, giữ thứ tự sao.
+  const danhSachHienThi = danhSachTho
+    .filter((tho) => {
+      if (currentUserId && tho.user_id === currentUserId) return false;
+      if (danhMucLoc && !(tho.danh_muc || []).includes(danhMucLoc)) return false;
+      if (!viTriKhach || !tho.vi_do || !tho.kinh_do) return true;
+      const kc = tinhKhoangCach(viTriKhach.lat, viTriKhach.lng, tho.vi_do, tho.kinh_do);
+      return kc <= (tho.ban_kinh_hoat_dong ?? BAN_KINH_MAC_DINH_KM);
+    })
+    .map((tho) => ({
+      tho,
+      khoangCach:
+        viTriKhach && tho.vi_do && tho.kinh_do
+          ? tinhKhoangCach(viTriKhach.lat, viTriKhach.lng, tho.vi_do, tho.kinh_do)
+          : null,
+    }))
+    .sort((a, b) => {
+      if (a.khoangCach === null && b.khoangCach === null) return 0;
+      if (a.khoangCach === null) return 1;
+      if (b.khoangCach === null) return -1;
+      return a.khoangCach - b.khoangCach;
+    });
 
-    if (danhMucLoc && !(tho.danh_muc || []).includes(danhMucLoc)) return false;
-
-    if (!viTriKhach || !tho.vi_do || !tho.kinh_do) return true;
-    const khoangCach = tinhKhoangCach(viTriKhach.lat, viTriKhach.lng, tho.vi_do, tho.kinh_do);
-    return khoangCach <= (tho.ban_kinh_hoat_dong ?? 10);
-  });
-
-  function moDatLich(index: number) {
-    if (datLich.batDau()) setViTriDatLich(index);
+  function moDatLich(thoId: string | number) {
+    if (datLich.batDau()) setViTriDatLich(thoId);
   }
 
   return (
@@ -147,12 +172,17 @@ function NoiDungTrangDanhSach() {
         soTinNhanChuaDoc={soTinNhanChuaDoc}
         bienThe="day_du"
       />
-      {thoTrongBanKinh.length === 0 && (
+      {!viTriKhach && danhSachHienThi.length > 0 && (
+        <p className="text-xs text-ink-soft mb-4 text-center">
+          Chưa lấy được vị trí của bạn nên danh sách chưa lọc và sắp xếp theo khoảng cách.
+        </p>
+      )}
+      {danhSachHienThi.length === 0 && (
         <p className="text-ink-soft mb-8">Chưa có thợ nào ở ngành này trong khu vực của bạn.</p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full max-w-7xl">
-        {thoTrongBanKinh.map((tho, index) => {
+        {danhSachHienThi.map(({ tho, khoangCach }, index) => {
           const dangLamViec = danhSachDon.some((don) => {
             if (don.tho_id !== tho.id || don.trang_thai !== "Đã xác nhận")
               return false;
@@ -163,11 +193,6 @@ function NoiDungTrangDanhSach() {
             return chenhLechGio < 2;
           });
 
-          const khoangCach =
-            viTriKhach && tho.vi_do && tho.kinh_do
-              ? tinhKhoangCach(viTriKhach.lat, viTriKhach.lng, tho.vi_do, tho.kinh_do)
-              : null;
-
           return (
             <TheTho
               key={tho.id}
@@ -176,14 +201,14 @@ function NoiDungTrangDanhSach() {
               dangNghi={tho.dang_nghi}
               khoangCach={khoangCach}
               index={index}
-              dangMo={viTriDangMo === index}
-              dangSua={viTriDangSua === index}
+              dangMo={viTriDangMo === tho.id}
+              dangSua={viTriDangSua === tho.id}
               ngheSua={ngheSua}
               danhMucSua={danhMucSua}
               daDangNhap={laAdmin}
-              onXemChiTiet={() => setViTriDangMo(viTriDangMo === index ? null : index)}
+              onXemChiTiet={() => setViTriDangMo(viTriDangMo === tho.id ? null : tho.id)}
               onBatDauSua={() => {
-                setViTriDangSua(index);
+                setViTriDangSua(tho.id);
                 setNgheSua(tho.nghe);
                 setDanhMucSua(tho.danh_muc || []);
               }}
@@ -206,13 +231,13 @@ function NoiDungTrangDanhSach() {
                   layDanhSachTho();
                 }
               }}
-              dangDatLich={viTriDatLich === index}
+              dangDatLich={viTriDatLich === tho.id}
               tenKhach={datLich.tenKhach}
               soDienThoai={datLich.soDienThoai}
               gioHenDayDu={datLich.gioHenDayDu}
               diaChiHen={datLich.diaChiHen}
               ghiChu={datLich.ghiChu}
-              onMoDatLich={() => moDatLich(index)}
+              onMoDatLich={() => moDatLich(tho.id)}
               onDoiTenKhach={datLich.setTenKhach}
               onDoiSoDienThoai={datLich.setSoDienThoai}
               onDoiGioHenDayDu={datLich.setGioHenDayDu}

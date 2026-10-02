@@ -7,6 +7,9 @@ type GoiYDiaChiProps = {
   value: string;
   onChange: (diaChi: string) => void;
   placeholder?: string;
+  // Tuỳ chọn: được gọi khi người dùng bấm chọn 1 gợi ý, kèm place_id để nơi dùng
+  // tự lấy toạ độ (Place/Detail) nếu cần. Không truyền thì hành vi như cũ.
+  onChonGoiY?: (placeId: string, moTa: string) => void;
 };
 
 type MucGoiY = {
@@ -21,7 +24,7 @@ const TOA_DO_MAC_DINH = { lat: 20.9721, lng: 105.7787 };
 // Ô nhập địa chỉ có gợi ý (autocomplete) đơn giản, KHÔNG kèm bản đồ/toạ độ —
 // dùng cho những chỗ chỉ cần lưu chuỗi địa chỉ (vd. đăng ký thợ), khác với
 // ChonDiaChi.tsx (có bước xác nhận trên bản đồ để lấy toạ độ vi_do/kinh_do).
-export default function GoiYDiaChi({ value, onChange, placeholder }: GoiYDiaChiProps) {
+export default function GoiYDiaChi({ value, onChange, placeholder, onChonGoiY }: GoiYDiaChiProps) {
   const [goiY, setGoiY] = useState<MucGoiY[]>([]);
   const [dangHienGoiY, setDangHienGoiY] = useState(false);
   const [dangTimKiem, setDangTimKiem] = useState(false);
@@ -69,10 +72,11 @@ export default function GoiYDiaChi({ value, onChange, placeholder }: GoiYDiaChiP
     return () => document.removeEventListener("mousedown", xuLyClickNgoai);
   }, []);
 
-  function chonGoiY(mo_ta: string) {
+  function chonGoiY(placeId: string, mo_ta: string) {
     onChange(mo_ta);
     setGoiY([]);
     setDangHienGoiY(false);
+    onChonGoiY?.(placeId, mo_ta);
   }
 
   return (
@@ -99,7 +103,7 @@ export default function GoiYDiaChi({ value, onChange, placeholder }: GoiYDiaChiP
               <button
                 key={g.place_id}
                 type="button"
-                onClick={() => chonGoiY(g.mo_ta)}
+                onClick={() => chonGoiY(g.place_id, g.mo_ta)}
                 className="w-full text-left px-4 py-2.5 text-sm text-ink hover:bg-paper transition flex items-start gap-2 border-b border-line last:border-0"
               >
                 <MapPin className="w-4 h-4 text-ink-soft mt-0.5 shrink-0" />

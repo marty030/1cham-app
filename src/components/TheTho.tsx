@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import FormDatLich from "./FormDatLich";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
-import { MessageCircle, CalendarDays, Pencil, Trash2, MapPin, Star } from "lucide-react";
+import { MessageCircle, CalendarDays, Pencil, Trash2, MapPin, Navigation, Star } from "lucide-react";
 
 type TheThoProps = {
   tho: any;
@@ -73,9 +73,18 @@ export default function TheTho({
   const router = useRouter();
   const chuCaiDau = tho.ten ? tho.ten.charAt(0).toUpperCase() : "T";
 
-  const tenCacDanhMuc: string[] = (tho.danh_muc || []).map(
-    (ma: string) => DANH_MUC_NGHE.find((m) => m.gia_tri === ma)?.nhan ?? ma
-  );
+  // Nhãn ngành để quét nhanh. Bỏ "Khác": nó chẳng nói gì về thợ — phần mô tả công việc
+  // mới là thứ nói thợ làm gì, nên với thợ "Khác" mô tả sẽ thành dòng chính.
+  const tenCacDanhMuc: string[] = (tho.danh_muc || [])
+    .filter((ma: string) => ma !== "khac")
+    .map((ma: string) => DANH_MUC_NGHE.find((m) => m.gia_tri === ma)?.nhan ?? ma);
+
+  // Thợ hay gõ "a,b,c" không có dấu cách sau phẩy → chuẩn hóa cho dễ đọc
+  const moTa: string = (tho.nghe || "").trim().replace(/\s*,\s*/g, ", ");
+  // Dòng chính: mô tả thợ tự viết; chưa viết thì dùng tên ngành; không có gì thì báo chưa cập nhật
+  const dongChinh = moTa || tenCacDanhMuc.join(" · ");
+  // Chỉ hiện nhãn ngành riêng khi dòng chính đang là mô tả (tránh lặp lại cùng một nội dung)
+  const hienNhanNganh = moTa !== "" && tenCacDanhMuc.length > 0;
 
   return (
     <div
@@ -83,9 +92,9 @@ export default function TheTho({
       onClick={() => router.push(`/tho/${tho.id}`)}
     >
 
-      {/* 1. HEADER */}
-      <div className="flex items-start gap-4 mb-4">
-        <div className="w-12 h-12 rounded-full overflow-hidden bg-teal-soft text-teal flex items-center justify-center text-xl font-bold shrink-0">
+      {/* 1. HEADER: tên → uy tín (sao, số đơn) → trạng thái */}
+      <div className="flex items-start gap-3.5 mb-4">
+        <div className="w-14 h-14 rounded-full overflow-hidden bg-teal-soft text-teal flex items-center justify-center text-2xl font-bold shrink-0">
           {tho.anh_dai_dien ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={tho.anh_dai_dien} alt={tho.ten} className="w-full h-full object-cover" />
@@ -93,7 +102,7 @@ export default function TheTho({
             chuCaiDau
           )}
         </div>
-        <div className="flex flex-col items-start gap-1.5 flex-1">
+        <div className="flex flex-col items-start gap-1.5 flex-1 min-w-0">
           <div className="flex items-center gap-2 w-full">
             <h2 className="text-lg font-bold text-ink leading-tight line-clamp-1">{tho.ten}</h2>
             <button
@@ -108,48 +117,72 @@ export default function TheTho({
             </button>
           </div>
 
-          {dangNghi ? (
-            <span className="bg-rust-soft text-rust border border-rust/20 text-xs px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rust"></span> Đang nghỉ
-            </span>
-          ) : dangLamViec ? (
-            <span className="bg-gold-soft text-gold border border-gold/20 text-xs px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold"></span> Đang bận
-            </span>
-          ) : (
-            <span className="bg-teal-soft text-teal border border-teal/20 text-xs px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"></span> Sẵn sàng
-            </span>
-          )}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            {tho.so_don_hoan_thanh > 0 ? (
+              <p className="flex items-center gap-1">
+                <Star className="w-4 h-4 fill-gold text-gold" />
+                <span className="text-base font-bold text-ink tabular-nums">{tho.danh_gia_sao}</span>
+                <span className="text-xs text-ink-soft">· {tho.so_don_hoan_thanh} đơn</span>
+              </p>
+            ) : (
+              <span className="text-xs font-semibold text-gold bg-gold-soft px-2 py-0.5 rounded-full">
+                Thợ mới
+              </span>
+            )}
+
+            {dangNghi ? (
+              <span className="bg-rust-soft text-rust border border-rust/20 text-xs px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-rust"></span> Đang nghỉ
+              </span>
+            ) : dangLamViec ? (
+              <span className="bg-gold-soft text-gold border border-gold/20 text-xs px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-gold"></span> Đang bận
+              </span>
+            ) : (
+              <span className="bg-teal-soft text-teal border border-teal/20 text-xs px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"></span> Sẵn sàng
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* 2. BODY */}
-      <div className="flex flex-col gap-2 mb-4 flex-1 text-sm">
-        {tenCacDanhMuc.length > 0 ? (
-          <p className="text-ink font-medium">{tenCacDanhMuc.join(" · ")}</p>
+      {/* 2. BODY: thợ làm gì (chính) → ở đâu / cách bao xa (phụ, dồn sát nút Đặt lịch) */}
+      <div className="flex flex-col gap-2.5 mb-4 flex-1">
+        {hienNhanNganh && (
+          <div className="flex flex-wrap gap-1.5">
+            {tenCacDanhMuc.map((ten) => (
+              <span
+                key={ten}
+                className="text-[11px] font-semibold uppercase tracking-wide text-teal bg-teal-soft px-2 py-0.5 rounded-md"
+              >
+                {ten}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {dongChinh ? (
+          <p className="text-[15px] font-semibold text-ink leading-snug line-clamp-3">{dongChinh}</p>
         ) : (
-          <p className="text-ink-soft italic">Chưa cập nhật ngành</p>
-        )}
-        {tho.nghe && <p className="text-ink-soft text-xs">{tho.nghe}</p>}
-
-        {tho.so_don_hoan_thanh > 0 ? (
-          <p className="text-gold font-medium font-mono text-sm flex items-center gap-1">
-            <Star className="w-3.5 h-3.5 fill-gold text-gold" /> {tho.danh_gia_sao} <span className="text-ink-soft font-normal font-sans">· {tho.so_don_hoan_thanh} đơn</span>
-          </p>
-        ) : (
-          <p className="text-ink-soft italic">Thợ mới — chưa có đánh giá</p>
+          <p className="text-sm text-ink-soft italic">Thợ chưa cập nhật mô tả công việc</p>
         )}
 
-        {khoangCach !== null && (
-          <p className="text-xs text-teal font-medium font-mono flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5" /> Cách bạn {khoangCach.toFixed(1)} km
-          </p>
-        )}
-
-        <div className="mt-2 p-3 bg-paper border border-line rounded-lg text-ink-soft text-sm flex items-start gap-2">
-          <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-ink-soft" />
-          <span className="line-clamp-2 leading-relaxed">{tho.dia_chi}</span>
+        <div className="mt-auto pt-3 border-t border-line flex flex-col gap-1.5">
+          {khoangCach !== null && (
+            <p className="text-sm font-semibold text-teal flex items-center gap-1.5">
+              <Navigation className="w-4 h-4 shrink-0" />
+              <span>
+                Cách bạn <span className="font-bold tabular-nums">{khoangCach.toFixed(1)} km</span>
+              </span>
+            </p>
+          )}
+          {tho.dia_chi && (
+            <p className="text-xs text-ink-soft flex items-start gap-1.5 leading-relaxed">
+              <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span className="line-clamp-2">{tho.dia_chi}</span>
+            </p>
+          )}
         </div>
       </div>
 
