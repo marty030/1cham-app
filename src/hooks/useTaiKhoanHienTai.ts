@@ -18,7 +18,9 @@ export function useTaiKhoanHienTai() {
       if (data.session) {
         setDaDangNhap(true);
         setCurrentUserId(data.session.user.id);
-        const role = data.session.user.user_metadata?.role;
+        // Vai trò admin đọc từ app_metadata (chỉ sửa được từ phía server/SQL), KHÔNG dùng
+        // user_metadata vì người dùng tự sửa được trường đó từ trình duyệt.
+        const role = data.session.user.app_metadata?.role;
         setLaAdmin(role === "admin");
         setHoSoKhach(await layHoSoKhachHienTai());
       } else {

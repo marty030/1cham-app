@@ -77,7 +77,13 @@ export default function DonCuaToi() {
     const hh = String(Math.floor(phutTron / 60)).padStart(2, "0");
     const mm = String(phutTron % 60).padStart(2, "0");
     const batDau = taoISOTuVN(ngay, `${hh}:${mm}`);
-    const ketThuc = new Date(new Date(batDau).getTime() + 30 * 60 * 1000).toISOString();
+    // Mốc kết thúc cũng ghi theo giờ VN (+07:00), KHÔNG dùng toISOString() (giờ UTC): cột gio_hen
+    // lưu giờ VN không múi giờ nên hậu tố "Z" của UTC sẽ bị bỏ và mốc lệch mất 7 tiếng.
+    const phutKet = Math.min(phutTron + 30, 24 * 60 - 1);
+    const ketThuc = taoISOTuVN(
+      ngay,
+      `${String(Math.floor(phutKet / 60)).padStart(2, "0")}:${String(phutKet % 60).padStart(2, "0")}`
+    );
 
     const { data, error } = await supabase
       .from("don_dat_lich")

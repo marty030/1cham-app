@@ -35,7 +35,8 @@ export default function LoginAdmin() {
       return;
     }
 
-    const role = data.user?.user_metadata?.role;
+    // app_metadata chỉ sửa được từ phía server/SQL; user_metadata thì người dùng tự sửa được
+    const role = data.user?.app_metadata?.role;
     if (role !== "admin") {
       await supabase.auth.signOut();
       setDangDangNhap(false);
