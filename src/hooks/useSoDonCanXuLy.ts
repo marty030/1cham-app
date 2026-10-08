@@ -2,18 +2,22 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { HoSoKhach } from "../lib/khach";
+import { useLuotQuayLaiUngDung } from "./useLuotQuayLaiUngDung";
 
 // Đếm số đơn "cần bạn xử lý ngay" để hiện chấm đỏ ở nút "Đơn của tôi" —
 // tính thẳng từ các cột trạng thái có sẵn, không cần thêm bảng/cột mới:
 //  - Khách: đơn thợ đã xác nhận hoàn thành nhưng khách chưa xác nhận (cần khách bấm xác nhận).
 //  - Thợ: đơn đang "Chờ xác nhận" (cần thợ phản hồi).
-// Chỉ tính lại khi trang tải/khi trạng thái đăng nhập đổi — không realtime.
+// Tính lại khi trang tải, khi trạng thái đăng nhập đổi, và khi người dùng quay lại ứng dụng
+// (từ tab khác / từ nền trên điện thoại). Chưa realtime: đang mở sẵn app mà có đơn mới thì
+// chấm đỏ cập nhật ở lần quay lại hoặc tải lại tiếp theo.
 export function useSoDonCanXuLy(
   daDangNhap: boolean,
   hoSoKhach: HoSoKhach | null,
   currentUserId: string | null
 ) {
   const [soDon, setSoDon] = useState(0);
+  const luotQuayLai = useLuotQuayLaiUngDung();
 
   useEffect(() => {
     let huy = false;
@@ -63,7 +67,7 @@ export function useSoDonCanXuLy(
     return () => {
       huy = true;
     };
-  }, [daDangNhap, hoSoKhach, currentUserId]);
+  }, [daDangNhap, hoSoKhach, currentUserId, luotQuayLai]);
 
   return soDon;
 }

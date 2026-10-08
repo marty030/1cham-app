@@ -9,6 +9,8 @@ import { ArrowLeft, ClipboardList, Car, ArrowRight, XCircle } from "lucide-react
 import NhanTrangThai from "../../components/NhanTrangThai";
 import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import NhacDonBoQuen, { type MucNhac } from "../../components/NhacDonBoQuen";
+import { layNhacDon } from "../../lib/gioHen";
 
 export default function DonCuaToiKhach() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
@@ -17,6 +19,8 @@ export default function DonCuaToiKhach() {
   const router = useRouter();
   const thongBao = useThongBao();
   const xacNhanHopThoai = useXacNhan();
+  // Đơn đang được làm nổi bật sau khi bấm "Xem đơn" ở khung nhắc
+  const [donNoiBat, setDonNoiBat] = useState<number | null>(null);
 
   useEffect(() => {
     async function layDon() {
@@ -42,29 +46,56 @@ export default function DonCuaToiKhach() {
     layDon();
   }, [router]);
 
-  async function huyDon(idDon: number) {
-    const dongY = await xacNhanHopThoai("Hủy đơn này? Bạn sẽ cần đặt lịch lại nếu vẫn cần thợ.");
+  async function huyDon(don: any) {
+    const daXacNhan = don.trang_thai === "Đã xác nhận";
+    const dongY = await xacNhanHopThoai(
+      daXacNhan
+        ? "Hủy đơn đã được thợ xác nhận? Thợ đã sắp xếp lịch theo đơn này — nên báo thợ trước nếu có thể. Không thể hoàn tác."
+        : "Hủy đơn này? Bạn sẽ cần đặt lịch lại nếu vẫn cần thợ."
+    );
     if (!dongY) return;
 
     const { error } = await supabase
       .from("don_dat_lich")
       .update({ trang_thai: "Đã hủy" })
-      .eq("id", idDon);
+      .eq("id", don.id);
 
     if (error) {
       thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
     } else {
       setDanhSachDon((truoc) =>
-        truoc.map((d) => (d.id === idDon ? { ...d, trang_thai: "Đã hủy" } : d))
+        truoc.map((d) => (d.id === don.id ? { ...d, trang_thai: "Đã hủy" } : d))
       );
       thongBao("Đã hủy đơn.", "thanhcong");
     }
+  }
+
+  // Bấm "Xem đơn" ở khung nhắc: về tab "Tất cả" (để thẻ chắc chắn đang hiện), cuộn tới thẻ và làm nổi bật ít giây
+  function nhayToiDon(id: number) {
+    setBoLoc("Tất cả");
+    setTimeout(() => {
+      document.getElementById(`don-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setDonNoiBat(id);
+      setTimeout(() => setDonNoiBat(null), 2500);
+    }, 80);
   }
 
   const danhSachHienThi = danhSachDon.filter((don) => {
     if (boLoc === "Tất cả") return true;
     return don.trang_thai === boLoc;
   });
+
+  const mucNhac: MucNhac[] = [];
+  for (const don of danhSachDon) {
+    const noiDung = layNhacDon(don, "khach");
+    if (noiDung) {
+      mucNhac.push({
+        id: don.id,
+        tieuDe: `Thợ ${don.tho?.ten ?? "đang cập nhật"} · ${dinhDangGioNgan(don.gio_hen)}`,
+        noiDung,
+      });
+    }
+  }
 
   if (dangTai) {
     return (
@@ -86,6 +117,8 @@ export default function DonCuaToiKhach() {
         <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-6 flex items-center gap-2">
           <ClipboardList className="w-6 h-6" /> Đơn của tôi
         </h1>
+
+        <NhacDonBoQuen muc={mucNhac} onChon={nhayToiDon} />
 
         <div className="flex flex-wrap gap-2 mb-8 bg-card p-2 rounded-2xl shadow-sm border border-line">
           {["Tất cả", "Chờ xác nhận", "Đã xác nhận", "Đã hoàn thành", "Đã hủy"].map((trangThaiTab) => {
@@ -133,7 +166,10 @@ export default function DonCuaToiKhach() {
               return (
                 <div
                   key={don.id}
-                  className="bg-card border border-line rounded-2xl shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden"
+                  id={`don-${don.id}`}
+                  className={`bg-card border border-line rounded-2xl shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden ${
+                    donNoiBat === don.id ? "ring-2 ring-gold" : ""
+                  }`}
                 >
                   <Link href={`/don/${don.id}`} className="flex flex-col flex-1">
                     <div className="bg-paper px-5 py-4 border-b border-line">
@@ -148,6 +184,15 @@ export default function DonCuaToiKhach() {
 
                       <KhoiLichHen gioHen={don.gio_hen} diaChi={don.dia_chi_hen} gioiHanDong />
 
+                      {don.trang_thai === "Đã xác nhận" &&
+                        Boolean(don.tho_xac_nhan_hoan_thanh) !== Boolean(don.khach_xac_nhan_hoan_thanh) && (
+                        <p className="text-xs font-semibold text-teal bg-teal-soft border border-teal/20 rounded-lg px-3 py-2">
+                          {don.khach_xac_nhan_hoan_thanh
+                            ? "Bạn đã xác nhận hoàn thành — đang chờ thợ."
+                            : "Thợ đã xác nhận hoàn thành — đang chờ bạn xác nhận."}
+                        </p>
+                      )}
+
                       {don.gio_du_kien_den && (
                         <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
                           <Car className="w-4 h-4 text-teal mt-0.5 shrink-0" />
@@ -160,15 +205,15 @@ export default function DonCuaToiKhach() {
 
                     <div className="px-5 pb-5">
                       <span className="inline-flex items-center justify-center gap-1.5 w-full text-sm font-semibold text-white bg-rust hover:opacity-90 transition px-4 py-2.5 rounded-xl shadow-sm">
-                        Xem chi tiết / xác nhận <ArrowRight className="w-4 h-4" />
+                        Xem chi tiết <ArrowRight className="w-4 h-4" />
                       </span>
                     </div>
                   </Link>
 
-                  {don.trang_thai === "Chờ xác nhận" && (
+                  {(don.trang_thai === "Chờ xác nhận" || don.trang_thai === "Đã xác nhận") && (
                     <div className="px-5 pb-5 -mt-2">
                       <button
-                        onClick={() => huyDon(don.id)}
+                        onClick={() => huyDon(don)}
                         className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-ink-soft border border-line hover:bg-rust-soft hover:text-rust hover:border-rust/30 py-2 rounded-lg transition"
                       >
                         <XCircle className="w-3.5 h-3.5" /> Hủy đơn

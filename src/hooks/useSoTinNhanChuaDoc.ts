@@ -2,16 +2,20 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { HoSoKhach } from "../lib/khach";
+import { useLuotQuayLaiUngDung } from "./useLuotQuayLaiUngDung";
 
 // Đếm số HỘI THOẠI đang có tin nhắn chưa đọc (không phải số tin nhắn) để hiện
 // chấm đỏ ở nút "Tin nhắn" / "Hộp thư Thợ" — dựa vào cột tin_nhan.da_doc.
-// Chỉ tính lại khi trang tải/khi trạng thái đăng nhập đổi — không realtime.
+// Tính lại khi trang tải, khi trạng thái đăng nhập đổi, và khi người dùng quay lại ứng dụng
+// (từ tab khác / từ nền trên điện thoại). Chưa realtime: đang mở sẵn app mà có tin mới thì
+// chấm đỏ cập nhật ở lần quay lại hoặc tải lại tiếp theo.
 export function useSoTinNhanChuaDoc(
   daDangNhap: boolean,
   hoSoKhach: HoSoKhach | null,
   currentUserId: string | null
 ) {
   const [soHoiThoai, setSoHoiThoai] = useState(0);
+  const luotQuayLai = useLuotQuayLaiUngDung();
 
   useEffect(() => {
     let huy = false;
@@ -62,7 +66,7 @@ export function useSoTinNhanChuaDoc(
     return () => {
       huy = true;
     };
-  }, [daDangNhap, hoSoKhach, currentUserId]);
+  }, [daDangNhap, hoSoKhach, currentUserId, luotQuayLai]);
 
   return soHoiThoai;
 }
