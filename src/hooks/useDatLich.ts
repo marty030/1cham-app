@@ -2,13 +2,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { taoDonDatLich } from "../lib/donDatLich";
+import { supabase } from "../lib/supabase";
 import { isoVietNamHienTai } from "../lib/thoiGianVN";
 import { HoSoKhach } from "../lib/khach";
 import { useThongBao } from "../components/ThongBao";
 
+// Số điện thoại thợ không còn nằm trong dữ liệu công khai: chỉ người đã đăng nhập đọc được,
+// nên goiNgay tự lấy số lúc bấm (không nhận qua props).
 type ThoDatLich = {
   id: number | string;
-  so_dien_thoai?: string | null;
 };
 
 type TuyChon = {
@@ -96,7 +98,7 @@ export function useDatLich({ hoSoKhach, duongDanQuayLai, danhMuc }: TuyChon) {
     router.push("/don-cua-toi-khach");
   }
 
-  // Gọi thợ ngay bây giờ: tạo đơn "Chờ xác nhận" rồi mở Zalo của thợ.
+  // Gọi thợ ngay bây giờ: tạo đơn "Chờ xác nhận" rồi mở trình gọi điện tới số của thợ.
   async function goiNgay(tho: ThoDatLich, dongForm: () => void) {
     if (!tenKhach || !soDienThoai || !diaChiHen) {
       thongBao("Vui lòng điền đủ họ tên, số điện thoại và địa chỉ trước khi gọi.", "canhbao");
@@ -129,14 +131,20 @@ export function useDatLich({ hoSoKhach, duongDanQuayLai, danhMuc }: TuyChon) {
     dongForm();
     xoaForm();
 
-    if (!tho.so_dien_thoai) {
-      thongBao("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.", "loi");
-    } else {
-      const soSach = tho.so_dien_thoai.replace(/\D/g, "");
-      window.open(`https://zalo.me/${soSach}`, "_blank");
-    }
-
+    // Lấy số của thợ bằng phiên đăng nhập của khách (database từ chối nếu chưa đăng nhập)
+    const { data: thoSdt } = await supabase
+      .from("tho")
+      .select("so_dien_thoai")
+      .eq("id", tho.id)
+      .maybeSingle();
+    const soSach = (thoSdt?.so_dien_thoai ?? "").replace(/\D/g, "");
     router.push("/don-cua-toi-khach");
+    if (!soSach) {
+      thongBao("Đã tạo yêu cầu! Thợ này chưa cập nhật số điện thoại, vui lòng chờ thợ liên hệ lại.", "loi");
+      return;
+    }
+    // Mở trình gọi điện (trên điện thoại sẽ bật bàn phím gọi với số của thợ).
+    window.location.href = `tel:${soSach}`;
   }
 
   return {

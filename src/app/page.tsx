@@ -19,12 +19,30 @@ import {
   WashingMachine,
   Wrench,
   ArrowRight,
+  Flame,
+  Waves,
+  CloudRain,
+  PaintRoller,
+  KeyRound,
+  DoorOpen,
+  Camera,
+  Tv,
+  Laptop,
 } from "lucide-react";
 
 const ICON_DANH_MUC: Record<string, typeof Snowflake> = {
   dien_lanh: Snowflake,
   dien_nuoc: Droplets,
   do_gia_dung: WashingMachine,
+  bep_dien: Flame,
+  thong_cong: Waves,
+  chong_tham: CloudRain,
+  son_sua_nha: PaintRoller,
+  pha_khoa: KeyRound,
+  cua_cuon_cua_kinh: DoorOpen,
+  camera_wifi: Camera,
+  tivi_dien_tu: Tv,
+  may_tinh: Laptop,
   khac: Wrench,
 };
 
@@ -162,7 +180,7 @@ export default function TrangChu() {
           <h2 className="text-center text-xl font-bold text-ink mb-1">Bạn cần sửa gì?</h2>
           <p className="text-center text-sm text-ink-soft mb-8">Chọn đúng ngành để xem thợ gần bạn nhất</p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
             {DANH_MUC_NGHE.map((muc) => {
               const Icon = ICON_DANH_MUC[muc.gia_tri] ?? Wrench;
               return (
