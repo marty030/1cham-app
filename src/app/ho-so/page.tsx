@@ -7,12 +7,14 @@ import { Camera, MapPin, PauseCircle, PlayCircle, Save, Star } from "lucide-reac
 import { useThongBao } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
 import { BAN_KINH_MAC_DINH_KM } from "../../lib/goong";
+import { DANH_MUC_NGHE } from "../../lib/danhMuc";
 
 export default function HoSo() {
   const [hoSo, setHoSo] = useState<any>(null);
   const [dangTai, setDangTai] = useState(true);
   const [ten, setTen] = useState("");
   const [moTaCongViec, setMoTaCongViec] = useState("");
+  const [danhMuc, setDanhMuc] = useState<string[]>([]);
   const [diaChi, setDiaChi] = useState("");
   const [viDo, setViDo] = useState<number | null>(null);
   const [kinhDo, setKinhDo] = useState<number | null>(null);
@@ -45,6 +47,7 @@ export default function HoSo() {
         setHoSo(data);
         setTen(data.ten);
         setMoTaCongViec(data.nghe || "");
+        setDanhMuc(data.danh_muc || []);
         setDiaChi(data.dia_chi || "");
         setViDo(data.vi_do ?? null);
         setKinhDo(data.kinh_do ?? null);
@@ -57,13 +60,24 @@ export default function HoSo() {
     layHoSo();
   }, [router]);
 
+  function toggleDanhMuc(giaTri: string) {
+    setDanhMuc((truoc) =>
+      truoc.includes(giaTri) ? truoc.filter((d) => d !== giaTri) : [...truoc, giaTri]
+    );
+  }
+
   async function luuHoSo() {
+    if (danhMuc.length === 0) {
+      thongBao("Vui lòng chọn ít nhất 1 ngành bạn nhận làm.", "canhbao");
+      return;
+    }
     setDangLuu(true);
     const { error } = await supabase
       .from("tho")
       .update({
         ten,
         nghe: moTaCongViec,
+        danh_muc: danhMuc,
         dia_chi: diaChi,
         vi_do: viDo,
         kinh_do: kinhDo,
@@ -209,6 +223,29 @@ export default function HoSo() {
               placeholder="Ví dụ: Sửa điều hòa, tủ lạnh, máy giặt tại nhà, có xe riêng..."
               className="border border-line rounded-lg px-3 py-2 w-full outline-none focus:border-teal text-sm resize-none"
             />
+          </div>
+        </div>
+
+        {/* NGÀNH NHẬN LÀM */}
+        <div className="bg-card border border-line rounded-2xl p-6 flex flex-col gap-3">
+          <div>
+            <p className="text-sm font-semibold text-ink">Ngành bạn nhận làm</p>
+            <p className="text-xs text-ink-soft mt-0.5">
+              Khách lọc thợ theo ngành, nên chỉ chọn những ngành bạn thật sự làm được. Chọn ít nhất 1 ngành.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 border border-line rounded-lg p-3 bg-paper">
+            {DANH_MUC_NGHE.map((muc) => (
+              <label key={muc.gia_tri} className="flex items-center gap-2 text-sm text-ink-soft">
+                <input
+                  type="checkbox"
+                  checked={danhMuc.includes(muc.gia_tri)}
+                  onChange={() => toggleDanhMuc(muc.gia_tri)}
+                  className="w-4 h-4 accent-teal"
+                />
+                {muc.nhan}
+              </label>
+            ))}
           </div>
         </div>
 
