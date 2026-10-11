@@ -135,7 +135,7 @@ function NoiDungDangKyKhach() {
               <p className="text-xs text-rust mt-1">Số điện thoại cần đủ 10 số, bắt đầu bằng 0.</p>
             ) : (
               <p className="text-xs text-ink-soft mt-1">
-                Nhập số thật — thợ sẽ gọi/nhắn Zalo qua số này khi nhận đơn của bạn.
+                Nhập số thật — thợ sẽ gọi qua số này khi nhận đơn của bạn.
               </p>
             )}
           </div>

@@ -4,41 +4,19 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { DANH_MUC_NGHE } from "../../../lib/danhMuc";
+import { COT_THO_CONG_KHAI } from "../../../lib/thoCongKhai";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { layHoSoKhachHienTai, HoSoKhach } from "../../../lib/khach";
 import FormDatLich from "../../../components/FormDatLich";
 import { ArrowLeft, MessageCircle, CalendarDays, Star, MapPin } from "lucide-react";
 import { useDatLich } from "../../../hooks/useDatLich";
+import { tinhCapDo, tinhHuyHieu } from "../../../lib/hoSoUyTin";
 
 type DanhGia = {
   so_sao: number;
   binh_luan: string | null;
   created_at: string;
 };
-
-const CAC_CAP_DO = [
-  { nguong: 0, ten: "Thợ mới" },
-  { nguong: 5, ten: "Thợ cứng tay" },
-  { nguong: 15, ten: "Thợ lành nghề" },
-  { nguong: 30, ten: "Thợ chuyên nghiệp" },
-  { nguong: 60, ten: "Chuyên gia" },
-  { nguong: 100, ten: "Bậc thầy" },
-];
-
-function tinhCapDo(soDon: number) {
-  let hienTai = CAC_CAP_DO[0];
-  let ke = CAC_CAP_DO[1] ?? null;
-  for (let i = 0; i < CAC_CAP_DO.length; i++) {
-    if (soDon >= CAC_CAP_DO[i].nguong) {
-      hienTai = CAC_CAP_DO[i];
-      ke = CAC_CAP_DO[i + 1] ?? null;
-    }
-  }
-  const phanTram = ke
-    ? Math.min(100, Math.round(((soDon - hienTai.nguong) / (ke.nguong - hienTai.nguong)) * 100))
-    : 100;
-  return { hienTai, ke, phanTram };
-}
 
 export default function TrangChiTietTho() {
   const params = useParams();
@@ -67,7 +45,7 @@ export default function TrangChiTietTho() {
 
       const { data: thoData, error } = await supabase
         .from("tho")
-        .select("*")
+        .select(COT_THO_CONG_KHAI)
         .eq("id", thoId)
         .single();
 
@@ -137,13 +115,7 @@ export default function TrangChiTietTho() {
   const saoTrungBinh = tho.danh_gia_sao || 0;
   const { hienTai: capDoHienTai, ke: capDoKe, phanTram } = tinhCapDo(soDon);
 
-  const huyHieu: { ten: string; icon: string }[] = [];
-  if (soDon >= 1) huyHieu.push({ ten: "Đơn đầu tiên", icon: "🎉" });
-  if (soDon >= 10) huyHieu.push({ ten: "10 đơn hoàn thành", icon: "🥉" });
-  if (soDon >= 50) huyHieu.push({ ten: "50 đơn hoàn thành", icon: "🥈" });
-  if (soDon >= 100) huyHieu.push({ ten: "100 đơn hoàn thành", icon: "🥇" });
-  if (soDon >= 5 && saoTrungBinh >= 4.5) huyHieu.push({ ten: "Được yêu thích", icon: "❤️" });
-  if (tenCacDanhMuc.length >= 2) huyHieu.push({ ten: "Đa năng", icon: "🧰" });
+  const huyHieu = tinhHuyHieu(soDon, saoTrungBinh, tenCacDanhMuc.length);
 
   return (
     <div className="min-h-screen bg-paper pb-28">

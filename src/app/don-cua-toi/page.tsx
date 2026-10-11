@@ -7,6 +7,7 @@ import KhoiLichHen, { dinhDangGioNgan } from "../../components/KhoiLichHen";
 import ThanhHaiBuoc from "../../components/ThanhHaiBuoc";
 import NutBaoVanDe from "../../components/NutBaoVanDe";
 import NhacDonBoQuen, { type MucNhac } from "../../components/NhacDonBoQuen";
+import KhoiUyTinTho from "../../components/KhoiUyTinTho";
 import { gioPhutVN, taoISOTuVN, TUY_CHON_GIO_VN } from "../../lib/thoiGianVN";
 import { daToiGioHen, nhanMoKhoa, layNhacDon } from "../../lib/gioHen";
 import {
@@ -34,6 +35,11 @@ export default function DonCuaToi() {
   const [donDangXacNhan, setDonDangXacNhan] = useState<number | null>(null);
   const [gioDenDuKienDayDu, setGioDenDuKienDayDu] = useState("");
   const [thoIdCuaToi, setThoIdCuaToi] = useState<number | null>(null);
+  const [hoSoUyTin, setHoSoUyTin] = useState<{
+    so_don_hoan_thanh: number | null;
+    danh_gia_sao: number | null;
+    danh_muc: string[] | null;
+  } | null>(null);
   // Đơn nào đang có báo cáo vấn đề chờ admin (do NutBaoVanDe báo lên) → khóa nút hoàn thành
   const [donCoBaoCao, setDonCoBaoCao] = useState<Record<number, boolean>>({});
   // Đơn đang được làm nổi bật sau khi bấm "Xem đơn" ở khung nhắc
@@ -63,7 +69,7 @@ export default function DonCuaToi() {
 
       const { data: hoSo } = await supabase
         .from("tho")
-        .select("id")
+        .select("id, so_don_hoan_thanh, danh_gia_sao, danh_muc")
         .eq("user_id", sessionData.session.user.id)
         .single();
 
@@ -73,6 +79,11 @@ export default function DonCuaToi() {
       }
 
       setThoIdCuaToi(hoSo.id);
+      setHoSoUyTin({
+        so_don_hoan_thanh: hoSo.so_don_hoan_thanh,
+        danh_gia_sao: hoSo.danh_gia_sao,
+        danh_muc: hoSo.danh_muc,
+      });
       await taiDonCuaTho(hoSo.id);
       setDangTai(false);
     }
@@ -143,6 +154,8 @@ export default function DonCuaToi() {
       return false;
     }
     setDanhSachDon((truoc) => truoc.map((d) => (d.id === don.id ? { ...d, ...data[0] } : d)));
+    // Database có thể vừa tự hủy các đơn chờ trùng khung giờ với đơn này → tải lại để thợ thấy đúng.
+    if (thoIdCuaToi) await taiDonCuaTho(thoIdCuaToi);
     return true;
   }
 
@@ -289,6 +302,15 @@ export default function DonCuaToi() {
         <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-6 flex items-center gap-2">
           <ClipboardList className="w-6 h-6" /> Đơn đặt lịch của tôi
         </h1>
+
+        {thoIdCuaToi && hoSoUyTin && (
+          <KhoiUyTinTho
+            thoId={thoIdCuaToi}
+            soDonHoanThanh={hoSoUyTin.so_don_hoan_thanh}
+            saoTrungBinh={hoSoUyTin.danh_gia_sao}
+            soDanhMuc={(hoSoUyTin.danh_muc || []).length}
+          />
+        )}
 
         <NhacDonBoQuen muc={mucNhac} onChon={nhayToiDon} />
 

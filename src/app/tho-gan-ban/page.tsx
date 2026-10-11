@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, usePathname } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { DANH_MUC_NGHE } from "../../lib/danhMuc";
+import { COT_THO_CONG_KHAI } from "../../lib/thoCongKhai";
 import TheTho from "../../components/TheTho";
 import FormThemTho from "../../components/FormThemTho";
 import Link from "next/link";
@@ -80,7 +81,7 @@ function NoiDungTrangDanhSach() {
   async function layDanhSachTho() {
     const { data, error } = await supabase
       .from("tho")
-      .select("*")
+      .select(COT_THO_CONG_KHAI)
       .eq("an_hien", true)
       .order("danh_gia_sao", { ascending: false });
     if (error) {

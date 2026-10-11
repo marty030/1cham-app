@@ -184,6 +184,12 @@ export default function DonCuaToiKhach() {
 
                       <KhoiLichHen gioHen={don.gio_hen} diaChi={don.dia_chi_hen} gioiHanDong />
 
+                      {don.trang_thai === "Đã hủy" && don.ly_do_huy && (
+                        <p className="text-xs font-semibold text-rust bg-rust-soft border border-rust/20 rounded-lg px-3 py-2">
+                          {don.ly_do_huy}
+                        </p>
+                      )}
+
                       {don.trang_thai === "Đã xác nhận" &&
                         Boolean(don.tho_xac_nhan_hoan_thanh) !== Boolean(don.khach_xac_nhan_hoan_thanh) && (
                         <p className="text-xs font-semibold text-teal bg-teal-soft border border-teal/20 rounded-lg px-3 py-2">

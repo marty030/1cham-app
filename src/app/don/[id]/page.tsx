@@ -49,6 +49,7 @@ type DonDatLich = {
   tho_xac_nhan_hoan_thanh: boolean;
   khach_xac_nhan_hoan_thanh: boolean;
   chinh_sua_luc: string | null;
+  ly_do_huy: string | null;
   hoan_thanh_luc: string | null;
   tao_luc: string | null;
   tho: { ten: string } | null;
@@ -451,7 +452,10 @@ export default function DonDetail() {
           )}
 
           {don.trang_thai === "Đã hủy" && (
-            <p className="text-sm text-rust border-t border-line pt-4">Đơn này đã bị hủy.</p>
+            <div className="text-sm text-rust border-t border-line pt-4 flex flex-col gap-1">
+              <p>Đơn này đã bị hủy.</p>
+              {don.ly_do_huy && <p className="font-semibold">{don.ly_do_huy}</p>}
+            </div>
           )}
 
           {/* ---------- ĐÃ XÁC NHẬN / ĐÃ HOÀN THÀNH ---------- */}
