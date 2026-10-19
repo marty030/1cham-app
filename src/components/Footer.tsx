@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MessageCircle, Phone, MapPin } from "lucide-react";
 
 const SDT_ADMIN = "0865455171"; // Số Zalo/hotline admin để nhận báo lỗi/khiếu nại
@@ -41,8 +42,13 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-line px-4 sm:px-6 py-4 text-center text-xs text-ink-soft">
-        © {new Date().getFullYear()} Thợ Xịn
+      <div className="border-t border-line px-4 sm:px-6 py-4 flex flex-col items-center gap-2 text-xs text-ink-soft">
+        <div className="flex flex-wrap justify-center gap-x-5 gap-y-1">
+          <Link href="/dieu-khoan" className="hover:text-teal transition">Điều khoản sử dụng</Link>
+          <Link href="/bao-mat" className="hover:text-teal transition">Bảo vệ dữ liệu cá nhân</Link>
+          <Link href="/quy-che" className="hover:text-teal transition">Quy chế hoạt động</Link>
+        </div>
+        <div>© {new Date().getFullYear()} Thợ Xịn</div>
       </div>
     </footer>
   );

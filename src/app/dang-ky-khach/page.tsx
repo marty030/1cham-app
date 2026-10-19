@@ -7,14 +7,17 @@ import { UserPlus } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import KhoiDongY from "../../components/KhoiDongY";
+import { duDongY, ghiNhanDongY } from "../../lib/dongYPhapLy";
 
 function NoiDungDangKyKhach() {
   const [soDienThoai, setSoDienThoai] = useState("");
   const [tenKhach, setTenKhach] = useState("");
   const [matKhau, setMatKhau] = useState("");
   const [xacNhanMatKhau, setXacNhanMatKhau] = useState("");
-  const [email, setEmail] = useState("");
   const [dangDangKy, setDangDangKy] = useState(false);
+  const [daChonDongY, setDaChonDongY] = useState<string[]>([]);
+  const [daChamDongY, setDaChamDongY] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const duongDanTiepTheo = searchParams.get("next") || "/";
@@ -53,6 +56,12 @@ function NoiDungDangKyKhach() {
       return;
     }
 
+    setDaChamDongY(true);
+    if (!duDongY("khach", daChonDongY)) {
+      thongBao("Vui lòng đánh dấu đồng ý các mục bắt buộc ở cuối biểu mẫu để tiếp tục đăng ký.", "canhbao");
+      return;
+    }
+
     setDangDangKy(true);
 
     if (await daCoTaiKhoanTheoSdt(soSach)) {
@@ -61,7 +70,7 @@ function NoiDungDangKyKhach() {
       return;
     }
 
-    const emailDeDangKy = email.trim() || taoEmailNoiBo(soSach);
+    const emailDeDangKy = taoEmailNoiBo(soSach);
 
     const { data, error } = await supabase.auth.signUp({
       email: emailDeDangKy,
@@ -87,6 +96,12 @@ function NoiDungDangKyKhach() {
         email_dang_nhap: emailDeDangKy,
       },
     ]);
+
+    if (!loiTaoHoSo && data.session) {
+      // Ghi nhận sự đồng ý (phiên bản + thời điểm). Nếu lỗi, cổng xin đồng ý sẽ hỏi lại ở lần tải trang kế tiếp.
+      const { error: loiDongY } = await ghiNhanDongY("khach");
+      if (loiDongY) console.error("Không ghi nhận được sự đồng ý:", loiDongY);
+    }
 
     setDangDangKy(false);
 
@@ -187,18 +202,12 @@ function NoiDungDangKyKhach() {
             {xacNhanLoi && <p className="text-xs text-rust mt-1">Xác nhận mật khẩu chưa khớp.</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-ink mb-1.5">
-              Email <span className="text-ink-soft font-normal">(có thể bỏ trống)</span>
-            </label>
-            <input
-              type="email"
-              placeholder="ban@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-line focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all"
-            />
-          </div>
+          <KhoiDongY
+            vaiTro="khach"
+            daChon={daChonDongY}
+            onDoi={setDaChonDongY}
+            hienLoi={daChamDongY && !duDongY("khach", daChonDongY)}
+          />
 
           <button
             className="bg-rust hover:opacity-90 transition text-white px-4 py-2.5 rounded-lg w-full font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"

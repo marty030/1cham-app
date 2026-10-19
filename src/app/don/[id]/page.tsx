@@ -103,6 +103,14 @@ export default function DonDetail() {
 
       const hoSo = await layHoSoKhachHienTai();
       setLaChuDon(!!hoSo && !!donData.khach_id && hoSo.id === donData.khach_id);
+
+      // Đơn này đã có đánh giá chưa? Phải hỏi database, vì state chỉ sống đến khi tải lại trang.
+      const { data: dgCu } = await supabase
+        .from("danh_gia")
+        .select("id")
+        .eq("don_dat_lich_id", donData.id)
+        .limit(1);
+      setDaGuiDanhGia(!!dgCu && dgCu.length > 0);
     }
     setLoading(false);
   }
@@ -516,7 +524,7 @@ export default function DonDetail() {
             </div>
           )}
 
-          {laChuDon && don.khach_xac_nhan_hoan_thanh && !daGuiDanhGia && (
+          {laChuDon && don.khach_xac_nhan_hoan_thanh && !daGuiDanhGia && don.trang_thai !== "Đã hủy" && (
             <div className="space-y-3 border-t border-line pt-4">
               <p className="font-medium text-ink">Bạn chấm mấy sao cho thợ?</p>
               <div className="flex gap-2">
@@ -548,7 +556,7 @@ export default function DonDetail() {
             </div>
           )}
 
-          {daGuiDanhGia && (
+          {laChuDon && daGuiDanhGia && don.trang_thai !== "Đã hủy" && (
             <p className="text-teal font-medium border-t border-line pt-4">Cảm ơn bạn đã đánh giá!</p>
           )}
         </div>

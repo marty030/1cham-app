@@ -9,17 +9,20 @@ import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
 import GoiYDiaChi from "../../components/GoiYDiaChi";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import KhoiDongY from "../../components/KhoiDongY";
+import { duDongY, ghiNhanDongY } from "../../lib/dongYPhapLy";
 
 export default function DangKy() {
   const [soDienThoaiTho, setSoDienThoaiTho] = useState("");
   const [tenTho, setTenTho] = useState("");
   const [matKhau, setMatKhau] = useState("");
   const [xacNhanMatKhau, setXacNhanMatKhau] = useState("");
-  const [email, setEmail] = useState("");
   const [ngheTho, setNgheTho] = useState("");
   const [diaChiTho, setDiaChiTho] = useState("");
   const [danhMucDaChon, setDanhMucDaChon] = useState<string[]>([]);
   const [dangDangKy, setDangDangKy] = useState(false);
+  const [daChonDongY, setDaChonDongY] = useState<string[]>([]);
+  const [daChamDongY, setDaChamDongY] = useState(false);
   const router = useRouter();
   const thongBao = useThongBao();
 
@@ -67,6 +70,12 @@ export default function DangKy() {
       return;
     }
 
+    setDaChamDongY(true);
+    if (!duDongY("tho", daChonDongY)) {
+      thongBao("Vui lòng đánh dấu đồng ý các mục bắt buộc ở cuối biểu mẫu để tiếp tục đăng ký.", "canhbao");
+      return;
+    }
+
     setDangDangKy(true);
 
     if (await daCoTaiKhoanTheoSdt(soSach)) {
@@ -75,7 +84,7 @@ export default function DangKy() {
       return;
     }
 
-    const emailDeDangKy = email.trim() || taoEmailNoiBo(soSach);
+    const emailDeDangKy = taoEmailNoiBo(soSach);
 
     const { data, error } = await supabase.auth.signUp({
       email: emailDeDangKy,
@@ -103,6 +112,12 @@ export default function DangKy() {
         danh_gia_sao: 0,
       },
     ]);
+
+    if (!loiTaoHoSo && data.session) {
+      // Ghi nhận sự đồng ý (phiên bản + thời điểm). Nếu lỗi, cổng xin đồng ý sẽ hỏi lại ở lần tải trang kế tiếp.
+      const { error: loiDongY } = await ghiNhanDongY("tho");
+      if (loiDongY) console.error("Không ghi nhận được sự đồng ý:", loiDongY);
+    }
 
     setDangDangKy(false);
 
@@ -198,19 +213,6 @@ export default function DangKy() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-ink mb-1.5">
-              Email <span className="text-ink-soft font-normal">(có thể bỏ trống)</span>
-            </label>
-            <input
-              type="email"
-              placeholder="ban@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-line focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all"
-            />
-          </div>
-
-          <div>
             <label className="block text-sm font-semibold text-ink mb-1.5">Nghề (mô tả chi tiết)</label>
             <input
               type="text"
@@ -245,6 +247,13 @@ export default function DangKy() {
             <GoiYDiaChi value={diaChiTho} onChange={setDiaChiTho} placeholder="Địa chỉ của bạn" />
           </div>
           
+          <KhoiDongY
+            vaiTro="tho"
+            daChon={daChonDongY}
+            onDoi={setDaChonDongY}
+            hienLoi={daChamDongY && !duDongY("tho", daChonDongY)}
+          />
+
           <button
             className="bg-teal hover:opacity-90 transition text-white px-4 py-2.5 rounded-lg w-full font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
             onClick={xuLyDangKy}

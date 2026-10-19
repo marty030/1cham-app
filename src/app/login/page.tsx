@@ -2,7 +2,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import { timEmailTheoSoDienThoai, sdtHopLe } from "../../lib/dangNhapSdt";
+import { timEmailTheoSoDienThoai, sdtHopLe, TIN_HIEU_CAN_EMAIL } from "../../lib/dangNhapSdt";
 import { LogIn } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
@@ -11,6 +11,9 @@ import { dichLoiSupabase } from "../../lib/dichLoi";
 function NoiDungDangNhap() {
   const [soDienThoai, setSoDienThoai] = useState("");
   const [matKhau, setMatKhau] = useState("");
+  // Tài khoản cũ đăng ký bằng email thật: database không trả email, người dùng tự nhập
+  const [canEmail, setCanEmail] = useState(false);
+  const [emailNhap, setEmailNhap] = useState("");
   const [dangDangNhap, setDangDangNhap] = useState(false);
   const [daChamSdt, setDaChamSdt] = useState(false);
   const [daChamMatKhau, setDaChamMatKhau] = useState(false);
@@ -37,11 +40,23 @@ function NoiDungDangNhap() {
 
     setDangDangNhap(true);
 
-    const email = await timEmailTheoSoDienThoai(soDienThoai);
-    if (!email) {
+    const timDuoc = await timEmailTheoSoDienThoai(soDienThoai);
+    if (!timDuoc) {
       setDangDangNhap(false);
       thongBao("Không tìm thấy tài khoản với số điện thoại này. Kiểm tra lại hoặc đăng ký mới.", "loi");
       return;
+    }
+
+    let email = timDuoc;
+    if (timDuoc === TIN_HIEU_CAN_EMAIL) {
+      // Tài khoản này đăng ký bằng email thật: hỏi người dùng email đó (hệ thống không tiết lộ email)
+      if (!canEmail || !emailNhap.trim()) {
+        setCanEmail(true);
+        setDangDangNhap(false);
+        thongBao("Tài khoản này đăng ký bằng email. Vui lòng nhập email bạn đã dùng để đăng ký.", "canhbao");
+        return;
+      }
+      email = emailNhap.trim();
     }
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -75,7 +90,10 @@ function NoiDungDangNhap() {
               type="tel"
               placeholder="09xx xxx xxx"
               value={soDienThoai}
-              onChange={(e) => setSoDienThoai(e.target.value)}
+              onChange={(e) => {
+                setSoDienThoai(e.target.value);
+                setCanEmail(false);
+              }}
               onBlur={() => setDaChamSdt(true)}
               className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${
                 sdtLoi
@@ -87,6 +105,24 @@ function NoiDungDangNhap() {
               <p className="text-xs text-rust mt-1">Số điện thoại cần đủ 10 số, bắt đầu bằng 0.</p>
             )}
           </div>
+
+          {canEmail && (
+            <div>
+              <label className="block text-sm font-semibold text-ink mb-1.5">
+                Email đã đăng ký <span className="text-rust">*</span>
+              </label>
+              <input
+                type="email"
+                placeholder="ban@email.com"
+                value={emailNhap}
+                onChange={(e) => setEmailNhap(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-line focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all"
+              />
+              <p className="text-xs text-ink-soft mt-1">
+                Tài khoản này được tạo bằng email. Nhập đúng email đó để đăng nhập.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-semibold text-ink mb-1.5">

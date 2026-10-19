@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Flag, Hourglass } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useThongBao } from "./ThongBao";
@@ -17,6 +18,8 @@ type NutBaoVanDeProps = {
 // việc xác nhận hoàn thành của đơn đó.
 export default function NutBaoVanDe({ don, onDoiCoBaoCao }: NutBaoVanDeProps) {
   const thongBao = useThongBao();
+  // Trang /don/[id] chỉ dành cho khách; các trang còn lại dùng nút này là của thợ.
+  const laKhach = usePathname().startsWith("/don/");
   const [coBaoCao, setCoBaoCao] = useState(false);
   const [dangMo, setDangMo] = useState(false);
   const [noiDung, setNoiDung] = useState("");
@@ -92,7 +95,11 @@ export default function NutBaoVanDe({ don, onDoiCoBaoCao }: NutBaoVanDeProps) {
         onChange={(e) => setNoiDung(e.target.value)}
         maxLength={1000}
         rows={3}
-        placeholder="Ví dụ: thợ không đến đúng hẹn / khách không có mặt / chưa thanh toán..."
+        placeholder={
+          laKhach
+            ? "Ví dụ: thợ không đến đúng hẹn / làm không đúng yêu cầu / đòi thêm tiền ngoài thỏa thuận..."
+            : "Ví dụ: khách không có mặt / khách chưa thanh toán / khách đổi yêu cầu so với lúc đặt..."
+        }
         className="w-full border border-line rounded-lg p-2 text-sm outline-none focus:border-teal bg-card"
       />
       <p className="text-[11px] text-ink-soft">

@@ -77,6 +77,7 @@ export default function TrangChiTietTho() {
         .from("danh_gia")
         .select("so_sao, binh_luan, created_at")
         .eq("tho_id", thoId)
+        .eq("bi_vo_hieu", false)
         .order("created_at", { ascending: false })
         .limit(20);
       setDanhSachDanhGia(danhGiaData || []);

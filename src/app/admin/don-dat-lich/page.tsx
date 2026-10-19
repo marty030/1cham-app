@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
-import { ClipboardList, Flag } from "lucide-react";
+import { ClipboardList, Flag, ShieldAlert } from "lucide-react";
 import NhanTrangThai from "../../../components/NhanTrangThai";
-import { useThongBao } from "../../../components/ThongBao";
+import { useThongBao, useXacNhan } from "../../../components/ThongBao";
 import { dichLoiSupabase } from "../../../lib/dichLoi";
 
 type BaoCao = {
@@ -27,6 +27,12 @@ export default function DonDatLich() {
   const [chiCoBaoCao, setChiCoBaoCao] = useState(false);
   const router = useRouter();
   const thongBao = useThongBao();
+  const xacNhanHopThoai = useXacNhan();
+
+  // Hủy đơn đã hoàn thành do vi phạm: đơn nào đang mở form, lý do đang gõ, đang gửi
+  const [donDangHuy, setDonDangHuy] = useState<number | null>(null);
+  const [lyDoHuy, setLyDoHuy] = useState("");
+  const [dangHuyViPham, setDangHuyViPham] = useState(false);
 
   useEffect(() => {
     async function kiemTra() {
@@ -83,6 +89,31 @@ export default function DonDatLich() {
     } else {
       layDonDatLich();
     }
+  }
+
+  async function huyDonViPham(idDon: number) {
+    const lyDo = lyDoHuy.trim();
+    if (lyDo.length < 5) {
+      thongBao("Hãy nhập lý do hủy (ít nhất 5 ký tự).", "canhbao");
+      return;
+    }
+    const dongY = await xacNhanHopThoai(
+      `Hủy đơn #${idDon} do vi phạm? Đơn chuyển sang "Đã hủy", thợ bị trừ 1 đơn hoàn thành, đánh giá của đơn (nếu có) bị ẩn và điểm sao được tính lại. Web không có nút hoàn tác.`
+    );
+    if (!dongY) return;
+
+    setDangHuyViPham(true);
+    const { error } = await supabase.rpc("admin_huy_don_vi_pham", { p_don: idDon, p_ly_do: lyDo });
+    setDangHuyViPham(false);
+
+    if (error) {
+      thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
+      return;
+    }
+    thongBao(`Đã hủy đơn #${idDon} do vi phạm.`, "thanhcong");
+    setDonDangHuy(null);
+    setLyDoHuy("");
+    layDonDatLich();
   }
 
   async function danhDauDaXuLy(baoCao: BaoCao) {
@@ -172,6 +203,9 @@ export default function DonDatLich() {
                   <span className="font-semibold text-ink">Trạng thái:</span>
                   <NhanTrangThai trangThai={don.trang_thai} />
                 </div>
+                {don.trang_thai === "Đã hủy" && don.ly_do_huy && (
+                  <p><span className="font-semibold text-ink">Lý do hủy:</span> {don.ly_do_huy}</p>
+                )}
 
                 {baoCaoCuaDon.map((bc) => (
                   <div key={bc.id} className="mt-2 bg-paper border border-line rounded-xl p-3 flex flex-col gap-1.5">
@@ -210,16 +244,67 @@ export default function DonDatLich() {
                   </div>
                 ))}
 
-                <select
-                  value={don.trang_thai}
-                  onChange={(e) => doiTrangThai(don.id, e.target.value)}
-                  className="border border-line rounded-lg px-3 py-2 mt-2 text-ink bg-card outline-none focus:border-teal"
-                >
-                  <option value="Chờ xác nhận">Chờ xác nhận</option>
-                  <option value="Đã xác nhận">Đã xác nhận</option>
-                  <option value="Đã hoàn thành">Đã hoàn thành</option>
-                  <option value="Đã hủy">Đã hủy</option>
-                </select>
+                {don.trang_thai === "Đã hoàn thành" ? (
+                  donDangHuy === don.id ? (
+                    <div className="mt-2 flex flex-col gap-2 bg-rust-soft border border-rust/30 rounded-xl p-3">
+                      <p className="text-xs font-semibold text-rust">
+                        Lý do hủy (khách và thợ của đơn đều thấy dòng này)
+                      </p>
+                      <textarea
+                        value={lyDoHuy}
+                        onChange={(e) => setLyDoHuy(e.target.value)}
+                        maxLength={300}
+                        rows={2}
+                        placeholder="Ví dụ: thợ không đến theo hẹn nhưng vẫn xác nhận hoàn thành"
+                        className="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-card outline-none focus:border-rust"
+                      />
+                      <p className="text-[11px] text-ink-soft">
+                        Đơn chuyển sang &ldquo;Đã hủy&rdquo;, thợ bị trừ 1 đơn hoàn thành, đánh giá của đơn (nếu có) bị ẩn
+                        khỏi trang thợ và không tính vào điểm sao. Dữ liệu đánh giá vẫn được giữ trong database.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => huyDonViPham(don.id)}
+                          disabled={dangHuyViPham}
+                          className="bg-rust hover:opacity-90 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition"
+                        >
+                          {dangHuyViPham ? "Đang hủy..." : "Xác nhận hủy do vi phạm"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDonDangHuy(null);
+                            setLyDoHuy("");
+                          }}
+                          disabled={dangHuyViPham}
+                          className="bg-line hover:bg-ink-soft hover:text-white text-ink-soft px-4 py-2 rounded-lg text-sm transition"
+                        >
+                          Đóng
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setDonDangHuy(don.id);
+                        setLyDoHuy("");
+                      }}
+                      className="self-start mt-2 flex items-center gap-1.5 text-sm font-semibold text-rust border border-rust/40 hover:bg-rust-soft px-4 py-2 rounded-lg transition"
+                    >
+                      <ShieldAlert className="w-4 h-4" /> Hủy do vi phạm
+                    </button>
+                  )
+                ) : (
+                  <select
+                    value={don.trang_thai}
+                    onChange={(e) => doiTrangThai(don.id, e.target.value)}
+                    className="border border-line rounded-lg px-3 py-2 mt-2 text-ink bg-card outline-none focus:border-teal"
+                  >
+                    <option value="Chờ xác nhận">Chờ xác nhận</option>
+                    <option value="Đã xác nhận">Đã xác nhận</option>
+                    <option value="Đã hoàn thành">Đã hoàn thành</option>
+                    <option value="Đã hủy">Đã hủy</option>
+                  </select>
+                )}
               </div>
             );
           })}

@@ -15,28 +15,33 @@ export function sdtHopLe(soDienThoai: string): boolean {
 }
 
 /**
- * Sinh một email nội bộ (không dùng để nhận thư) khi người dùng không nhập
- * email thật lúc đăng ký — Supabase Auth bắt buộc phải có email hoặc SDT đã
- * xác minh OTP để tạo tài khoản, và ở đây ta chưa làm OTP thật, nên dùng
- * email giả này để thỏa yêu cầu của Supabase mà không bắt người dùng phải
- * nhập email thật.
+ * Sinh email nội bộ (không dùng để nhận thư) cho mọi tài khoản đăng ký mới —
+ * Supabase Auth bắt buộc phải có email hoặc SDT đã xác minh OTP để tạo tài
+ * khoản, và ở đây ta chưa làm OTP thật, nên dùng email giả này. Web không thu
+ * email thật nữa (không dùng vào việc gì, thu thêm chỉ tăng rủi ro dữ liệu).
  */
 export function taoEmailNoiBo(soDienThoai: string): string {
   return `sdt${chuanHoaSdt(soDienThoai)}@nguoidung.1cham.local`;
 }
 
 /**
- * Tìm email đăng nhập (email thật người dùng nhập, hoặc email nội bộ tự
- * sinh) gắn với một số điện thoại — tra theo thứ tự bảng khach rồi đến bảng
- * tho. Dùng để người dùng đăng nhập bằng số điện thoại thay vì phải nhớ
- * email đã dùng lúc đăng ký.
+ * Tín hiệu hàm SQL `tim_email_theo_sdt` trả về khi tài khoản được đăng ký bằng
+ * email thật (tài khoản cũ). Vì lý do riêng tư, database KHÔNG trả email thật
+ * cho người chưa đăng nhập; trang đăng nhập sẽ yêu cầu người dùng tự nhập email.
+ */
+export const TIN_HIEU_CAN_EMAIL = "CAN_EMAIL";
+
+/**
+ * Tìm email đăng nhập gắn với một số điện thoại — tra theo thứ tự bảng khach
+ * rồi đến bảng tho. Trả về: email nội bộ (sdt…@nguoidung.1cham.local), hoặc
+ * TIN_HIEU_CAN_EMAIL nếu tài khoản dùng email thật, hoặc null nếu không có.
  *
  * Gọi qua RPC (hàm SECURITY DEFINER `tim_email_theo_sdt` ở phía Supabase)
  * thay vì SELECT trực tiếp bảng khach/tho — vì RLS trên 2 bảng này chặn đọc
  * ẩn danh (anon) để bảo vệ số điện thoại khách, và lúc đăng nhập người dùng
  * đang ở trạng thái anon (chưa có phiên) nên SELECT trực tiếp luôn trả về
  * rỗng. Hàm RPC chạy với quyền cao hơn RLS nhưng chỉ trả đúng 1 email, không
- * lộ dữ liệu khác.
+ * lộ dữ liệu khác (và không bao giờ trả email thật).
  */
 export async function timEmailTheoSoDienThoai(soDienThoai: string): Promise<string | null> {
   const soSach = chuanHoaSdt(soDienThoai);

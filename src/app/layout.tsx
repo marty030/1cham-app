@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Header from "../components/Header";
 import { ThongBaoProvider } from "../components/ThongBao";
+import CongDongYPhapLy from "../components/CongDongYPhapLy";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default function RootLayout({
         <ThongBaoProvider>
           <Header />
           <main>{children}</main>
+          <CongDongYPhapLy />
         </ThongBaoProvider>
       </body>
     </html>

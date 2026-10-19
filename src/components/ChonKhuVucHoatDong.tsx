@@ -195,6 +195,11 @@ export default function ChonKhuVucHoatDong({
 
   return (
     <div className="flex flex-col gap-2">
+      <p className="text-xs text-gold bg-gold-soft border border-gold/30 rounded-lg px-3 py-2 leading-relaxed">
+        Điểm này, địa chỉ bên dưới và bán kính hoạt động sẽ được hiển thị công khai cho mọi người. Hãy chọn điểm đại
+        diện cho khu vực bạn làm việc, không nhất thiết là nhà riêng.
+      </p>
+
       <div>
         <label className="text-xs font-semibold text-ink-soft mb-1 block">
           Nhập địa chỉ để tìm

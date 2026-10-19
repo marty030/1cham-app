@@ -529,7 +529,12 @@ export default function DonCuaToi() {
                       <NutBaoVanDe don={don} />
                     </div>
                   ) : (
-                    <div className="p-5 pt-0 mt-auto">
+                    <div className="p-5 pt-0 mt-auto flex flex-col gap-2">
+                      {don.ly_do_huy && (
+                        <p className="text-xs text-rust bg-rust-soft border border-rust/20 rounded-lg px-3 py-2">
+                          <span className="font-semibold">Lý do hủy (khách cũng thấy):</span> {don.ly_do_huy}
+                        </p>
+                      )}
                       <div className="w-full flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl border bg-rust-soft text-rust border-rust/30">
                         <XCircle className="w-4 h-4" /> Đã hủy
                       </div>
