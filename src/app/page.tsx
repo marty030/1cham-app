@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
 import Footer from "../components/Footer";
@@ -28,6 +29,8 @@ import {
   Camera,
   Tv,
   Laptop,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 const ICON_DANH_MUC: Record<string, typeof Snowflake> = {
@@ -45,6 +48,28 @@ const ICON_DANH_MUC: Record<string, typeof Snowflake> = {
   may_tinh: Laptop,
   khac: Wrench,
 };
+
+// Ngành HIỆN SẴN ở trang chủ (phổ biến nhất); các ngành còn lại gom vào nút "Xem thêm".
+// Muốn đổi ngành nào hiện sẵn: sửa danh sách mã dưới đây (mã lấy từ lib/danhMuc.ts).
+// Thứ tự trong danh sách này cũng là thứ tự hiển thị.
+const NGANH_HIEN_SAN: string[] = [
+  "dien_lanh",
+  "dien_nuoc",
+  "do_gia_dung",
+  "bep_dien",
+  "thong_cong",
+  "chong_tham",
+  "son_sua_nha",
+  "camera_wifi",
+];
+
+type NganhDanhMuc = (typeof DANH_MUC_NGHE)[number];
+
+const NGANH_CHINH: NganhDanhMuc[] = NGANH_HIEN_SAN.map((ma) =>
+  DANH_MUC_NGHE.find((muc) => muc.gia_tri === ma)
+).filter((muc): muc is NganhDanhMuc => !!muc);
+
+const NGANH_THEM: NganhDanhMuc[] = DANH_MUC_NGHE.filter((muc) => !NGANH_HIEN_SAN.includes(muc.gia_tri));
 
 const CAM_KET = [
   {
@@ -88,6 +113,7 @@ const CAC_BUOC = [
 ];
 
 export default function TrangChu() {
+  const [hienThemNganh, setHienThemNganh] = useState(false);
     const { daDangNhap, laAdmin, hoSoKhach, currentUserId, dangXuat } = useTaiKhoanHienTai();
     const soDonCanXuLy = useSoDonCanXuLy(daDangNhap, hoSoKhach, currentUserId);
   const soTinNhanChuaDoc = useSoTinNhanChuaDoc(daDangNhap, hoSoKhach, currentUserId);
@@ -180,8 +206,8 @@ export default function TrangChu() {
           <h2 className="text-center text-xl font-bold text-ink mb-1">Bạn cần sửa gì?</h2>
           <p className="text-center text-sm text-ink-soft mb-8">Chọn đúng ngành để xem thợ gần bạn nhất</p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
-            {DANH_MUC_NGHE.map((muc) => {
+          <div id="luoi-danh-muc" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
+            {(hienThemNganh ? [...NGANH_CHINH, ...NGANH_THEM] : NGANH_CHINH).map((muc) => {
               const Icon = ICON_DANH_MUC[muc.gia_tri] ?? Wrench;
               return (
                 <Link key={muc.gia_tri} href={`/tho-gan-ban?danh_muc=${muc.gia_tri}`}>
@@ -195,6 +221,28 @@ export default function TrangChu() {
               );
             })}
           </div>
+
+          {NGANH_THEM.length > 0 && (
+            <div className="text-center mb-8">
+              <button
+                type="button"
+                onClick={() => setHienThemNganh((v) => !v)}
+                aria-expanded={hienThemNganh}
+                aria-controls="luoi-danh-muc"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft border border-line bg-paper hover:bg-line px-4 py-2 rounded-full transition"
+              >
+                {hienThemNganh ? (
+                  <>
+                    Thu gọn <ChevronUp className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    Xem thêm {NGANH_THEM.length} ngành khác <ChevronDown className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
 
           <div className="text-center">
             <Link

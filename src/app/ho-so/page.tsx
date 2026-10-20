@@ -8,6 +8,7 @@ import { useThongBao } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
 import { BAN_KINH_MAC_DINH_KM } from "../../lib/goong";
 import { DANH_MUC_NGHE } from "../../lib/danhMuc";
+import { thuNhoAnhDaiDien } from "../../lib/thuNhoAnh";
 
 export default function HoSo() {
   const [hoSo, setHoSo] = useState<any>(null);
@@ -116,15 +117,32 @@ export default function HoSo() {
 
   async function xuLyChonAnh(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = ""; // cho phép chọn lại cùng một file nếu lần trước bị lỗi
     if (!file || !hoSo) return;
 
+    if (file.size > 25 * 1024 * 1024) {
+      thongBao("Ảnh quá lớn (tối đa 25 MB). Hãy chọn ảnh khác.", "canhbao");
+      return;
+    }
+
     setDangTaiAnh(true);
-    const duoiFile = file.name.split(".").pop() || "jpg";
-    const duongDan = `${hoSo.user_id}/avatar.${duoiFile}`;
+
+    // Thu nhỏ và xóa metadata (kể cả tọa độ GPS trong ảnh chụp) trước khi tải lên
+    let anhDaThuNho: Blob;
+    try {
+      anhDaThuNho = await thuNhoAnhDaiDien(file);
+    } catch (loi) {
+      console.error("Không xử lý được ảnh:", loi);
+      setDangTaiAnh(false);
+      thongBao("Không đọc được ảnh này. Hãy chọn ảnh JPG hoặc PNG.", "loi");
+      return;
+    }
+
+    const duongDan = `${hoSo.user_id}/avatar.jpg`;
 
     const { error: loiUpload } = await supabase.storage
       .from("avatars")
-      .upload(duongDan, file, { upsert: true, cacheControl: "3600" });
+      .upload(duongDan, anhDaThuNho, { upsert: true, cacheControl: "3600", contentType: "image/jpeg" });
 
     if (loiUpload) {
       setDangTaiAnh(false);
