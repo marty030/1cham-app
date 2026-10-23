@@ -15,12 +15,13 @@ export function duDongY(vaiTro: VaiTro, daChon: string[]): boolean {
 }
 
 // Ghi một dòng "đã đồng ý phiên bản X lúc Y". Người dùng và thời điểm do database tự gán.
-export async function ghiNhanDongY(vaiTro: VaiTro) {
+// themMuc: các mục đồng ý RIÊNG ngoài các mục bắt buộc (ví dụ "xac_minh_danh_tinh" khi thợ nộp hồ sơ xác minh).
+export async function ghiNhanDongY(vaiTro: VaiTro, themMuc: string[] = []) {
   return supabase.from("dong_y_phap_ly").insert([
     {
       vai_tro: vaiTro,
       phien_ban: PHIEN_BAN_PHAP_LY.ma,
-      noi_dung: MUC_BAT_BUOC[vaiTro],
+      noi_dung: [...MUC_BAT_BUOC[vaiTro], ...themMuc],
     },
   ]);
 }

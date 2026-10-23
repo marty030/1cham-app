@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "../components/Header";
 import { ThongBaoProvider } from "../components/ThongBao";
 import CongDongYPhapLy from "../components/CongDongYPhapLy";
+import BannerDuyetTho from "../components/BannerDuyetTho";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body>
         <ThongBaoProvider>
           <Header />
+          <BannerDuyetTho />
           <main>{children}</main>
           <CongDongYPhapLy />
         </ThongBaoProvider>
