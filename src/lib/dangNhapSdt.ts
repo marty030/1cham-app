@@ -25,27 +25,31 @@ export function taoEmailNoiBo(soDienThoai: string): string {
 }
 
 /**
- * Tín hiệu hàm SQL `tim_email_theo_sdt` trả về khi tài khoản được đăng ký bằng
- * email thật (tài khoản cũ). Vì lý do riêng tư, database KHÔNG trả email thật
- * cho người chưa đăng nhập; trang đăng nhập sẽ yêu cầu người dùng tự nhập email.
+ * Tín hiệu cũ của hàm SQL `tim_email_theo_sdt` (tài khoản cũ đăng ký bằng email thật).
+ * Bản code này KHÔNG còn dùng nó để rẽ nhánh giao diện (vì làm lộ số nào là tài khoản cũ),
+ * nhưng vẫn nhận ra để tương thích khi database chưa cập nhật.
  */
 export const TIN_HIEU_CAN_EMAIL = "CAN_EMAIL";
 
+/** Tín hiệu hàm SQL trả về khi một địa chỉ IP tra cứu quá nhiều lần trong thời gian ngắn. */
+export const TIN_HIEU_QUA_NHANH = "QUA_NHANH";
+
+export type KetQuaTraEmail = { quaNhanh: false; email: string } | { quaNhanh: true };
+
 /**
- * Tìm email đăng nhập gắn với một số điện thoại — tra theo thứ tự bảng khach
- * rồi đến bảng tho. Trả về: email nội bộ (sdt…@nguoidung.1cham.local), hoặc
- * TIN_HIEU_CAN_EMAIL nếu tài khoản dùng email thật, hoặc null nếu không có.
+ * Tìm email đăng nhập gắn với một số điện thoại.
  *
- * Gọi qua RPC (hàm SECURITY DEFINER `tim_email_theo_sdt` ở phía Supabase)
- * thay vì SELECT trực tiếp bảng khach/tho — vì RLS trên 2 bảng này chặn đọc
- * ẩn danh (anon) để bảo vệ số điện thoại khách, và lúc đăng nhập người dùng
- * đang ở trạng thái anon (chưa có phiên) nên SELECT trực tiếp luôn trả về
- * rỗng. Hàm RPC chạy với quyền cao hơn RLS nhưng chỉ trả đúng 1 email, không
- * lộ dữ liệu khác (và không bao giờ trả email thật).
+ * QUAN TRỌNG (chống dò số điện thoại): hàm này LUÔN trả về một email, kể cả khi số điện thoại
+ * chưa đăng ký — khi đó dùng email nội bộ suy ra từ số. Nhờ vậy giao diện luôn đi tiếp tới bước
+ * đăng nhập bằng mật khẩu, và người lạ chỉ nhận lại một thông báo chung "Sai số điện thoại hoặc
+ * mật khẩu", không phân biệt được số đã đăng ký hay chưa.
+ *
+ * Vẫn cần tra database (thay vì tự suy ra email) vì người dùng có thể đã đổi số điện thoại ở
+ * trang Cài đặt, trong khi email đăng nhập nội bộ giữ nguyên theo số cũ.
  */
-export async function timEmailTheoSoDienThoai(soDienThoai: string): Promise<string | null> {
+export async function timEmailDangNhap(soDienThoai: string): Promise<KetQuaTraEmail> {
   const soSach = chuanHoaSdt(soDienThoai);
-  if (!soSach) return null;
+  const macDinh = taoEmailNoiBo(soSach);
 
   const { data, error } = await supabase.rpc("tim_email_theo_sdt", {
     so_dien_thoai_input: soSach,
@@ -53,17 +57,22 @@ export async function timEmailTheoSoDienThoai(soDienThoai: string): Promise<stri
 
   if (error) {
     console.error("Lỗi tra email theo số điện thoại (RPC):", error);
-    return null;
+    return { quaNhanh: false, email: macDinh };
   }
 
-  return data || null;
+  if (data === TIN_HIEU_QUA_NHANH) return { quaNhanh: true };
+  if (!data || data === TIN_HIEU_CAN_EMAIL) return { quaNhanh: false, email: macDinh };
+  return { quaNhanh: false, email: data as string };
 }
 
 /**
  * Kiểm tra một số điện thoại đã có tài khoản (khách hoặc thợ) hay chưa —
- * dùng để chặn đăng ký trùng. Cũng gọi qua RPC vì lý do RLS như trên.
+ * dùng để chặn đăng ký trùng. Gọi qua RPC vì RLS chặn đọc ẩn danh.
+ *
+ * Trả về: true (đã có), false (chưa có hoặc lỗi kỹ thuật — database vẫn chặn trùng ở bước ghi hồ sơ),
+ * null (tra cứu quá nhanh, bị giới hạn tạm thời).
  */
-export async function daCoTaiKhoanTheoSdt(soDienThoai: string): Promise<boolean> {
+export async function daCoTaiKhoanTheoSdt(soDienThoai: string): Promise<boolean | null> {
   const soSach = chuanHoaSdt(soDienThoai);
   if (!soSach) return false;
 
@@ -76,5 +85,6 @@ export async function daCoTaiKhoanTheoSdt(soDienThoai: string): Promise<boolean>
     return false;
   }
 
+  if (data === null) return null;
   return !!data;
 }

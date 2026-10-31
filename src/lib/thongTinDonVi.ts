@@ -30,6 +30,6 @@ export const CHINH_SACH_PHI =
 
 // Đổi mã phiên bản mỗi khi sửa nội dung pháp lý (dùng để ghi nhận người dùng đã đồng ý bản nào).
 export const PHIEN_BAN_PHAP_LY = {
-  ma: "2026-10-13",
-  ngayCapNhat: "13/10/2026",
+  ma: "2026-10-25",
+  ngayCapNhat: "25/10/2026",
 };

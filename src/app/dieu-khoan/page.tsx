@@ -45,6 +45,9 @@ export default function DieuKhoan() {
             Thợ phải có khả năng hành nghề hợp pháp, và tuân thủ điều kiện, giấy phép riêng của ngành nghề nếu pháp luật
             có yêu cầu.
           </li>
+          <li>
+            Hồ sơ Thợ chỉ hiển thị công khai sau khi Thợ nộp hồ sơ xác minh và được quản trị viên duyệt (Điều 8).
+          </li>
         </Ds>
       </Muc>
 
@@ -101,9 +104,21 @@ export default function DieuKhoan() {
             Nền tảng sẽ thực hiện xác thực điện tử danh tính người bán theo lộ trình pháp luật quy định.
           </li>
           <li>
+            Để được hiển thị công khai, Thợ nộp hồ sơ xác minh trung thực gồm ảnh Căn cước công dân hai mặt, ảnh chân dung, và
+            ảnh công việc đã làm hoặc thông tin người giới thiệu (chứng chỉ nghề nếu có), rồi chờ quản trị viên duyệt. Quản trị
+            viên có thể duyệt, yêu cầu bổ sung hoặc từ chối. Cách chúng tôi xử lý hồ sơ xác minh, gồm việc xóa ảnh sau khi duyệt
+            hoặc từ chối, nêu tại{" "}
+            <Link href="/bao-mat" className="text-rust hover:underline">Chính sách bảo vệ dữ liệu cá nhân</Link>.
+          </li>
+          <li>
             Thợ hiểu và đồng ý rằng các thông tin sau được hiển thị công khai: tên, nghề, ngành, địa chỉ, vị trí trung tâm và
-            bán kính khu vực hoạt động, ảnh đại diện, số đơn hoàn thành, điểm đánh giá, trạng thái nghỉ hoặc bận. Số điện
+            bán kính khu vực hoạt động, ảnh đại diện, số đơn hoàn thành, điểm đánh giá, trạng thái nghỉ hoặc bận, và huy hiệu
+            xác minh (&ldquo;Đã xác minh danh tính&rdquo;, &ldquo;Có chứng chỉ nghề&rdquo;) nếu được cấp. Số điện
             thoại chỉ hiển thị cho người dùng đã đăng nhập.
+          </li>
+          <li>
+            Huy hiệu xác minh chỉ thể hiện kết quả đối chiếu hồ sơ tại thời điểm quản trị viên duyệt. Huy hiệu không phải là bảo
+            đảm của Nền tảng về chất lượng công việc, giá, hay giấy phép hành nghề của Thợ.
           </li>
           <li>Thợ cập nhật trạng thái &ldquo;đang nghỉ&rdquo; khi không nhận việc, và phản hồi đơn kịp thời, trung thực.</li>
         </Ds>
@@ -112,6 +127,7 @@ export default function DieuKhoan() {
       <Muc so={9} tieuDe="Hành vi bị cấm">
         <Ds>
           <li>Cung cấp thông tin giả; mạo danh; dùng tài khoản của người khác.</li>
+          <li>Nộp giấy tờ giả, giấy tờ hoặc ảnh của người khác, hoặc ảnh chỉnh sửa trong hồ sơ xác minh.</li>
           <li>Đánh giá giả, thông đồng đánh giá, xác nhận hoàn thành khi công việc chưa diễn ra, tạo đơn ảo hoặc đơn nhằm quấy rối.</li>
           <li>Lăng mạ, đe dọa, quấy rối; đăng nội dung vi phạm pháp luật hoặc thuần phong mỹ tục.</li>
           <li>Thu thập dữ liệu hàng loạt bằng công cụ tự động, can thiệp trái phép vào hệ thống, khai thác lỗ hổng.</li>
@@ -127,8 +143,8 @@ export default function DieuKhoan() {
             Khi còn báo cáo chưa xử lý, đơn không thể được xác nhận hoàn thành. Quản trị viên xem xét và đánh dấu đã xử lý.
           </li>
           <li>
-            Tùy mức độ, Nền tảng có thể: nhắc nhở; ẩn đánh giá hoặc nội dung vi phạm; hủy một đơn do vi phạm; ẩn hồ sơ Thợ;
-            tạm khóa hoặc chấm dứt tài khoản.
+            Tùy mức độ, Nền tảng có thể: nhắc nhở; ẩn đánh giá hoặc nội dung vi phạm; hủy một đơn do vi phạm; từ chối hồ sơ
+            xác minh; ẩn hồ sơ Thợ; tạm khóa hoặc chấm dứt tài khoản.
           </li>
           <li>
             Khi hủy một đơn đã hoàn thành do vi phạm, Nền tảng đổi đơn sang &ldquo;Đã hủy&rdquo; kèm lý do hiển thị cho cả Khách và

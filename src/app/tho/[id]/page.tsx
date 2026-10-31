@@ -8,7 +8,7 @@ import { COT_THO_CONG_KHAI } from "../../../lib/thoCongKhai";
 import { TUY_CHON_GIO_VN } from "../../../lib/thoiGianVN";
 import { layHoSoKhachHienTai, HoSoKhach } from "../../../lib/khach";
 import FormDatLich from "../../../components/FormDatLich";
-import { ArrowLeft, MessageCircle, CalendarDays, Star, MapPin } from "lucide-react";
+import { ArrowLeft, MessageCircle, CalendarDays, Star, MapPin, ShieldCheck, Award } from "lucide-react";
 import { useDatLich } from "../../../hooks/useDatLich";
 import { tinhCapDo, tinhHuyHieu } from "../../../lib/hoSoUyTin";
 
@@ -156,6 +156,21 @@ export default function TrangChiTietTho() {
               )}
             </div>
           </div>
+
+          {(tho.da_xac_minh_danh_tinh || tho.co_chung_chi_nghe) && (
+            <div className="flex flex-wrap gap-2">
+              {tho.da_xac_minh_danh_tinh && (
+                <span className="bg-teal-soft text-teal border border-teal/20 text-xs font-semibold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Đã xác minh danh tính
+                </span>
+              )}
+              {tho.co_chung_chi_nghe && (
+                <span className="bg-gold-soft text-gold border border-gold/20 text-xs font-semibold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5" /> Có chứng chỉ nghề
+                </span>
+              )}
+            </div>
+          )}
 
           {tenCacDanhMuc.length > 0 && (
             <div className="flex flex-wrap gap-2">

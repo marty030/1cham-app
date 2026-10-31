@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
-import { useThongBao } from "../../components/ThongBao";
+import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
 import { TUY_CHON_GIO_VN } from "../../lib/thoiGianVN";
 import { ghiNhanDongY } from "../../lib/dongYPhapLy";
@@ -105,6 +105,7 @@ function OChonAnh({
 export default function XacMinhTho() {
   const router = useRouter();
   const thongBao = useThongBao();
+  const xacNhanHopThoai = useXacNhan();
 
   const [dangTai, setDangTai] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -122,6 +123,7 @@ export default function XacMinhTho() {
   const [daCham, setDaCham] = useState(false);
   const [dangNop, setDangNop] = useState(false);
   const [tienDo, setTienDo] = useState("");
+  const [dangRut, setDangRut] = useState(false);
 
   async function taiTrangThai() {
     const { data: sess } = await supabase.auth.getSession();
@@ -240,6 +242,31 @@ export default function XacMinhTho() {
     }
   }
 
+  // Rút hồ sơ đang chờ duyệt: xóa ảnh TRƯỚC (nếu xóa không được thì dừng, tránh để ảnh giấy tờ mồ côi
+  // trong kho), rồi mới gọi hàm SQL đưa trạng thái về "chưa nộp" và xóa dòng hồ sơ.
+  async function rutHoSo() {
+    if (!userId) return;
+    const dongYRut = await xacNhanHopThoai(
+      "Rút hồ sơ đang chờ duyệt? Ảnh giấy tờ và nội dung bạn đã nộp sẽ bị xóa khỏi hệ thống. Bạn có thể nộp lại bất cứ lúc nào."
+    );
+    if (!dongYRut) return;
+
+    setDangRut(true);
+    try {
+      const kq = await xoaMoiAnhXacMinh(userId);
+      if (!kq.thanhCong) throw new Error("Chưa xóa được ảnh giấy tờ, hồ sơ chưa được rút. Hãy thử lại.");
+      const { error } = await supabase.rpc("rut_ho_so_xac_minh");
+      if (error) throw new Error(dichLoiSupabase(error.message));
+      thongBao("Đã rút hồ sơ và xóa ảnh giấy tờ.", "thanhcong");
+      await taiTrangThai();
+    } catch (loi) {
+      const noiDung = loi instanceof Error ? loi.message : "Có lỗi xảy ra";
+      thongBao("Không rút được hồ sơ: " + noiDung, "loi");
+    } finally {
+      setDangRut(false);
+    }
+  }
+
   if (dangTai) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper">
@@ -308,6 +335,15 @@ export default function XacMinhTho() {
                 : ""}
               Chúng tôi sẽ xem xét và báo kết quả ngay trên trang này. Khi được duyệt, hồ sơ của bạn sẽ hiện công khai.
             </p>
+            <button
+              type="button"
+              onClick={rutHoSo}
+              disabled={dangRut}
+              className="self-start mt-1 text-sm font-semibold text-rust border border-rust/30 hover:bg-rust-soft px-3 py-2 rounded-lg disabled:opacity-50 transition"
+            >
+              {dangRut ? "Đang rút hồ sơ..." : "Rút hồ sơ"}
+            </button>
+            <p className="text-xs text-ink-soft">Rút hồ sơ sẽ xóa ảnh giấy tờ đã nộp. Bạn có thể nộp lại sau.</p>
           </div>
         )}
 

@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import FormDatLich from "./FormDatLich";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
-import { MessageCircle, CalendarDays, Pencil, Trash2, MapPin, Navigation, Star } from "lucide-react";
+import { MessageCircle, CalendarDays, Pencil, Trash2, MapPin, Navigation, Star, ShieldCheck, Award } from "lucide-react";
 
 type TheThoProps = {
   tho: any;
@@ -146,6 +146,22 @@ export default function TheTho({
           </div>
         </div>
       </div>
+
+      {/* HUY HIỆU XÁC MINH (do admin cấp khi duyệt hồ sơ) */}
+      {(tho.da_xac_minh_danh_tinh || tho.co_chung_chi_nghe) && (
+        <div className="flex flex-wrap gap-1.5 -mt-1 mb-3">
+          {tho.da_xac_minh_danh_tinh && (
+            <span className="text-[11px] font-semibold text-teal bg-teal-soft border border-teal/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" /> Đã xác minh danh tính
+            </span>
+          )}
+          {tho.co_chung_chi_nghe && (
+            <span className="text-[11px] font-semibold text-gold bg-gold-soft border border-gold/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+              <Award className="w-3 h-3" /> Có chứng chỉ nghề
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 2. BODY: thợ làm gì (chính) → ở đâu / cách bao xa (phụ, dồn sát nút Đặt lịch) */}
       <div className="flex flex-col gap-2.5 mb-4 flex-1">

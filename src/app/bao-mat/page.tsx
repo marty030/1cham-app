@@ -18,8 +18,13 @@ const BANG_DU_LIEU: { nhom: string; duLieu: string; mucDich: string }[] = [
   },
   {
     nhom: "Hồ sơ Thợ",
-    duLieu: "Tên, nghề, ngành, địa chỉ, tọa độ trung tâm và bán kính khu vực hoạt động, số điện thoại, ảnh đại diện, số đơn hoàn thành, điểm đánh giá.",
+    duLieu: "Tên, nghề, ngành, địa chỉ, tọa độ trung tâm và bán kính khu vực hoạt động, số điện thoại, ảnh đại diện, số đơn hoàn thành, điểm đánh giá, huy hiệu xác minh (Đã xác minh danh tính, Có chứng chỉ nghề) nếu được cấp.",
     mucDich: "Hiển thị Thợ cho Khách, tìm thợ theo khu vực, xây dựng uy tín.",
+  },
+  {
+    nhom: "Hồ sơ xác minh của Thợ",
+    duLieu: "Ảnh Căn cước công dân (hai mặt), ảnh chân dung, ảnh chứng chỉ nghề (nếu có), ảnh công việc đã làm, thông tin người giới thiệu hoặc đường dẫn giới thiệu, mô tả kinh nghiệm; kết quả duyệt và ghi chú của quản trị viên.",
+    mucDich: "Xác minh danh tính và tay nghề của Thợ trước khi hiển thị công khai. Xem mục 4.",
   },
   {
     nhom: "Tin nhắn",
@@ -95,16 +100,63 @@ export default function BaoMat() {
         </Ds>
       </Muc>
 
-      <Muc so={4} tieuDe="Cơ sở xử lý">
+      <Muc so={4} tieuDe="Hồ sơ xác minh của Thợ">
+        <P>
+          Mục này chỉ áp dụng với Thợ. Để hồ sơ hiển thị công khai, Thợ nộp hồ sơ xác minh và được quản trị viên duyệt thủ công.
+        </P>
         <Ds>
-          <li>Sự đồng ý của bạn khi đăng ký (được ghi nhận kèm thời điểm và phiên bản văn bản đã đồng ý).</li>
+          <li>
+            <strong>Dữ liệu:</strong> ảnh Căn cước công dân (hai mặt), ảnh chân dung, ảnh chứng chỉ nghề (nếu có), ảnh công việc đã
+            làm, thông tin người giới thiệu hoặc đường dẫn giới thiệu, mô tả kinh nghiệm. Ảnh Căn cước công dân chứa nhiều dữ liệu
+            cá nhân (như họ tên, số định danh, ngày sinh, nơi cư trú). Chúng tôi không nhập các thông tin đó thành dữ liệu riêng
+            trong hệ thống.
+          </li>
+          <li>
+            <strong>Mục đích duy nhất:</strong> xác minh danh tính và tay nghề của Thợ trước khi hiển thị công khai. Quản trị viên
+            đối chiếu bằng mắt; chúng tôi không dùng phần mềm nhận diện khuôn mặt và không tạo hay lưu mẫu sinh trắc học.
+          </li>
+          <li>
+            <strong>Đồng ý riêng:</strong> bạn đánh dấu đồng ý riêng khi nộp hồ sơ. Sự đồng ý được ghi nhận kèm thời điểm và phiên
+            bản văn bản.
+          </li>
+          <li>
+            <strong>Bảo vệ:</strong> ảnh được lưu trong kho riêng tư, không công khai. Chỉ quản trị viên xem được, qua liên kết tạm
+            thời có hiệu lực 10 phút. Trước khi tải lên, ảnh được thu nhỏ và loại bỏ thông tin ẩn (như vị trí chụp) ngay trên thiết
+            bị của bạn.
+          </li>
+                    <li>
+            <strong>Xóa ảnh và nội dung hồ sơ:</strong> toàn bộ ảnh và phần chữ bạn tự điền (người giới thiệu, kinh nghiệm) bị xóa
+            khỏi hệ thống ngay sau khi quản trị viên quyết định duyệt hoặc từ chối. Khi quản trị viên yêu cầu bổ sung, hồ sơ được
+            giữ tạm để bạn bổ sung và bị xóa khi có quyết định cuối hoặc khi bạn nộp lại. Bạn có thể rút hồ sơ đang chờ duyệt bất cứ
+            lúc nào, khi đó ảnh và nội dung hồ sơ bị xóa ngay. Nếu nộp không thành công, ảnh đã tải lên bị xóa. Nếu việc xóa tự động
+            gặp lỗi, quản trị viên xóa thủ công.
+          </li>
+                    <li>
+            <strong>Được giữ lại sau khi xử lý hồ sơ:</strong> kết quả xác minh, thời điểm nộp và duyệt, ghi chú của quản trị viên
+            và huy hiệu. Các dữ liệu này được giữ cho tới khi bạn yêu cầu xóa hoặc tài khoản bị xóa.
+          </li>
+          <li>
+            <strong>Người giới thiệu:</strong> bạn chỉ ghi thông tin của người đã đồng ý cho bạn chia sẻ. Quản trị viên có thể liên
+            hệ người đó để xác nhận công việc của bạn.
+          </li>
+          <li>
+            <strong>Huy hiệu:</strong> &ldquo;Đã xác minh danh tính&rdquo; và &ldquo;Có chứng chỉ nghề&rdquo; được hiển thị công khai
+            trên hồ sơ Thợ nếu được cấp. Huy hiệu chỉ thể hiện kết quả đối chiếu tại thời điểm duyệt, không phải bảo đảm về chất
+            lượng hay giá công việc.
+          </li>
+        </Ds>
+      </Muc>
+
+      <Muc so={5} tieuDe="Cơ sở xử lý">
+        <Ds>
+          <li>Sự đồng ý của bạn khi đăng ký (được ghi nhận kèm thời điểm và phiên bản văn bản đã đồng ý). Riêng hồ sơ xác minh của Thợ cần sự đồng ý riêng khi nộp (mục 4).</li>
           <li>Thực hiện dịch vụ bạn yêu cầu: tạo đơn, kết nối với Thợ, trao đổi, xác nhận hoàn thành.</li>
           <li>Tuân thủ nghĩa vụ pháp luật, như phối hợp với cơ quan nhà nước có thẩm quyền.</li>
           <li>Bảo vệ quyền, lợi ích hợp pháp của bạn, của người dùng khác và của Nền tảng, như phòng chống gian lận.</li>
         </Ds>
       </Muc>
 
-      <Muc so={5} tieuDe="Ai nhìn thấy dữ liệu của bạn">
+      <Muc so={6} tieuDe="Ai nhìn thấy dữ liệu của bạn">
         <Ds>
           <li>
             <strong>Thợ của đơn:</strong> thấy tên, số điện thoại, địa chỉ hẹn, giờ hẹn và ghi chú trong đơn của bạn.
@@ -113,7 +165,10 @@ export default function BaoMat() {
             <strong>Khách:</strong> thấy thông tin công khai của Thợ (mục 3 và Điều khoản). Số điện thoại Thợ chỉ hiển thị khi đã đăng nhập.
           </li>
           <li>
-            <strong>Công khai:</strong> đánh giá (số sao, nhận xét) và hồ sơ công khai của Thợ.
+            <strong>Công khai:</strong> đánh giá (số sao, nhận xét) và hồ sơ công khai của Thợ, gồm huy hiệu xác minh nếu có.
+          </li>
+          <li>
+            <strong>Hồ sơ xác minh của Thợ (ảnh giấy tờ, ảnh chân dung...):</strong> chỉ quản trị viên xem được, không hiển thị cho Khách hay Thợ khác.
           </li>
           <li>
             <strong>Đơn vị vận hành:</strong> có thể truy cập dữ liệu để hỗ trợ, xử lý khiếu nại, báo cáo vi phạm và bảo đảm an toàn hệ thống.
@@ -124,9 +179,9 @@ export default function BaoMat() {
         </Ds>
       </Muc>
 
-      <Muc so={6} tieuDe="Bên thứ ba hỗ trợ vận hành">
+      <Muc so={7} tieuDe="Bên thứ ba hỗ trợ vận hành">
         <Ds>
-          <li><strong>Supabase:</strong> lưu cơ sở dữ liệu và xác thực đăng nhập.</li>
+          <li><strong>Supabase:</strong> lưu cơ sở dữ liệu, kho lưu trữ ảnh (kể cả kho riêng tư chứa hồ sơ xác minh) và xác thực đăng nhập.</li>
           <li><strong>Vercel:</strong> lưu trữ và phân phối website.</li>
           <li><strong>Goong:</strong> gợi ý địa chỉ, bản đồ và đổi tọa độ thành địa chỉ; nhận nội dung địa chỉ bạn gõ hoặc tọa độ bạn chọn.</li>
           <li><strong>Google Fonts:</strong> tải phông chữ; việc này có thể cho Google biết địa chỉ IP của thiết bị.</li>
@@ -138,10 +193,11 @@ export default function BaoMat() {
         </P>
       </Muc>
 
-      <Muc so={7} tieuDe="Thời gian lưu trữ">
+      <Muc so={8} tieuDe="Thời gian lưu trữ">
         <Ds>
           <li>Dữ liệu tài khoản được lưu trong thời gian tài khoản còn hoạt động.</li>
           <li>Dữ liệu đơn, tin nhắn, đánh giá, báo cáo được lưu trong thời gian cần thiết để cung cấp dịch vụ, giải quyết khiếu nại, và theo yêu cầu của pháp luật.</li>
+          <li>Ảnh trong hồ sơ xác minh của Thợ bị xóa ngay sau khi hồ sơ được duyệt hoặc từ chối (mục 4).</li>
           <li>
             Khi bạn yêu cầu xóa, chúng tôi xóa hoặc ẩn danh dữ liệu trong vòng {CAM_KET.xuLyYeuCauDuLieuNgay} ngày, trừ dữ liệu pháp luật
             yêu cầu giữ hoặc cần cho khiếu nại, tranh chấp chưa giải quyết xong.
@@ -149,11 +205,12 @@ export default function BaoMat() {
         </Ds>
       </Muc>
 
-      <Muc so={8} tieuDe="Quyền của bạn">
+      <Muc so={9} tieuDe="Quyền của bạn">
         <Ds>
           <li>Được biết về việc xử lý dữ liệu của mình; đồng ý hoặc không đồng ý.</li>
           <li>Xem, chỉnh sửa hoặc yêu cầu chỉnh sửa; yêu cầu cung cấp bản sao dữ liệu.</li>
           <li>Rút lại sự đồng ý; yêu cầu xóa dữ liệu; hạn chế hoặc phản đối việc xử lý.</li>
+          <li>Với Thợ: rút lại sự đồng ý xử lý hồ sơ xác minh. Khi đó chúng tôi không thể duyệt hoặc tiếp tục hiển thị công khai hồ sơ Thợ của bạn.</li>
           <li>Khiếu nại, tố cáo, khởi kiện và yêu cầu bồi thường thiệt hại theo quy định của pháp luật; tự bảo vệ quyền của mình.</li>
         </Ds>
         <P>
@@ -164,9 +221,10 @@ export default function BaoMat() {
         </P>
       </Muc>
 
-      <Muc so={9} tieuDe="Bảo mật">
+      <Muc so={10} tieuDe="Bảo mật">
         <Ds>
           <li>Kết nối được mã hóa (HTTPS); mật khẩu được mã hóa bởi hệ thống xác thực.</li>
+          <li>Ảnh giấy tờ xác minh nằm trong kho riêng tư, chỉ quản trị viên truy cập được qua liên kết tạm thời; ảnh bị xóa sau khi hồ sơ được xử lý (mục 4).</li>
           <li>Cơ sở dữ liệu áp dụng phân quyền theo từng dòng và từng cột: ví dụ, số điện thoại Thợ không hiển thị cho người chưa đăng nhập; người dùng chỉ xem được đơn của chính mình.</li>
           <li>
             Khi xảy ra vi phạm dữ liệu cá nhân, chúng tôi sẽ thông báo cho cơ quan có thẩm quyền và cho người bị ảnh hưởng theo thời
@@ -176,18 +234,18 @@ export default function BaoMat() {
         </Ds>
       </Muc>
 
-      <Muc so={10} tieuDe="Người dưới 18 tuổi">
+      <Muc so={11} tieuDe="Người dưới 18 tuổi">
         <P>Nền tảng không dành cho người dưới 18 tuổi và chúng tôi không chủ định thu thập dữ liệu của họ. Nếu phát hiện, chúng tôi sẽ xóa dữ liệu đó.</P>
       </Muc>
 
-      <Muc so={11} tieuDe="Lưu trữ trên trình duyệt">
+      <Muc so={12} tieuDe="Lưu trữ trên trình duyệt">
         <P>
           Nền tảng dùng bộ nhớ của trình duyệt (như local storage hoặc cookie) để giữ phiên đăng nhập của bạn. Chúng tôi không dùng
           công cụ theo dõi quảng cáo.
         </P>
       </Muc>
 
-      <Muc so={12} tieuDe="Thay đổi chính sách và liên hệ">
+      <Muc so={13} tieuDe="Thay đổi chính sách và liên hệ">
         <P>
           Khi có thay đổi quan trọng, chúng tôi sẽ thông báo trên Nền tảng và xin lại sự đồng ý nếu pháp luật yêu cầu. Mọi thắc mắc
           về dữ liệu cá nhân, liên hệ {T.soDienThoai} hoặc {T.email}. Xem thêm{" "}

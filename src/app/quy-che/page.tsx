@@ -30,14 +30,39 @@ export default function QuyChe() {
         <Ds>
           <li>Khách và Thợ đều phải từ đủ 18 tuổi, có năng lực hành vi dân sự đầy đủ, đăng ký bằng số điện thoại và thông tin trung thực.</li>
           <li>
-            Thợ khai báo nghề, ngành, địa chỉ, khu vực hoạt động. Quản trị viên có thể ẩn hồ sơ Thợ khi thông tin không đúng hoặc có vi
-            phạm. Nền tảng sẽ thực hiện xác thực điện tử danh tính người bán theo lộ trình pháp luật quy định (từ 01/01/2027).
+            Thợ khai báo nghề, ngành, địa chỉ, khu vực hoạt động và phải được quản trị viên duyệt hồ sơ xác minh (mục 4) trước khi
+            hiển thị công khai. Quản trị viên có thể ẩn hồ sơ Thợ khi thông tin không đúng hoặc có vi phạm.
+          </li>
+          <li>
+            Nền tảng sẽ thực hiện xác thực điện tử danh tính người bán theo lộ trình pháp luật quy định (từ 01/01/2027). Việc duyệt
+            thủ công hiện nay là biện pháp xác minh ban đầu và sẽ được điều chỉnh theo lộ trình đó.
           </li>
           <li>Quyền và nghĩa vụ chi tiết của từng bên nằm trong Điều khoản sử dụng, Điều 7 và 8.</li>
         </Ds>
       </Muc>
 
-      <Muc so={4} tieuDe="Quy trình giao dịch">
+      <Muc so={4} tieuDe="Duyệt Thợ và quy trình giao dịch">
+        <P>Duyệt Thợ trước khi hiển thị công khai:</P>
+        <Ds>
+          <li>Thợ mới đăng ký ở trạng thái &ldquo;Chưa nộp hồ sơ&rdquo; và chưa hiển thị công khai cho Khách.</li>
+          <li>
+            Thợ nộp hồ sơ xác minh tại trang xác minh: ảnh Căn cước công dân hai mặt và ảnh chân dung (bắt buộc); ảnh công việc đã
+            làm hoặc thông tin người giới thiệu (cần ít nhất một); chứng chỉ nghề (không bắt buộc).
+          </li>
+          <li>
+            Quản trị viên xem xét thủ công và quyết định: duyệt, yêu cầu bổ sung (kèm nội dung cần bổ sung), hoặc từ chối (kèm lý
+            do). Kết quả được báo cho Thợ ngay trên Nền tảng. Thợ bị từ chối hoặc được yêu cầu bổ sung có thể nộp lại.
+          </li>
+          <li>
+            Khi duyệt, quản trị viên có thể cấp huy hiệu &ldquo;Đã xác minh danh tính&rdquo; và &ldquo;Có chứng chỉ nghề&rdquo;. Huy
+            hiệu chỉ thể hiện kết quả đối chiếu tại thời điểm duyệt.
+          </li>
+          <li>
+            Ảnh giấy tờ bị xóa khỏi hệ thống ngay sau khi hồ sơ được duyệt hoặc từ chối; chỉ giữ lại kết quả xác minh. Chi tiết xem{" "}
+            <Link href="/bao-mat" className="text-rust hover:underline">Chính sách bảo vệ dữ liệu cá nhân</Link>.
+          </li>
+        </Ds>
+        <P>Quy trình giao dịch giữa Khách và Thợ:</P>
         <Ds>
           <li>Khách chọn Thợ, đặt giờ hẹn hoặc gọi ngay; đơn ở trạng thái &ldquo;Chờ xác nhận&rdquo;.</li>
           <li>Thợ xác nhận hoặc từ chối. Các đơn chờ trùng khung 30 phút với đơn Thợ vừa xác nhận tự động bị hủy kèm lý do.</li>
@@ -58,6 +83,7 @@ export default function QuyChe() {
       <Muc so={6} tieuDe="Quản lý thông tin và kiểm soát nội dung">
         <Ds>
           <li>Nền tảng lưu thông tin đăng ký của Thợ và Khách, bảo vệ theo Chính sách bảo vệ dữ liệu cá nhân.</li>
+          <li>Hồ sơ xác minh của Thợ chỉ quản trị viên xem được; ảnh giấy tờ bị xóa sau khi hồ sơ được xử lý.</li>
           <li>Đánh giá chỉ được gửi bởi Khách của đơn đã hoàn thành. Đánh giá, nội dung vi phạm có thể bị ẩn.</li>
           <li>
             Quản trị viên xem xét báo cáo vấn đề và áp dụng biện pháp: nhắc nhở, ẩn nội dung, hủy đơn do vi phạm, ẩn hồ sơ, tạm khóa

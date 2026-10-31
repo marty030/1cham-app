@@ -64,7 +64,13 @@ function NoiDungDangKyKhach() {
 
     setDangDangKy(true);
 
-    if (await daCoTaiKhoanTheoSdt(soSach)) {
+        const daCoTaiKhoan = await daCoTaiKhoanTheoSdt(soSach);
+    if (daCoTaiKhoan === null) {
+      setDangDangKy(false);
+      thongBao("Bạn thao tác quá nhanh. Vui lòng thử lại sau vài phút.", "canhbao");
+      return;
+    }
+    if (daCoTaiKhoan) {
       setDangDangKy(false);
       thongBao("Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.", "loi");
       return;
