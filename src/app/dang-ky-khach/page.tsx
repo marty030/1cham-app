@@ -7,6 +7,7 @@ import { UserPlus } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import { useCaptcha, THONG_BAO_DOI_CAPTCHA } from "../../components/Captcha";
 import KhoiDongY from "../../components/KhoiDongY";
 import { duDongY, ghiNhanDongY } from "../../lib/dongYPhapLy";
 
@@ -22,6 +23,7 @@ function NoiDungDangKyKhach() {
   const searchParams = useSearchParams();
   const duongDanTiepTheo = searchParams.get("next") || "/";
   const thongBao = useThongBao();
+  const { token: captchaToken, lamMoi: lamMoiCaptcha, oCaptcha, canCaptcha } = useCaptcha();
 
   const [daCham, setDaCham] = useState({
     sdt: false,
@@ -62,6 +64,11 @@ function NoiDungDangKyKhach() {
       return;
     }
 
+    if (canCaptcha && !captchaToken) {
+      thongBao(THONG_BAO_DOI_CAPTCHA, "canhbao");
+      return;
+    }
+
     setDangDangKy(true);
 
         const daCoTaiKhoan = await daCoTaiKhoanTheoSdt(soSach);
@@ -83,8 +90,10 @@ function NoiDungDangKyKhach() {
       password: matKhau,
       options: {
         data: { role: "khach" },
+        captchaToken: captchaToken ?? undefined,
       },
     });
+    lamMoiCaptcha(); // mỗi mã CAPTCHA chỉ dùng được 1 lần
 
     if (error) {
       setDangDangKy(false);
@@ -214,6 +223,8 @@ function NoiDungDangKyKhach() {
             onDoi={setDaChonDongY}
             hienLoi={daChamDongY && !duDongY("khach", daChonDongY)}
           />
+
+          {oCaptcha}
 
           <button
             className="bg-rust hover:opacity-90 transition text-white px-4 py-2.5 rounded-lg w-full font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"

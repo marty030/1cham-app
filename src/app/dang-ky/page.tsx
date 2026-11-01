@@ -9,6 +9,7 @@ import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
 import GoiYDiaChi from "../../components/GoiYDiaChi";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import { useCaptcha, THONG_BAO_DOI_CAPTCHA } from "../../components/Captcha";
 import KhoiDongY from "../../components/KhoiDongY";
 import { duDongY, ghiNhanDongY } from "../../lib/dongYPhapLy";
 
@@ -25,6 +26,7 @@ export default function DangKy() {
   const [daChamDongY, setDaChamDongY] = useState(false);
   const router = useRouter();
   const thongBao = useThongBao();
+  const { token: captchaToken, lamMoi: lamMoiCaptcha, oCaptcha, canCaptcha } = useCaptcha();
 
   const [daCham, setDaCham] = useState({
     sdt: false,
@@ -76,6 +78,11 @@ export default function DangKy() {
       return;
     }
 
+    if (canCaptcha && !captchaToken) {
+      thongBao(THONG_BAO_DOI_CAPTCHA, "canhbao");
+      return;
+    }
+
     setDangDangKy(true);
 
         const daCoTaiKhoan = await daCoTaiKhoanTheoSdt(soSach);
@@ -95,7 +102,9 @@ export default function DangKy() {
     const { data, error } = await supabase.auth.signUp({
       email: emailDeDangKy,
       password: matKhau,
+      options: { captchaToken: captchaToken ?? undefined },
     });
+    lamMoiCaptcha(); // mỗi mã CAPTCHA chỉ dùng được 1 lần
 
     if (error) {
       setDangDangKy(false);
@@ -259,6 +268,8 @@ export default function DangKy() {
             onDoi={setDaChonDongY}
             hienLoi={daChamDongY && !duDongY("tho", daChonDongY)}
           />
+
+          {oCaptcha}
 
           <button
             className="bg-teal hover:opacity-90 transition text-white px-4 py-2.5 rounded-lg w-full font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"

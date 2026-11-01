@@ -198,9 +198,14 @@ export default function BaoMat() {
           <li>Dữ liệu tài khoản được lưu trong thời gian tài khoản còn hoạt động.</li>
           <li>Dữ liệu đơn, tin nhắn, đánh giá, báo cáo được lưu trong thời gian cần thiết để cung cấp dịch vụ, giải quyết khiếu nại, và theo yêu cầu của pháp luật.</li>
           <li>Ảnh trong hồ sơ xác minh của Thợ bị xóa ngay sau khi hồ sơ được duyệt hoặc từ chối (mục 4).</li>
-          <li>
+                    <li>
             Khi bạn yêu cầu xóa, chúng tôi xóa hoặc ẩn danh dữ liệu trong vòng {CAM_KET.xuLyYeuCauDuLieuNgay} ngày, trừ dữ liệu pháp luật
             yêu cầu giữ hoặc cần cho khiếu nại, tranh chấp chưa giải quyết xong.
+          </li>
+          <li>
+            Nội dung do người khác gửi trong cuộc trò chuyện chung với bạn (ví dụ tin nhắn của Thợ gửi cho Khách) thuộc về người đó nên
+            không bị xóa theo yêu cầu của một bên. Phần này chỉ được tách khỏi tài khoản của bạn, còn thông tin cá nhân của bạn trong
+            các tin nhắn bạn đã gửi vẫn bị xóa hoặc ẩn danh như trên.
           </li>
         </Ds>
       </Muc>

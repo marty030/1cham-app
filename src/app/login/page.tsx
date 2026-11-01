@@ -7,6 +7,7 @@ import { LogIn } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+  import { useCaptcha, THONG_BAO_DOI_CAPTCHA } from "../../components/Captcha";
 
 function NoiDungDangNhap() {
   const [soDienThoai, setSoDienThoai] = useState("");
@@ -24,17 +25,20 @@ function NoiDungDangNhap() {
   const searchParams = useSearchParams();
   const duongDanTiepTheo = searchParams.get("next") || "/";
   const thongBao = useThongBao();
+    const { token: captchaToken, lamMoi: lamMoiCaptcha, oCaptcha, canCaptcha } = useCaptcha();
 
   const sdtLoi = daChamSdt && !sdtHopLe(soDienThoai);
   const emailLoi = daChamEmail && !emailNhap.trim();
   const matKhauLoi = daChamMatKhau && !matKhau;
 
   async function dangNhapVoi(email: string) {
-    const { error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
       email,
       password: matKhau,
+      options: { captchaToken: captchaToken ?? undefined },
     });
 
+    lamMoiCaptcha(); // mỗi mã chỉ dùng được 1 lần
     setDangDangNhap(false);
 
     if (error) {
@@ -45,8 +49,13 @@ function NoiDungDangNhap() {
     }
   }
 
-  async function xuLyDangNhap() {
+   async function xuLyDangNhap() {
     setDaChamMatKhau(true);
+
+    if (canCaptcha && !captchaToken) {
+      thongBao(THONG_BAO_DOI_CAPTCHA, "canhbao");
+      return;
+    }
 
     if (dungEmail) {
       setDaChamEmail(true);
@@ -148,8 +157,10 @@ function NoiDungDangNhap() {
               placeholder="Nhập mật khẩu"
               loi={matKhauLoi}
             />
-            {matKhauLoi && <p className="text-xs text-rust mt-1">Vui lòng nhập mật khẩu.</p>}
+                       {matKhauLoi && <p className="text-xs text-rust mt-1">Vui lòng nhập mật khẩu.</p>}
           </div>
+
+          {oCaptcha}
 
           <button
             className="bg-teal hover:opacity-90 transition text-white px-4 py-2.5 rounded-lg w-full font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"

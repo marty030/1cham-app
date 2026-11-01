@@ -8,6 +8,7 @@ import { User, Phone, KeyRound, Save, Wrench, ArrowLeft } from "lucide-react";
 import TruongMatKhau from "../../components/TruongMatKhau";
 import { useThongBao } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import { useCaptcha, THONG_BAO_DOI_CAPTCHA } from "../../components/Captcha";
 
 type VaiTro = "khach" | "tho";
 
@@ -21,6 +22,7 @@ type HoSoTaiKhoan = {
 export default function CaiDat() {
   const router = useRouter();
   const thongBao = useThongBao();
+  const { token: captchaToken, lamMoi: lamMoiCaptcha, oCaptcha, canCaptcha } = useCaptcha();
   const [dangTai, setDangTai] = useState(true);
   const [vaiTro, setVaiTro] = useState<VaiTro | null>(null);
   const [hoSo, setHoSo] = useState<HoSoTaiKhoan | null>(null);
@@ -140,6 +142,11 @@ export default function CaiDat() {
       return;
     }
 
+    if (canCaptcha && !captchaToken) {
+      thongBao(THONG_BAO_DOI_CAPTCHA, "canhbao");
+      return;
+    }
+
     setDangDoiMatKhau(true);
 
     // Xác thực lại mật khẩu hiện tại trước khi cho đổi — tránh trường hợp máy
@@ -147,7 +154,9 @@ export default function CaiDat() {
     const { error: loiXacThuc } = await supabase.auth.signInWithPassword({
       email: hoSo.email_dang_nhap,
       password: matKhauHienTai,
+      options: { captchaToken: captchaToken ?? undefined },
     });
+    lamMoiCaptcha(); // mỗi mã CAPTCHA chỉ dùng được 1 lần
 
     if (loiXacThuc) {
       setDangDoiMatKhau(false);
@@ -304,6 +313,8 @@ export default function CaiDat() {
             />
             {xacNhanLoi && <p className="text-xs text-rust mt-1">Xác nhận mật khẩu chưa khớp.</p>}
           </div>
+
+          {oCaptcha}
 
           <button
             className="flex items-center justify-center gap-2 bg-teal hover:opacity-90 text-white px-4 py-2.5 rounded-xl w-full font-semibold disabled:opacity-50 transition"

@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { ShieldCheck } from "lucide-react";
 import { dichLoiSupabase } from "../../lib/dichLoi";
 import { useThongBao } from "../../components/ThongBao";
+import { useCaptcha, THONG_BAO_DOI_CAPTCHA } from "../../components/Captcha";
 
 export default function LoginAdmin() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function LoginAdmin() {
   const [loi, setLoi] = useState("");
   const router = useRouter();
   const thongBao = useThongBao();
+  const { token: captchaToken, lamMoi: lamMoiCaptcha, oCaptcha, canCaptcha } = useCaptcha();
 
   async function xuLyDangNhap() {
     setLoi("");
@@ -22,12 +24,19 @@ export default function LoginAdmin() {
       return;
     }
 
+    if (canCaptcha && !captchaToken) {
+      setLoi(THONG_BAO_DOI_CAPTCHA);
+      return;
+    }
+
     setDangDangNhap(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password: matKhau,
+      options: { captchaToken: captchaToken ?? undefined },
     });
+    lamMoiCaptcha(); // mỗi mã CAPTCHA chỉ dùng được 1 lần
 
     if (error) {
       setDangDangNhap(false);
@@ -81,6 +90,8 @@ export default function LoginAdmin() {
           </div>
 
           {loi && <p className="text-sm text-rust">{loi}</p>}
+
+          {oCaptcha}
 
           <button
             className="bg-teal hover:opacity-90 transition text-white px-4 py-2.5 rounded-lg w-full font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
