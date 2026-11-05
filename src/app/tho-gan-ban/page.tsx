@@ -16,6 +16,7 @@ import { useTaiKhoanHienTai } from "../../hooks/useTaiKhoanHienTai";
 import { useSoDonCanXuLy } from "../../hooks/useSoDonCanXuLy";
 import { useSoTinNhanChuaDoc } from "../../hooks/useSoTinNhanChuaDoc";
 import ThanhDieuHuong from "../../components/ThanhDieuHuong";
+import { dangBanTaiThoiDiem, khoangTaiDonDangBan } from "../../lib/lichLamViec";
 
 function tinhKhoangCach(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -68,10 +69,10 @@ function NoiDungTrangDanhSach() {
     async function layDon() {
       // Chỉ lấy khung giờ bận (tho_id, gio_hen, trang_thai) của các đơn đã xác nhận quanh thời điểm
       // hiện tại, qua hàm SQL — không đọc cả bảng đơn nên không lộ thông tin khách.
-      const bayGio = Date.now();
+      const khoang = khoangTaiDonDangBan();
       const { data } = await supabase.rpc("khung_gio_ban", {
-        p_tu: new Date(bayGio - 2 * 60 * 60 * 1000).toISOString(),
-        p_den: new Date(bayGio + 2 * 60 * 60 * 1000).toISOString(),
+        p_tu: khoang.tu,
+        p_den: khoang.den,
       });
       setDanhSachDon(data || []);
     }
@@ -184,15 +185,11 @@ function NoiDungTrangDanhSach() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full max-w-7xl">
         {danhSachHienThi.map(({ tho, khoangCach }, index) => {
-          const dangLamViec = danhSachDon.some((don) => {
-            if (don.tho_id !== tho.id || don.trang_thai !== "Đã xác nhận")
-              return false;
-            const gioHen = new Date(don.gio_hen);
-            const bayGio = new Date();
-            const chenhLechGio =
-              Math.abs(gioHen.getTime() - bayGio.getTime()) / (1000 * 60 * 60);
-            return chenhLechGio < 2;
-          });
+          const dangLamViec = dangBanTaiThoiDiem(
+            danhSachDon
+              .filter((don) => don.tho_id === tho.id && don.trang_thai === "Đã xác nhận")
+              .map((don) => don.gio_hen)
+          );
 
           return (
             <TheTho

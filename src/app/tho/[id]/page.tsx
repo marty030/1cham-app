@@ -11,6 +11,7 @@ import FormDatLich from "../../../components/FormDatLich";
 import { ArrowLeft, MessageCircle, CalendarDays, Star, MapPin, ShieldCheck, Award } from "lucide-react";
 import { useDatLich } from "../../../hooks/useDatLich";
 import { tinhCapDo, tinhHuyHieu } from "../../../lib/hoSoUyTin";
+import { dangBanTaiThoiDiem, khoangTaiDonDangBan } from "../../../lib/lichLamViec";
 
 type DanhGia = {
   so_sao: number;
@@ -57,20 +58,18 @@ export default function TrangChiTietTho() {
       setTho(thoData);
 
       // Khung giờ bận lấy qua hàm SQL (chỉ trả tho_id, gio_hen, trang_thai — không lộ thông tin khách)
-      const bayGioMs = Date.now();
+      const khoang = khoangTaiDonDangBan();
       const { data: donData } = await supabase.rpc("khung_gio_ban", {
         p_tho_id: thoId,
-        p_tu: new Date(bayGioMs - 2 * 60 * 60 * 1000).toISOString(),
-        p_den: new Date(bayGioMs + 2 * 60 * 60 * 1000).toISOString(),
+        p_tu: khoang.tu,
+        p_den: khoang.den,
       });
 
-      const banHienTai = (donData || []).some((don: any) => {
-        if (don.trang_thai !== "Đã xác nhận") return false;
-        const gio = new Date(don.gio_hen);
-        const bayGio = new Date();
-        const chenhLech = Math.abs(gio.getTime() - bayGio.getTime()) / (1000 * 60 * 60);
-        return chenhLech < 2;
-      });
+      const banHienTai = dangBanTaiThoiDiem(
+        ((donData || []) as { gio_hen: string; trang_thai: string }[])
+          .filter((don) => don.trang_thai === "Đã xác nhận")
+          .map((don) => don.gio_hen)
+      );
       setDangBan(banHienTai);
 
       const { data: danhGiaData } = await supabase

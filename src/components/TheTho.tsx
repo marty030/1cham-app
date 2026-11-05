@@ -2,7 +2,8 @@
 import { useRouter } from "next/navigation";
 import FormDatLich from "./FormDatLich";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
-import { MessageCircle, CalendarDays, Pencil, Trash2, MapPin, Navigation, Star, ShieldCheck, Award } from "lucide-react";
+import { useState } from "react";
+import { MessageCircle, CalendarDays, Pencil, Trash2, MapPin, Navigation, Star, ShieldCheck, Award, PhoneCall } from "lucide-react";
 
 type TheThoProps = {
   tho: any;
@@ -72,6 +73,16 @@ export default function TheTho({
 }: TheThoProps) {
   const router = useRouter();
   const chuCaiDau = tho.ten ? tho.ten.charAt(0).toUpperCase() : "T";
+
+  // Form đặt lịch mở ở tab nào tùy khách bấm "Đặt lịch" (chọn giờ hẹn) hay "Gọi ngay" (gọi thợ luôn).
+  // lanMoForm tăng mỗi lần mở để form được dựng mới và nhận đúng tab ban đầu.
+  const [cheDoMoForm, setCheDoMoForm] = useState<"ngay_bay_gio" | "gio_khac">("gio_khac");
+  const [lanMoForm, setLanMoForm] = useState(0);
+  function moForm(cheDo: "ngay_bay_gio" | "gio_khac") {
+    setCheDoMoForm(cheDo);
+    setLanMoForm((n) => n + 1);
+    onMoDatLich();
+  }
 
   // Nhãn ngành để quét nhanh. Bỏ "Khác": nó chẳng nói gì về thợ — phần mô tả công việc
   // mới là thứ nói thợ làm gì, nên với thợ "Khác" mô tả sẽ thành dòng chính.
@@ -246,17 +257,28 @@ export default function TheTho({
         </div>
       )}
 
-      {/* 4. FOOTER — chỉ còn đúng 1 nút CTA chính */}
-      <div className="flex gap-2 mt-auto pt-2">
+      {/* 4. FOOTER — 1 nút CTA chính (Đặt lịch) + dòng nhỏ "Gọi ngay" cho khách cần thợ liền */}
+      <div className="flex flex-col gap-1 mt-auto pt-2">
         <button
-          className="flex-1 bg-rust hover:opacity-90 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
+          className="w-full bg-rust hover:opacity-90 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-1.5"
           onClick={(e) => {
             e.stopPropagation();
-            onMoDatLich();
+            moForm("gio_khac");
           }}
         >
           <CalendarDays className="w-4 h-4" /> Đặt lịch
         </button>
+        {!dangNghi && (
+          <button
+            className="w-full text-xs font-semibold text-rust hover:underline py-1 flex items-center justify-center gap-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              moForm("ngay_bay_gio");
+            }}
+          >
+            <PhoneCall className="w-3.5 h-3.5" /> Gọi ngay
+          </button>
+        )}
       </div>
 
       {/* 5. KHU VỰC QUẢN LÝ DÀNH CHO ADMIN */}
@@ -289,6 +311,8 @@ export default function TheTho({
       {/* FORM ĐẶT LỊCH (Popup) */}
       <div onClick={(e) => e.stopPropagation()}>
         <FormDatLich
+          key={lanMoForm}
+          cheDoBanDau={cheDoMoForm}
           hienForm={dangDatLich}
           thoId={tho.id}
           tenKhach={tenKhach}

@@ -21,6 +21,8 @@ type FormDatLichProps = {
   onXacNhan: () => void;
   onGoiNgay: () => void;
   onHuy: () => void;
+  // Tab hiển thị khi form mở: "ngay_bay_gio" (gọi thợ ngay) hoặc "gio_khac" (chọn giờ hẹn). Mặc định "ngay_bay_gio".
+  cheDoBanDau?: "ngay_bay_gio" | "gio_khac";
 };
 
 export default function FormDatLich({
@@ -39,8 +41,9 @@ export default function FormDatLich({
   onXacNhan,
   onGoiNgay,
   onHuy,
+  cheDoBanDau = "ngay_bay_gio",
 }: FormDatLichProps) {
-  const [cheDo, setCheDo] = useState<"ngay_bay_gio" | "gio_khac">("ngay_bay_gio");
+  const [cheDo, setCheDo] = useState<"ngay_bay_gio" | "gio_khac">(cheDoBanDau);
   const [daCham, setDaCham] = useState({ ten: false, sdt: false });
   const thongBao = useThongBao();
 

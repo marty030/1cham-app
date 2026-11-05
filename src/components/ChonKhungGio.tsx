@@ -5,6 +5,7 @@ import { Vietnamese } from "flatpickr/dist/l10n/vn.js";
 import "flatpickr/dist/flatpickr.min.css";
 import { supabase } from "../lib/supabase";
 import { taoISOTuVN, gioPhutVN } from "../lib/thoiGianVN";
+import { chongVoiDonDaXacNhan } from "../lib/lichLamViec";
 
 const GIO_BAT_DAU = 7; // 07:00
 const GIO_KET_THUC = 20; // 20:00 (không bao gồm khung 20:00, dừng ở 19:30)
@@ -58,7 +59,8 @@ export default function ChonKhungGio({ thoId, value, onChange }: ChonKhungGioPro
   const [ngayDaChon, setNgayDaChon] = useState<string>(gtKhoiTao.ngay);
   const [gioDaChon, setGioDaChon] = useState<string>(gtKhoiTao.gio);
   const [dangTaiKhungGio, setDangTaiKhungGio] = useState(false);
-  const [khungGioDaDat, setKhungGioDaDat] = useState<Set<string>>(new Set());
+  // Các đơn đã xác nhận / đã hoàn thành của thợ trong ngày đang chọn (chỉ có giờ hẹn và trạng thái).
+  const [donTrongNgay, setDonTrongNgay] = useState<{ gio: Date; daXacNhan: boolean }[]>([]);
 
   useEffect(() => {
     if (!ngayInputRef.current) return;
@@ -83,11 +85,12 @@ export default function ChonKhungGio({ thoId, value, onChange }: ChonKhungGioPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Tải các khung giờ đã được thợ xác nhận (hoặc đã hoàn thành) trong ngày đã chọn.
+  // Tải các đơn đã được thợ xác nhận (hoặc đã hoàn thành) trong ngày đã chọn.
   // Đơn còn "Chờ xác nhận" KHÔNG khóa khung giờ — chỉ khi thợ xác nhận thì giờ đó mới bị gạch.
+  // Đơn đã xác nhận chiếm cả thời lượng của nó (xem lib/lichLamViec.ts), nên các khung giờ chồng lên cũng bị gạch.
   useEffect(() => {
     if (!ngayDaChon || !thoId) {
-      setKhungGioDaDat(new Set());
+      setDonTrongNgay([]);
       return;
     }
 
@@ -106,15 +109,14 @@ export default function ChonKhungGio({ thoId, value, onChange }: ChonKhungGioPro
 
       if (error) {
         console.error("Lỗi tải khung giờ đã đặt:", error);
-        setKhungGioDaDat(new Set());
+        setDonTrongNgay([]);
       } else {
-        const daDat = new Set<string>(
-          ((data as any[]) || []).map((don: any) => {
-            const { gio, phut } = gioPhutVN(don.gio_hen);
-            return lamTronXuong30Phut(gio, phut);
-          })
+        setDonTrongNgay(
+          ((data as any[]) || []).map((don: any) => ({
+            gio: new Date(don.gio_hen),
+            daXacNhan: don.trang_thai === "Đã xác nhận",
+          }))
         );
-        setKhungGioDaDat(daDat);
       }
       setDangTaiKhungGio(false);
     }
@@ -144,7 +146,13 @@ export default function ChonKhungGio({ thoId, value, onChange }: ChonKhungGioPro
               {DANH_SACH_KHUNG_GIO.map((gio) => {
                 const [h, m] = gio.split(":").map(Number);
                 const daQuaGio = ngayDaChon === homNay && h * 60 + m <= gioPhutHienTai;
-                const daDuocDat = khungGioDaDat.has(gio);
+                const batDauKhung = new Date(taoISOTuVN(ngayDaChon, gio));
+                const daDuocDat = donTrongNgay.some((don) => {
+                  if (don.daXacNhan) return chongVoiDonDaXacNhan(batDauKhung, don.gio);
+                  // Đơn đã hoàn thành: chỉ gạch đúng khung giờ của nó như trước đây
+                  const { gio: gioDon, phut: phutDon } = gioPhutVN(don.gio);
+                  return lamTronXuong30Phut(gioDon, phutDon) === gio;
+                });
                 const khongKhaDung = daQuaGio || daDuocDat;
                 const dangChon = gioDaChon === gio;
 
