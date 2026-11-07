@@ -20,7 +20,9 @@ export async function layHoSoKhachHienTai(): Promise<HoSoKhach | null> {
     .from("khach")
     .select("id, ten, so_dien_thoai, user_id")
     .eq("user_id", sessionData.session.user.id)
-    .single();
+    // maybeSingle: tài khoản thợ/admin không có hàng trong bảng khach là chuyện bình thường,
+    // trả về null chứ không báo lỗi 406 ra Console như .single().
+    .maybeSingle();
 
   if (error || !data) return null;
   return data as HoSoKhach;

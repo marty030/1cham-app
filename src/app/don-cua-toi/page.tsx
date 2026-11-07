@@ -20,9 +20,20 @@ import {
   XCircle,
   PencilLine,
   Lock,
+  AlertTriangle,
 } from "lucide-react";
 import { useThongBao, useXacNhan } from "../../components/ThongBao";
 import { dichLoiSupabase } from "../../lib/dichLoi";
+import { satGioNhau } from "../../lib/lichLamViec";
+
+// Lý do thợ chọn khi không nhận / hủy đơn. "ma" gửi lên database (hàm tho_tu_choi_don), database tự
+// đổi thành câu "Xin lỗi, ..." mà khách nhìn thấy. Thêm lý do mới thì phải sửa cả hàm SQL đó.
+const LY_DO_TU_CHOI = [
+  { ma: "trung_gio", nhan: "Thợ đã có đơn ở khung giờ này" },
+  { ma: "qua_xa", nhan: "Địa chỉ nằm ngoài khu vực thợ hoạt động" },
+  { ma: "khong_nhan_viec", nhan: "Thợ không nhận loại việc này" },
+  { ma: "ban_dot_xuat", nhan: "Thợ có việc đột xuất" },
+];
 
 export default function DonCuaToi() {
   const [danhSachDon, setDanhSachDon] = useState<any[]>([]);
@@ -44,6 +55,10 @@ export default function DonCuaToi() {
   const [donCoBaoCao, setDonCoBaoCao] = useState<Record<number, boolean>>({});
   // Đơn đang được làm nổi bật sau khi bấm "Xem đơn" ở khung nhắc
   const [donNoiBat, setDonNoiBat] = useState<number | null>(null);
+  // Hộp chọn lý do khi không nhận / hủy đơn
+  const [donDangTuChoi, setDonDangTuChoi] = useState<any | null>(null);
+  const [lyDoTuChoi, setLyDoTuChoi] = useState("");
+  const [dangGuiTuChoi, setDangGuiTuChoi] = useState(false);
 
   async function taiDonCuaTho(thoId: number) {
     const { data, error } = await supabase
@@ -246,29 +261,60 @@ export default function DonCuaToi() {
     }, 80);
   }
 
-  // Dùng cho cả "Không nhận đơn" (đơn Chờ xác nhận) và "Hủy đơn" (đơn Đã xác nhận)
-  async function huyDon(don: any) {
-    const daXacNhan = don.trang_thai === "Đã xác nhận";
-    const dongY = await xacNhanHopThoai(
-      daXacNhan
-        ? "Hủy đơn đã xác nhận? Khách đã sắp xếp lịch theo đơn này — nên liên hệ khách trước nếu có thể. Không thể hoàn tác."
-        : "Không nhận đơn này? Khách sẽ thấy đơn chuyển sang Đã hủy, không thể hoàn tác."
+  // Tìm một đơn thợ ĐÃ NHẬN mà giờ hẹn sát với đơn này (hai đơn chiếm thời gian chồng lên nhau).
+  // Chỉ dùng để CẢNH BÁO thợ — database không chặn, thợ tự quyết nhận hay từ chối.
+  function donDaNhanSatGio(don: any): any | null {
+    if (don.che_do_dat_lich !== "gio_khac" || !don.gio_hen) return null;
+    const gio = new Date(don.gio_hen);
+    return (
+      danhSachDon.find(
+        (d) =>
+          d.id !== don.id &&
+          d.trang_thai === "Đã xác nhận" &&
+          d.che_do_dat_lich === "gio_khac" &&
+          d.gio_hen &&
+          satGioNhau(gio, new Date(d.gio_hen))
+      ) ?? null
     );
-    if (!dongY) return;
+  }
 
-    const { error } = await supabase
-      .from("don_dat_lich")
-      .update({ trang_thai: "Đã hủy" })
-      .eq("id", don.id);
+  // Mở hộp chọn lý do — dùng cho cả "Không nhận đơn" (đơn Chờ xác nhận) và "Hủy đơn" (đơn Đã xác nhận).
+  // Gợi ý sẵn "đã có đơn ở khung giờ này" khi đơn sát giờ một đơn thợ đã nhận.
+  function huyDon(don: any) {
+    setLyDoTuChoi(donDaNhanSatGio(don) ? "trung_gio" : "");
+    setDonDangTuChoi(don);
+  }
+
+  async function guiTuChoiDon() {
+    if (!donDangTuChoi) return;
+    if (!lyDoTuChoi) {
+      thongBao("Vui lòng chọn một lý do để khách hiểu.", "canhbao");
+      return;
+    }
+    const don = donDangTuChoi;
+    const daXacNhan = don.trang_thai === "Đã xác nhận";
+
+    setDangGuiTuChoi(true);
+    // Hàm SQL kiểm tra bạn đúng là thợ của đơn rồi mới ghi trạng thái "Đã hủy" kèm câu lý do.
+    const { data, error } = await supabase.rpc("tho_tu_choi_don", {
+      p_don_id: don.id,
+      p_ly_do: lyDoTuChoi,
+    });
+    setDangGuiTuChoi(false);
 
     if (error) {
       thongBao("Lỗi: " + dichLoiSupabase(error.message), "loi");
-    } else {
-      setDanhSachDon((truoc) =>
-        truoc.map((d) => (d.id === don.id ? { ...d, trang_thai: "Đã hủy" } : d))
-      );
-      thongBao(daXacNhan ? "Đã hủy đơn." : "Đã từ chối đơn.", "thanhcong");
+      return;
     }
+    setDanhSachDon((truoc) =>
+      truoc.map((d) =>
+        d.id === don.id
+          ? { ...d, trang_thai: "Đã hủy", ly_do_huy: typeof data === "string" ? data : d.ly_do_huy }
+          : d
+      )
+    );
+    setDonDangTuChoi(null);
+    thongBao(daXacNhan ? "Đã hủy đơn." : "Đã từ chối đơn.", "thanhcong");
   }
 
   const danhSachHienThi = danhSachDon.filter((don) => {
@@ -355,6 +401,7 @@ export default function DonCuaToi() {
               const thoDaBam = don.tho_xac_nhan_hoan_thanh === true;
               const khachDaBam = don.khach_xac_nhan_hoan_thanh === true;
               const coBaoCao = donCoBaoCao[don.id] === true;
+              const donSatGio = don.trang_thai === "Chờ xác nhận" ? donDaNhanSatGio(don) : null;
 
               return (
                 <div
@@ -409,6 +456,16 @@ export default function DonCuaToi() {
                       nhanGio="Khách hẹn lúc"
                       gioiHanDong
                     />
+
+                    {donSatGio && (
+                      <div className="flex items-start gap-2.5 bg-gold-soft p-2.5 rounded-lg border border-gold/30">
+                        <AlertTriangle className="w-4 h-4 text-gold mt-0.5 shrink-0" />
+                        <span className="text-gold font-semibold">
+                          Sát giờ đơn bạn đã nhận ({dinhDangGioNgan(donSatGio.gio_hen)}). Cân nhắc trước khi
+                          xác nhận — nếu không kịp, hãy từ chối và chọn lý do.
+                        </span>
+                      </div>
+                    )}
 
                     {don.gio_du_kien_den && (
                       <div className="flex items-start gap-2.5 bg-teal-soft p-2.5 rounded-lg border border-teal/20">
@@ -546,6 +603,69 @@ export default function DonCuaToi() {
           </div>
         )}
       </div>
+
+      {/* HỘP CHỌN LÝ DO KHI KHÔNG NHẬN / HỦY ĐƠN */}
+      {donDangTuChoi && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm"
+          onClick={() => !dangGuiTuChoi && setDonDangTuChoi(null)}
+        >
+          <div
+            className="bg-card rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-line bg-paper">
+              <h3 className="text-lg font-bold text-ink">
+                {donDangTuChoi.trang_thai === "Đã xác nhận" ? "Hủy đơn đã xác nhận" : "Không nhận đơn này"}
+              </h3>
+              <p className="text-xs text-ink-soft mt-1">
+                {donDangTuChoi.trang_thai === "Đã xác nhận"
+                  ? "Khách đã sắp xếp lịch theo đơn này — nên liên hệ khách trước nếu có thể. "
+                  : ""}
+                Chọn lý do để khách hiểu. Khách sẽ thấy lý do này, và không thể hoàn tác.
+              </p>
+            </div>
+
+            <div className="p-6 flex flex-col gap-2">
+              {LY_DO_TU_CHOI.map((lyDo) => (
+                <button
+                  key={lyDo.ma}
+                  type="button"
+                  onClick={() => setLyDoTuChoi(lyDo.ma)}
+                  className={`text-left text-sm font-semibold px-4 py-2.5 rounded-lg border transition ${
+                    lyDoTuChoi === lyDo.ma
+                      ? "bg-rust-soft text-rust border-rust"
+                      : "bg-card text-ink border-line hover:border-rust/40"
+                  }`}
+                >
+                  {lyDo.nhan}
+                </button>
+              ))}
+            </div>
+
+            <div className="px-6 py-4 border-t border-line bg-paper flex gap-3">
+              <button
+                onClick={() => setDonDangTuChoi(null)}
+                disabled={dangGuiTuChoi}
+                className="flex-1 bg-card border border-line text-ink-soft font-semibold py-2.5 rounded-lg hover:bg-line transition disabled:opacity-50"
+              >
+                Quay lại
+              </button>
+              <button
+                onClick={guiTuChoiDon}
+                disabled={dangGuiTuChoi}
+                className="flex-1 bg-rust text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition disabled:opacity-50"
+              >
+                {dangGuiTuChoi
+                  ? "Đang gửi..."
+                  : donDangTuChoi.trang_thai === "Đã xác nhận"
+                  ? "Hủy đơn"
+                  : "Từ chối đơn"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

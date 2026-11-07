@@ -11,7 +11,7 @@ import FormDatLich from "../../../components/FormDatLich";
 import { ArrowLeft, MessageCircle, CalendarDays, Star, MapPin, ShieldCheck, Award } from "lucide-react";
 import { useDatLich } from "../../../hooks/useDatLich";
 import { tinhCapDo, tinhHuyHieu } from "../../../lib/hoSoUyTin";
-import { dangBanTaiThoiDiem, khoangTaiDonDangBan } from "../../../lib/lichLamViec";
+import { dangBanTaiThoiDiem, khoangTaiDonDangBan, GHI_CHU_DANG_BAN } from "../../../lib/lichLamViec";
 
 type DanhGia = {
   so_sao: number;
@@ -152,6 +152,9 @@ export default function TrangChiTietTho() {
                 <span className="bg-teal-soft text-teal border border-teal/20 text-xs px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1 w-fit">
                   <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"></span> Sẵn sàng
                 </span>
+              )}
+              {dangBan && !tho.dang_nghi && (
+                <p className="text-xs text-ink-soft/70">{GHI_CHU_DANG_BAN}</p>
               )}
             </div>
           </div>

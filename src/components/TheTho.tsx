@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import FormDatLich from "./FormDatLich";
 import { DANH_MUC_NGHE } from "../lib/danhMuc";
+import { GHI_CHU_DANG_BAN } from "../lib/lichLamViec";
 import { useState } from "react";
 import { MessageCircle, CalendarDays, Pencil, Trash2, MapPin, Navigation, Star, ShieldCheck, Award, PhoneCall } from "lucide-react";
 
@@ -155,6 +156,10 @@ export default function TheTho({
               </span>
             )}
           </div>
+
+          {dangLamViec && !dangNghi && (
+            <p className="text-[11px] text-ink-soft/70 leading-snug">{GHI_CHU_DANG_BAN}</p>
+          )}
         </div>
       </div>
 

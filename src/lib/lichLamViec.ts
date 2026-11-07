@@ -1,11 +1,18 @@
-// MỘT chỗ duy nhất quy định "một đơn chiếm thợ bao lâu", để trạng thái "Đang bận"
-// và bộ chọn giờ khi đặt lịch luôn khớp nhau. Muốn đổi cách tính thì chỉ sửa 2 số dưới đây.
+// MỘT chỗ duy nhất quy định "một đơn chiếm thợ bao lâu". Con số này dùng cho:
+//  - trạng thái "Đang bận" của thợ
+//  - cảnh báo "sát giờ đơn bạn đã nhận" trên trang đơn của thợ (chỉ cảnh báo, KHÔNG chặn)
+// Bộ chọn giờ của khách KHÔNG dùng nó: khách đặt được mọi khung giờ, chỉ khung đã được thợ
+// xác nhận mới bị gạch; thợ tự quyết nhận hay từ chối (kèm lý do) các đơn sát giờ nhau.
+// Muốn đổi cách tính thì chỉ sửa 2 số dưới đây.
 //
 // Lưu ý: hàm SQL khung_gio_ban chỉ trả đơn trong khoảng ±3 giờ quanh hiện tại khi tra cứu
 // "thợ nào đang bận", nên THOI_LUONG_DON_PHUT không nên vượt 170 phút.
 
 export const THOI_LUONG_DON_PHUT = 120; // một đơn kéo dài khoảng 2 giờ kể từ giờ hẹn
 export const DI_CHUYEN_TRUOC_PHUT = 30; // thợ lên đường trước giờ hẹn bấy nhiêu phút thì đã tính là bận
+
+// Dòng chú thích mờ hiện dưới nhãn "Đang bận", để khách không hiểu nhầm là thợ không nhận việc.
+export const GHI_CHU_DANG_BAN = "Thợ vẫn nhận đặt lịch vào giờ khác";
 
 const MOT_PHUT_MS = 60 * 1000;
 
@@ -42,7 +49,7 @@ export function dangBanTaiThoiDiem(
   });
 }
 
-/** Một đơn MỚI bắt đầu lúc `batDau` có bị chồng giờ với đơn đã xác nhận hẹn lúc `gioHen` không? */
-export function chongVoiDonDaXacNhan(batDau: Date, gioHen: Date): boolean {
-  return Math.abs(batDau.getTime() - gioHen.getTime()) < THOI_LUONG_DON_PHUT * MOT_PHUT_MS;
+/** Hai đơn hẹn lúc `a` và `b` có chiếm thời gian chồng lên nhau không (mỗi đơn kéo dài THOI_LUONG_DON_PHUT)? */
+export function satGioNhau(a: Date, b: Date): boolean {
+  return Math.abs(a.getTime() - b.getTime()) < THOI_LUONG_DON_PHUT * MOT_PHUT_MS;
 }
